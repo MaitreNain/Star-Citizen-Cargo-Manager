@@ -75,7 +75,6 @@ export default function CargoPlanner() {
   }, [shipId, contracts, fragments, placedCrates, sortMode, archivedDeliveries, activatedDeliveries]);
 
   const ship = useMemo(() => ships.find((s) => s.id === shipId)!, [shipId]);
-  const bayNames = useMemo(() => Object.fromEntries(ship.cargoBays.map((b) => [b.id, b.name])), [ship]);
   const shipCapacityScu = useMemo(() => ship.cargoBays.reduce((sum, bay) => sum + bay.size.x * bay.size.y * bay.size.z, 0), [ship]);
 
   const maxCrateCapacity = useMemo(() => {
