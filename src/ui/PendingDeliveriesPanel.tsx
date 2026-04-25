@@ -173,6 +173,7 @@ export default function PendingDeliveriesPanel({
             borderRadius: isSelected || showDetails ? "2px 2px 0 0" : "2px",
             cursor: isWaiting ? "default" : "pointer",
             userSelect: "none",
+            opacity: isWaiting ? 0.8 : 1,
             transition: "background 0.15s, border-color 0.15s",
             boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
           }}
@@ -180,7 +181,8 @@ export default function PendingDeliveriesPanel({
         {/* Point couleur */}
           <div style={{
             width: "6px", height: "6px", borderRadius: "50%",
-            background: isComplete ? "var(--success)" : deliveryColor,
+            background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
+            border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
             boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 5px ${deliveryColor}`,
             flexShrink: 0,
             alignSelf: "flex-start",
