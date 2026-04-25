@@ -350,7 +350,7 @@ export default function PendingDeliveriesPanel({
               background: "var(--accent-glow)", border: "1px solid var(--accent-dim)",
               color: "var(--accent)", userSelect: "none",
             }}>
-              ▶ Cliquez sur une soute dans la vue 3D
+              Cliquez sur une soute dans la vue 3D
             </div>
           );
         }
@@ -363,7 +363,7 @@ export default function PendingDeliveriesPanel({
             background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-glow)",
             color: "var(--text-dim)", userSelect: "none",
           }}>
-            ▶ Cliquez sur une livraison pour la placer dans la soute
+            Cliquez sur une livraison pour la placer dans la soute
           </div>
         );
       })()}
