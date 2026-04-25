@@ -338,14 +338,14 @@ export default function PendingDeliveriesPanel({
         {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} livrée{deliveredCount > 1 ? "s" : ""}</span>}
       </div>
 
-      {/* Instruction contextuelle — hauteur fixe pour éviter les décalages */}
+      {/* Instruction contextuelle — toujours présent pour éviter les décalages */}
       {(() => {
         const hasPlaceable = sortedItems.some((i) => i.state === "loaded" && i.pendingScu > 0);
         const selValid = isSelecting && (() => {
           const sel = items.find((i) => i.deliveryId === selectedDeliveryId);
           return sel && sel.state !== "waiting" && sel.pendingScu > 0;
         })();
-        if (!hasPlaceable && !selValid) return null;
+        const visible = hasPlaceable || !!selValid;
         const active = !!selValid;
         return (
           <div style={{
@@ -355,6 +355,7 @@ export default function PendingDeliveriesPanel({
             border: `1px solid ${active ? "var(--accent-dim)" : "var(--border-glow)"}`,
             color: active ? "var(--accent)" : "var(--text-dim)",
             userSelect: "none",
+            visibility: visible ? "visible" : "hidden",
           }}>
             {active ? "▶ Cliquez sur une soute dans la vue 3D" : "▶ Cliquez sur une livraison pour la placer dans la soute"}
           </div>
