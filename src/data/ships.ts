@@ -338,6 +338,19 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "valkyrie",
+    name: "Valkyrie",
+    cargoBays: [
+      {
+        id: "valkyrie-bay-1",
+        name: "Soute 1",
+        size: { x: 5, y: 8, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "asgard",
     name: "Asgard",
     cargoBays: [
