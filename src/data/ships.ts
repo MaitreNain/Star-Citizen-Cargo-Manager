@@ -364,6 +364,38 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "corsair",
+    name: "Corsair",
+    cargoBays: [
+      {
+        id: "corsair-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 6, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "cutlass-black",
+    name: "Cutlass Black",
+    cargoBays: [
+      {
+        id: "cutlass-black-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 5, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "cutlass-black-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 3, z: 2 },
+        offset: { x: 1, y: 5, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "nomad",
     name: "Nomad",
     cargoBays: [
