@@ -364,6 +364,51 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "nomad",
+    name: "Nomad",
+    cargoBays: [
+      {
+        id: "nomad-bay-1",
+        name: "Soute 1",
+        size: { x: 3, y: 4, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "a2-hercules-starlifter",
+    name: "A2 Hercules",
+    cargoBays: [
+      {
+        id: "a2-bay-1",
+        name: "Soute 1",
+        size: { x: 6, y: 18, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "m2-hercules-starlifter",
+    name: "M2 Hercules",
+    cargoBays: [
+      {
+        id: "m2-bay-1",
+        name: "Soute 1",
+        size: { x: 8, y: 15, z: 3 },
+        offset: { x: 0, y: -7, z: 0 },
+      },
+      {
+        id: "m2-bay-2",
+        name: "Soute 2",
+        size: { x: 6, y: 9, z: 3 },
+        offset: { x: 1, y: 9, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "carrack",
     name: "Carrack",
     cargoBays: [
