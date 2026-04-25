@@ -344,7 +344,7 @@ export const ships: Ship[] = [
       {
         id: "asgard-bay-1",
         name: "Soute 1",
-        size: { x: 9, y: 5, z: 4 },
+        size: { x: 5, y: 9, z: 4 },
         offset: { x: 0, y: 0, z: 0 },
       },
     ],
