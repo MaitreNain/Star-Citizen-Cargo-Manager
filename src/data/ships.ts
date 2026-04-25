@@ -180,6 +180,81 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "freelancer-dur",
+    name: "Freelancer DUR",
+    cargoBays: [
+      {
+        id: "freelancer-dur-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 4, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "freelancer-dur-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: -1, y: 5, z: 0 },
+      },
+      {
+        id: "freelancer-dur-bay-3",
+        name: "Soute 3",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: 2, y: 5, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "freelancer-max",
+    name: "Freelancer MAX",
+    cargoBays: [
+      {
+        id: "freelancer-max-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 9, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "freelancer-max-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: 0, y: 10, z: 0 },
+      },
+      {
+        id: "freelancer-max-bay-3",
+        name: "Soute 3",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: 3, y: 10, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "freelancer-mis",
+    name: "Freelancer MIS",
+    cargoBays: [
+      {
+        id: "freelancer-mis-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 4, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "freelancer-mis-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: -1, y: 5, z: 0 },
+      },
+      {
+        id: "freelancer-mis-bay-3",
+        name: "Soute 3",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: 2, y: 5, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "golem-ox",
     name: "Golem OX",
     cargoBays: [
@@ -188,6 +263,37 @@ export const ships: Ship[] = [
         name: "Soute 1",
         size: { x: 4, y: 8, z: 2 },
         offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "hull-a",
+    name: "Hull A",
+    cargoBays: [
+      {
+        id: "hull-a-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: -6, y: 0, z: 0 },
+      },
+      {
+        id: "hull-a-bay-2",
+        name: "Soute 2",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: -3, y: 0, z: 0 },
+      },
+      {
+        id: "hull-a-bay-3",
+        name: "Soute 3",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: 1, y: 0, z: 0 },
+      },
+      {
+        id: "hull-a-bay-4",
+        name: "Soute 4",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: 4, y: 0, z: 0 },
       },
     ],
   },
