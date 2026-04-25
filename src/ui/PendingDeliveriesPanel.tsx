@@ -244,7 +244,7 @@ export default function PendingDeliveriesPanel({
                     color: "var(--success)", cursor: "pointer", fontSize: "10px",
                     fontFamily: "var(--font-mono)", padding: "2px 6px", borderRadius: "2px", whiteSpace: "nowrap",
                   }}
-                >↑ Chargé</button>
+                >↑ En soute</button>
               ) : (
                 <>
                   {isComplete && (
