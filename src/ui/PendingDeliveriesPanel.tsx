@@ -173,7 +173,6 @@ export default function PendingDeliveriesPanel({
             borderRadius: isSelected || showDetails ? "2px 2px 0 0" : "2px",
             cursor: isWaiting ? "default" : "pointer",
             userSelect: "none",
-            opacity: isWaiting ? 0.6 : 1,
             transition: "background 0.15s, border-color 0.15s",
             boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
           }}
@@ -181,7 +180,7 @@ export default function PendingDeliveriesPanel({
         {/* Point couleur */}
           <div style={{
             width: "6px", height: "6px", borderRadius: "50%",
-            background: isComplete ? "var(--success)" : isWaiting ? "var(--text-dim)" : deliveryColor,
+            background: isComplete ? "var(--success)" : deliveryColor,
             boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 5px ${deliveryColor}`,
             flexShrink: 0,
             alignSelf: "flex-start",
@@ -192,7 +191,7 @@ export default function PendingDeliveriesPanel({
           <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
             <div style={{
               fontSize: "13px", fontWeight: 700,
-              color: isWaiting ? "var(--text-dim)" : "var(--text)",
+              color: "var(--text)",
               letterSpacing: "0.03em",
               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }}>
@@ -224,7 +223,7 @@ export default function PendingDeliveriesPanel({
                   ✓ {item.totalScu} SCU
                 </div>
               ) : (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: isWaiting ? "var(--text-dim)" : "var(--accent)", fontWeight: 700 }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: isWaiting ? "var(--text)" : "var(--accent)", fontWeight: 700 }}>
                   {item.pendingScu > 0 ? item.pendingScu : item.totalScu} SCU
                   {item.pendingScu < item.totalScu && item.pendingScu > 0 && (
                     <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "3px" }}>/ {item.totalScu}</span>
