@@ -394,7 +394,7 @@ export default function PendingDeliveriesPanel({
               borderLeft: `4px solid ${archived.color}`,
               borderRadius: "2px", opacity: 0.8,
             }}>
-              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--success)", boxShadow: "0 0 5px var(--success)", flexShrink: 0 }} />
+              <div style={{ width: "6px", height: "6px", borderRadius: "1px", background: "var(--success)", transform: "rotate(45deg)", flexShrink: 0, alignSelf: "flex-start", marginTop: "5px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {archived.commodity}
