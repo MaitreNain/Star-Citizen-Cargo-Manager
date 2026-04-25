@@ -155,6 +155,44 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "freelancer",
+    name: "Freelancer",
+    cargoBays: [
+      {
+        id: "freelancer-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 9, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "freelancer-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: -1, y: 10, z: 0 },
+      },
+      {
+        id: "freelancer-bay-3",
+        name: "Soute 3",
+        size: { x: 1, y: 2, z: 3 },
+        offset: { x: 2, y: 10, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "golem-ox",
+    name: "Golem OX",
+    cargoBays: [
+      {
+        id: "golem-ox-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 8, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "hull-b",
     name: "Hull B",
     cargoBays: [
@@ -406,6 +444,38 @@ export const ships: Ship[] = [
         id: "nomad-bay-1",
         name: "Soute 1",
         size: { x: 3, y: 4, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "prowler-utility",
+    name: "Prowler Utility",
+    cargoBays: [
+      {
+        id: "prowler-utility-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: -3, y: 0, z: 0 },
+      },
+      {
+        id: "prowler-utility-bay-2",
+        name: "Soute 2",
+        size: { x: 2, y: 4, z: 2 },
+        offset: { x: 1, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "shiv",
+    name: "Shiv",
+    cargoBays: [
+      {
+        id: "shiv-bay-1",
+        name: "Soute 1",
+        size: { x: 2, y: 8, z: 2 },
         offset: { x: 0, y: 0, z: 0 },
       },
     ],
