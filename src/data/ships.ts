@@ -2,6 +2,45 @@ import type { Ship } from "../types/Ship";
 
 export const ships: Ship[] = [
   {
+    id: "a2-hercules-starlifter",
+    name: "A2 Hercules",
+    cargoBays: [
+      {
+        id: "a2-bay-1",
+        name: "Soute 1",
+        size: { x: 6, y: 18, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "argo-raft",
+    name: "Argo RAFT",
+    cargoBays: [
+      {
+        id: "raft-bay-1",
+        name: "Soute principale",
+        size: { x: 8, y: 12, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "asgard",
+    name: "Asgard",
+    cargoBays: [
+      {
+        id: "asgard-bay-1",
+        name: "Soute 1",
+        size: { x: 5, y: 9, z: 4 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "c1-spirit",
     name: "C1 Spirit",
     cargoBays: [
@@ -35,6 +74,82 @@ export const ships: Ship[] = [
         name: "Soute 2",
         size: { x: 6, y: 9, z: 4 },
         offset: { x: 1, y: 9, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "carrack",
+    name: "Carrack",
+    cargoBays: [
+      { id: "m1-a", name: "Module 1 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 0, z: 0 } },
+      { id: "m1-b", name: "Module 1 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 0, z: 0 } },
+      { id: "m1-c", name: "Module 1 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 0, z: 0 } },
+
+      { id: "m2-a", name: "Module 2 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 6, z: 0 } },
+      { id: "m2-b", name: "Module 2 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 6, z: 0 } },
+      { id: "m2-c", name: "Module 2 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 6, z: 0 } },
+
+      { id: "m3-a", name: "Module 3 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 12, z: 0 } },
+      { id: "m3-b", name: "Module 3 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 12, z: 0 } },
+      { id: "m3-c", name: "Module 3 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 12, z: 0 } },
+    ],
+  },
+
+  {
+    id: "constellation-andromeda",
+    name: "Constellation Andromeda",
+    cargoBays: [
+      {
+        id: "andromeda-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 8, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "constellation-taurus",
+    name: "Constellation Taurus",
+    cargoBays: [
+      {
+        id: "Taurus-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 14, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "corsair",
+    name: "Corsair",
+    cargoBays: [
+      {
+        id: "corsair-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 6, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "cutlass-black",
+    name: "Cutlass Black",
+    cargoBays: [
+      {
+        id: "cutlass-black-bay-1",
+        name: "Soute 1",
+        size: { x: 4, y: 5, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "cutlass-black-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 3, z: 2 },
+        offset: { x: 1, y: 6, z: 0 },
       },
     ],
   },
@@ -139,10 +254,10 @@ export const ships: Ship[] = [
         size: { x: 2, y: 8, z: 2 },
         offset: { x: 12, y: -9, z: 0 },
       },
-
     ],
   },
-{
+
+  {
     id: "hull-c",
     name: "Hull C",
     cargoBays: [
@@ -246,6 +361,57 @@ export const ships: Ship[] = [
   },
 
   {
+    id: "m2-hercules-starlifter",
+    name: "M2 Hercules",
+    cargoBays: [
+      {
+        id: "m2-bay-1",
+        name: "Soute 1",
+        size: { x: 8, y: 15, z: 3 },
+        offset: { x: 0, y: -7, z: 0 },
+      },
+      {
+        id: "m2-bay-2",
+        name: "Soute 2",
+        size: { x: 6, y: 9, z: 3 },
+        offset: { x: 1, y: 9, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "mercury-star-runner",
+    name: "Mercury Star Runner",
+    cargoBays: [
+      {
+        id: "mercury-star-runner-bay-1",
+        name: "Soute 1",
+        size: { x: 6, y: 6, z: 3 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+      {
+        id: "mercury-star-runner-bay-2",
+        name: "Soute 2",
+        size: { x: 1, y: 3, z: 2 },
+        offset: { x: -2, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
+    id: "nomad",
+    name: "Nomad",
+    cargoBays: [
+      {
+        id: "nomad-bay-1",
+        name: "Soute 1",
+        size: { x: 3, y: 4, z: 2 },
+        offset: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  },
+
+  {
     id: "starlancer-max",
     name: "Starlancer MAX",
     cargoBays: [
@@ -273,67 +439,6 @@ export const ships: Ship[] = [
         size: { x: 2, y: 8, z: 3 },
         offset: { x: 4, y: -10, z: 0 },
       },
-
-
-    ],
-  },
-
-
-  {
-    id: "argo-raft",
-    name: "Argo RAFT",
-    cargoBays: [
-      {
-        id: "raft-bay-1",
-        name: "Soute principale",
-        size: { x: 8, y: 12, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "constellation-taurus",
-    name: "Constellation Taurus",
-    cargoBays: [
-      {
-        id: "Taurus-bay-1",
-        name: "Soute 1",
-        size: { x: 4, y: 14, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "constellation-andromeda",
-    name: "Constellation Andromeda",
-    cargoBays: [
-      {
-        id: "andromeda-bay-1",
-        name: "Soute 1",
-        size: { x: 4, y: 8, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "mercury-star-runner",
-    name: "Mercury Star Runner",
-    cargoBays: [
-      {
-        id: "mercury-star-runner-bay-1",
-        name: "Soute 1",
-        size: { x: 6, y: 6, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-      {
-        id: "mercury-star-runner-bay-2",
-        name: "Soute 2",
-        size: { x: 1, y: 3, z: 2 },
-        offset: { x: -2, y: 0, z: 0 },
-      },
     ],
   },
 
@@ -347,114 +452,6 @@ export const ships: Ship[] = [
         size: { x: 5, y: 6, z: 3 },
         offset: { x: 0, y: 0, z: 0 },
       },
-    ],
-  },
-
-  {
-    id: "asgard",
-    name: "Asgard",
-    cargoBays: [
-      {
-        id: "asgard-bay-1",
-        name: "Soute 1",
-        size: { x: 5, y: 9, z: 4 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "corsair",
-    name: "Corsair",
-    cargoBays: [
-      {
-        id: "corsair-bay-1",
-        name: "Soute 1",
-        size: { x: 4, y: 6, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "cutlass-black",
-    name: "Cutlass Black",
-    cargoBays: [
-      {
-        id: "cutlass-black-bay-1",
-        name: "Soute 1",
-        size: { x: 4, y: 5, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-      {
-        id: "cutlass-black-bay-2",
-        name: "Soute 2",
-        size: { x: 1, y: 3, z: 2 },
-        offset: { x: 1, y: 5, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "nomad",
-    name: "Nomad",
-    cargoBays: [
-      {
-        id: "nomad-bay-1",
-        name: "Soute 1",
-        size: { x: 3, y: 4, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "a2-hercules-starlifter",
-    name: "A2 Hercules",
-    cargoBays: [
-      {
-        id: "a2-bay-1",
-        name: "Soute 1",
-        size: { x: 6, y: 18, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "m2-hercules-starlifter",
-    name: "M2 Hercules",
-    cargoBays: [
-      {
-        id: "m2-bay-1",
-        name: "Soute 1",
-        size: { x: 8, y: 15, z: 3 },
-        offset: { x: 0, y: -7, z: 0 },
-      },
-      {
-        id: "m2-bay-2",
-        name: "Soute 2",
-        size: { x: 6, y: 9, z: 3 },
-        offset: { x: 1, y: 9, z: 0 },
-      },
-    ],
-  },
-
-  {
-    id: "carrack",
-    name: "Carrack",
-    cargoBays: [
-      { id: "m1-a", name: "Module 1 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 0, z: 0 } },
-      { id: "m1-b", name: "Module 1 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 0, z: 0 } },
-      { id: "m1-c", name: "Module 1 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 0, z: 0 } },
-
-      { id: "m2-a", name: "Module 2 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 6, z: 0 } },
-      { id: "m2-b", name: "Module 2 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 6, z: 0 } },
-      { id: "m2-c", name: "Module 2 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 6, z: 0 } },
-
-      { id: "m3-a", name: "Module 3 - A", size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 12, z: 0 } },
-      { id: "m3-b", name: "Module 3 - B", size: { x: 4, y: 3, z: 2 }, offset: { x: 5, y: 12, z: 0 } },
-      { id: "m3-c", name: "Module 3 - C", size: { x: 4, y: 4, z: 4 }, offset: { x: 10, y: 12, z: 0 } },
     ],
   },
 ];
