@@ -155,7 +155,7 @@ export default function PendingDeliveriesPanel({
         style={{ marginBottom: "6px" }}
         ref={isHighlighted ? highlightedRef : undefined}
       >
-        {/* Ligne principale */}
+        {/* Carte livraison */}
         <div
           onClick={() => {
             if (isWaiting) return;
@@ -163,8 +163,7 @@ export default function PendingDeliveriesPanel({
             else onSelectDelivery(item.deliveryId, item.contractId, item.pendingScu);
           }}
           style={{
-            display: "flex", alignItems: "center", gap: "8px",
-            padding: "8px 10px",
+            padding: "10px 12px",
             background: bgColor,
             borderTop: `1px solid ${borderColor}`,
             borderRight: `1px solid ${borderColor}`,
@@ -178,111 +177,101 @@ export default function PendingDeliveriesPanel({
             boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
           }}
         >
-        {/* Point couleur */}
-          <div style={{
-            width: "6px", height: "6px", borderRadius: "50%",
-            background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
-            border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
-            boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 5px ${deliveryColor}`,
-            flexShrink: 0,
-            alignSelf: "flex-start",
-            marginTop: "4px",
-          }} />
-
-          {/* Infos — colonne gauche */}
-          <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          {/* Ligne 1 : indicateur + commodity + SCU */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
             <div style={{
-              fontSize: "13px", fontWeight: 700,
-              color: "var(--text)",
-              letterSpacing: "0.03em",
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
+              background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
+              border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
+              boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 5px ${deliveryColor}`,
+            }} />
+            <div style={{
+              flex: 1, minWidth: 0,
+              fontSize: "13px", fontWeight: 700, color: "var(--text)",
+              letterSpacing: "0.03em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }}>
               {item.commodity}
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
-                {item.contractName}
+            </div>
+            {isComplete ? (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--success)", fontWeight: 700, flexShrink: 0 }}>
+                ✓ {item.totalScu} SCU
               </span>
+            ) : (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: isWaiting ? "var(--text)" : "var(--accent)", fontWeight: 700, flexShrink: 0 }}>
+                {item.pendingScu > 0 ? item.pendingScu : item.totalScu} SCU
+                {item.pendingScu < item.totalScu && item.pendingScu > 0 && (
+                  <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "3px" }}>/ {item.totalScu}</span>
+                )}
+              </span>
+            )}
+            {isHighlighted && <span style={{ color: "#facc15", fontSize: "14px", flexShrink: 0 }}>◀</span>}
+          </div>
+
+          {/* Ligne 2 : nom du contrat */}
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", marginBottom: "5px", paddingLeft: "14px" }}>
+            {item.contractName}
+          </div>
+
+          {/* Lignes 3-4 : localisation */}
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", display: "flex", flexDirection: "column", gap: "2px", marginBottom: "8px", paddingLeft: "14px" }}>
+            <div style={{ display: "flex", gap: "4px", alignItems: "center", minWidth: 0 }}>
+              <span style={{ color: "var(--success)", flexShrink: 0 }}>↑</span>
+              <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>Chgt :</span>
+              <span style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.pickupLocation}</span>
             </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
-              <div style={{ display: "flex", gap: "4px", alignItems: "center", minWidth: 0 }}>
-                <span style={{ color: "var(--success)", flexShrink: 0 }}>↑</span>
-                <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>Chgt :</span>
-                <span style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.pickupLocation}</span>
-              </div>
-              <div style={{ display: "flex", gap: "4px", alignItems: "center", minWidth: 0 }}>
-                <span style={{ color: "var(--accent)", flexShrink: 0 }}>↓</span>
-                <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>Livr :</span>
-                <span style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.destination}</span>
-              </div>
+            <div style={{ display: "flex", gap: "4px", alignItems: "center", minWidth: 0 }}>
+              <span style={{ color: "var(--accent)", flexShrink: 0 }}>↓</span>
+              <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>Livr :</span>
+              <span style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.destination}</span>
             </div>
           </div>
 
-          {/* Colonne droite : SCU + boutons */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
-            {/* SCU */}
-            <div style={{ textAlign: "right" }}>
-              {isComplete ? (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--success)", fontWeight: 700 }}>
-                  ✓ {item.totalScu} SCU
-                </div>
-              ) : (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: isWaiting ? "var(--text)" : "var(--accent)", fontWeight: 700 }}>
-                  {item.pendingScu > 0 ? item.pendingScu : item.totalScu} SCU
-                  {item.pendingScu < item.totalScu && item.pendingScu > 0 && (
-                    <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "3px" }}>/ {item.totalScu}</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Boutons action + retour */}
-            <div style={{ display: "flex", gap: "4px" }}>
-              {isWaiting ? (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
-                  style={{
-                    background: "rgba(34,211,160,0.08)", border: "1px solid rgba(34,211,160,0.35)",
-                    color: "var(--success)", cursor: "pointer", fontSize: "10px",
-                    fontFamily: "var(--font-mono)", padding: "2px 6px", borderRadius: "2px", whiteSpace: "nowrap",
-                  }}
-                >↑ En soute</button>
-              ) : (
-                <>
-                  {isComplete && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onArchiveDelivery(item.deliveryId); }}
-                      style={{
-                        background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
-                        color: "var(--success)", cursor: "pointer", fontSize: "10px",
-                        fontFamily: "var(--font-mono)", fontWeight: 700, padding: "2px 6px", borderRadius: "2px", whiteSpace: "nowrap",
-                      }}
-                    >↓ Livré</button>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onFocusDelivery(item.deliveryId); }}
-                    style={{
-                      background: isFocused ? "rgba(56,189,248,0.15)" : "none",
-                      border: `1px solid ${isFocused ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
-                      color: isFocused ? "var(--cyan)" : "var(--text-muted)",
-                      cursor: "pointer", fontSize: "11px", padding: "2px 6px", borderRadius: "2px",
-                    }}
-                  >{isFocused ? "◉" : "◎"}</button>
-                </>
-              )}
+          {/* Ligne 5 : boutons */}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
+            {isWaiting ? (
               <button
-                onClick={(e) => { e.stopPropagation(); if (item.state === "loaded") onDeactivateDelivery(item.deliveryId); }}
-                disabled={item.state === "waiting"}
+                onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
                 style={{
-                  background: "none",
-                  border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
-                  color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
-                  cursor: item.state === "waiting" ? "default" : "pointer",
-                  fontSize: "12px", padding: "2px 6px", borderRadius: "2px",
+                  background: "rgba(34,211,160,0.08)", border: "1px solid rgba(34,211,160,0.35)",
+                  color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                  fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
                 }}
-              >↩</button>
-            </div>
+              >↑ En soute</button>
+            ) : (
+              <>
+                {isComplete && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onArchiveDelivery(item.deliveryId); }}
+                    style={{
+                      background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
+                      color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                      fontFamily: "var(--font-mono)", fontWeight: 700, padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                    }}
+                  >✓ Livré</button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onFocusDelivery(item.deliveryId); }}
+                  style={{
+                    background: isFocused ? "rgba(56,189,248,0.15)" : "none",
+                    border: `1px solid ${isFocused ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
+                    color: isFocused ? "var(--cyan)" : "var(--text-muted)",
+                    cursor: "pointer", fontSize: "11px", padding: "3px 8px", borderRadius: "2px",
+                  }}
+                >{isFocused ? "◉" : "◎"}</button>
+              </>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); if (item.state === "loaded") onDeactivateDelivery(item.deliveryId); }}
+              disabled={item.state === "waiting"}
+              style={{
+                background: "none",
+                border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
+                color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
+                cursor: item.state === "waiting" ? "default" : "pointer",
+                fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
+              }}
+            >↩</button>
           </div>
-
-          {isHighlighted && <div style={{ color: "#facc15", fontSize: "14px", flexShrink: 0, alignSelf: "flex-start" }}>◀</div>}
         </div>
 
         {/* Détail des fragments (état loaded, sélectionné) */}
