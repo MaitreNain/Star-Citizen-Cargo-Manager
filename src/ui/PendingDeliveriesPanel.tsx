@@ -338,19 +338,32 @@ export default function PendingDeliveriesPanel({
         {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} livrée{deliveredCount > 1 ? "s" : ""}</span>}
       </div>
 
-      {/* Instruction sélection soute */}
-      {isSelecting && (() => {
-        const sel = items.find((i) => i.deliveryId === selectedDeliveryId);
-        if (!sel || sel.state === "waiting") return null;
-        if (sel.pendingScu <= 0) return null;
+      {/* Instruction contextuelle */}
+      {(() => {
+        if (isSelecting) {
+          const sel = items.find((i) => i.deliveryId === selectedDeliveryId);
+          if (!sel || sel.state === "waiting" || sel.pendingScu <= 0) return null;
+          return (
+            <div style={{
+              fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em",
+              padding: "6px 8px", marginBottom: "10px", borderRadius: "3px",
+              background: "var(--accent-glow)", border: "1px solid var(--accent-dim)",
+              color: "var(--accent)", userSelect: "none",
+            }}>
+              ▶ Cliquez sur une soute dans la vue 3D
+            </div>
+          );
+        }
+        const hasPlaceable = sortedItems.some((i) => i.state === "loaded" && i.pendingScu > 0);
+        if (!hasPlaceable) return null;
         return (
           <div style={{
             fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em",
             padding: "6px 8px", marginBottom: "10px", borderRadius: "3px",
-            background: "var(--accent-glow)", border: "1px solid var(--accent-dim)",
-            color: "var(--accent)", userSelect: "none",
+            background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-glow)",
+            color: "var(--text-dim)", userSelect: "none",
           }}>
-            ▶ Cliquez sur une soute dans la vue 3D
+            ▶ Cliquez sur une livraison pour la placer dans la soute
           </div>
         );
       })()}
