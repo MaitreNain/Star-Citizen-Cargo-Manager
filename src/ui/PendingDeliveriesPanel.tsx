@@ -169,10 +169,11 @@ export default function PendingDeliveriesPanel({
             borderTop: `1px solid ${borderColor}`,
             borderRight: `1px solid ${borderColor}`,
             borderBottom: `1px solid ${borderColor}`,
-            borderLeft: `4px solid ${deliveryColor}`,
+            borderLeft: `4px ${isWaiting ? "dashed" : "solid"} ${deliveryColor}`,
             borderRadius: isSelected || showDetails ? "2px 2px 0 0" : "2px",
             cursor: isWaiting ? "default" : "pointer",
             userSelect: "none",
+            opacity: isWaiting ? 0.78 : 1,
             transition: "background 0.15s, border-color 0.15s",
             boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
           }}
