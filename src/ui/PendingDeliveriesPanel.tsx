@@ -394,7 +394,7 @@ export default function PendingDeliveriesPanel({
               borderLeft: `4px solid ${archived.color}`,
               borderRadius: "2px", opacity: 0.8,
             }}>
-              <div style={{ width: "14px", flexShrink: 0, overflow: "visible", color: "var(--success)", fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-ui)", alignSelf: "flex-start" }}>✓</div>
+              <div style={{ width: "16px", paddingLeft: "3px", flexShrink: 0, overflow: "visible", color: "var(--success)", fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-ui)", alignSelf: "flex-start" }}>✓</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {archived.commodity}
