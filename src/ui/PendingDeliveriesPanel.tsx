@@ -386,7 +386,7 @@ export default function PendingDeliveriesPanel({
           {archivedDeliveries.map((archived) => (
             <div key={archived.deliveryId} style={{
               display: "flex", alignItems: "center", gap: "8px",
-              padding: "8px 10px", marginBottom: "6px",
+              padding: "8px 10px 8px 14px", marginBottom: "6px",
               background: "rgba(34,211,160,0.04)",
               borderTop: "1px solid rgba(34,211,160,0.2)",
               borderRight: "1px solid rgba(34,211,160,0.2)",
@@ -394,7 +394,7 @@ export default function PendingDeliveriesPanel({
               borderLeft: `4px solid ${archived.color}`,
               borderRadius: "2px", opacity: 0.8,
             }}>
-              <div style={{ width: "16px", paddingLeft: "3px", flexShrink: 0, overflow: "visible", color: "var(--success)", fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-ui)", alignSelf: "flex-start" }}>✓</div>
+              <div style={{ width: "12px", flexShrink: 0, color: "var(--success)", fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-ui)", textAlign: "center" }}>✓</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {archived.commodity}
