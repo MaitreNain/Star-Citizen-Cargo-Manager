@@ -351,9 +351,9 @@ export default function PendingDeliveriesPanel({
           <div style={{
             fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em",
             padding: "6px 8px", marginBottom: "10px", borderRadius: "3px",
-            background: active ? "var(--accent-glow)" : "rgba(255,255,255,0.03)",
-            border: `1px solid ${active ? "var(--accent-dim)" : "var(--border-glow)"}`,
-            color: active ? "var(--accent)" : "var(--text-dim)",
+            background: "var(--accent-glow)",
+            border: "1px solid var(--accent-dim)",
+            color: "var(--accent)",
             userSelect: "none",
             visibility: visible ? "visible" : "hidden",
           }}>
