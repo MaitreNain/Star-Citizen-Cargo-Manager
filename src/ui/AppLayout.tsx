@@ -26,8 +26,8 @@ style.textContent = `
     --cyan-dim: #0a3248;
     --cyan-glow: rgba(56,189,248,0.10);
     --text: #bdd0e2;
-    --text-dim: #6a8ca8;
-    --text-muted: #3a5470;
+    --text-dim: #8ab4cc;
+    --text-muted: #5c82a0;
     --danger: #e05050;
     --danger-glow: rgba(224,80,80,0.12);
     --success: #22d3a0;

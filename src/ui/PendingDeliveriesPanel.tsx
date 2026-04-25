@@ -191,17 +191,17 @@ export default function PendingDeliveriesPanel({
           {/* Infos — colonne gauche */}
           <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
             <div style={{
-              fontSize: "12px", fontWeight: 700,
+              fontSize: "13px", fontWeight: 700,
               color: isWaiting ? "var(--text-dim)" : "var(--text)",
               letterSpacing: "0.03em",
               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }}>
               {item.commodity}
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
                 {item.contractName}
               </span>
             </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
               <div style={{ display: "flex", gap: "4px", alignItems: "center", minWidth: 0 }}>
                 <span style={{ color: "var(--success)", flexShrink: 0 }}>↑</span>
                 <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>Chgt :</span>
@@ -220,14 +220,14 @@ export default function PendingDeliveriesPanel({
             {/* SCU */}
             <div style={{ textAlign: "right" }}>
               {isComplete ? (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)", fontWeight: 700 }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--success)", fontWeight: 700 }}>
                   ✓ {item.totalScu} SCU
                 </div>
               ) : (
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: isWaiting ? "var(--text-dim)" : "var(--accent)", fontWeight: 700 }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: isWaiting ? "var(--text-dim)" : "var(--accent)", fontWeight: 700 }}>
                   {item.pendingScu > 0 ? item.pendingScu : item.totalScu} SCU
                   {item.pendingScu < item.totalScu && item.pendingScu > 0 && (
-                    <span style={{ fontSize: "9px", color: "var(--text-muted)", marginLeft: "3px" }}>/ {item.totalScu}</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "3px" }}>/ {item.totalScu}</span>
                   )}
                 </div>
               )}
@@ -298,17 +298,17 @@ export default function PendingDeliveriesPanel({
                 display: "flex", alignItems: "center",
                 padding: "4px 10px 4px 18px", gap: "8px",
               }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--cyan)", flexShrink: 0 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--cyan)", flexShrink: 0 }}>
                   {getBayLabel(frag.bayId)}
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-dim)", flex: 1 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)", flex: 1 }}>
                   {frag.placedScu} SCU
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); onRetractFragment(frag); }}
                   style={{
                     background: "none", border: "1px solid rgba(224,80,80,0.25)",
-                    color: "var(--danger)", cursor: "pointer", fontSize: "10px",
+                    color: "var(--danger)", cursor: "pointer", fontSize: "11px",
                     fontFamily: "var(--font-mono)", padding: "1px 6px",
                     borderRadius: "2px", flexShrink: 0,
                   }}
@@ -331,7 +331,7 @@ export default function PendingDeliveriesPanel({
       <div className="section-header">Livraisons</div>
 
       {/* Résumé */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px", fontFamily: "var(--font-mono)", fontSize: "10px", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "10px", fontFamily: "var(--font-mono)", fontSize: "11px", flexWrap: "wrap" }}>
         {waitingCount > 0 && <span style={{ color: "var(--text-dim)" }}>⏳ {waitingCount} en attente</span>}
         {loadedCount > 0 && <span style={{ color: "var(--accent)" }}>↑ {loadedCount} chargée{loadedCount > 1 ? "s" : ""}</span>}
         {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} livrée{deliveredCount > 1 ? "s" : ""}</span>}
@@ -397,11 +397,11 @@ export default function PendingDeliveriesPanel({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {archived.commodity}
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
                     {archived.contractName}
                   </span>
                 </div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
                   ↓ {archived.destination}
                 </div>
               </div>
