@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Contract } from "../types/Contract";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
 import type { ArchivedDelivery } from "../types/ArchivedDelivery";
@@ -29,8 +29,10 @@ type Props = {
   deliveryColors: Map<string, string>;
   selectedDeliveryId: string | null;
   highlightedDeliveryId: string | null;
-  focusedDeliveryId: string | null;
-  onFocusDelivery: (id: string) => void;
+  markedDeliveryIds: string[];
+  onMarkDelivery: (id: string) => void;
+  onClearMarked: () => void;
+  onClearPlacement: () => void;
   activatedDeliveries: string[];
   onActivateDelivery: (id: string) => void;
   onDeactivateDelivery: (id: string) => void;
@@ -50,8 +52,10 @@ export default function PendingDeliveriesPanel({
   deliveryColors,
   selectedDeliveryId,
   highlightedDeliveryId,
-  focusedDeliveryId,
-  onFocusDelivery,
+  markedDeliveryIds,
+  onMarkDelivery,
+  onClearMarked,
+  onClearPlacement,
   activatedDeliveries,
   onActivateDelivery,
   onDeactivateDelivery,
@@ -110,6 +114,7 @@ export default function PendingDeliveriesPanel({
   if (items.length === 0 && archivedDeliveries.length === 0) return null;
 
   const isSelecting = selectedDeliveryId !== null;
+  const [viderConfirm, setViderConfirm] = useState(false);
   const deliveredCount = archivedDeliveries.length;
 
   function getBayLabel(bayId: string): string {
@@ -124,7 +129,7 @@ export default function PendingDeliveriesPanel({
     const showDetails = isSelected && deliveryFragments.length > 0;
     const deliveryColor = deliveryColors.get(item.deliveryId) ?? item.contractColor;
     const isHighlighted = highlightedDeliveryId === item.deliveryId && !isSelected;
-    const isFocused = focusedDeliveryId === item.deliveryId;
+    const isMarked = markedDeliveryIds.includes(item.deliveryId);
     const isWaiting = item.state === "waiting";
 
     const borderColor = isSelected && !isWaiting
@@ -133,7 +138,7 @@ export default function PendingDeliveriesPanel({
         ? "rgba(34,211,160,0.4)"
         : isHighlighted
           ? "#facc15"
-          : isFocused
+          : isMarked
             ? "rgba(56,189,248,0.6)"
             : isWaiting
               ? "var(--border)"
@@ -145,7 +150,7 @@ export default function PendingDeliveriesPanel({
         ? "rgba(34,211,160,0.06)"
         : isHighlighted
           ? "rgba(250,204,21,0.12)"
-          : isFocused
+          : isMarked
             ? "rgba(56,189,248,0.08)"
             : "#040a10";
 
@@ -169,7 +174,7 @@ export default function PendingDeliveriesPanel({
             borderRight: `1px solid ${borderColor}`,
             borderBottom: `1px solid ${borderColor}`,
             borderLeft: `4px solid ${deliveryColor}`,
-            borderRadius: isSelected || showDetails ? "3px 3px 0 0" : "3px",
+            borderRadius: deliveryFragments.length > 0 ? "3px 3px 0 0" : "3px",
             cursor: isWaiting ? "default" : "pointer",
             userSelect: "none",
             opacity: isWaiting ? 0.8 : 1,
@@ -212,7 +217,7 @@ export default function PendingDeliveriesPanel({
 
             {/* Ligne 2 : contrat */}
             <div style={{
-              fontFamily: "var(--font-mono)", fontSize: "10px",
+              fontFamily: "var(--font-mono)", fontSize: "11px",
               color: "var(--text-muted)", marginBottom: "5px", paddingLeft: "15px",
               letterSpacing: "0.04em",
             }}>
@@ -223,13 +228,13 @@ export default function PendingDeliveriesPanel({
             <div style={{ paddingLeft: "15px", display: "flex", flexDirection: "column", gap: "3px", marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--success)", flexShrink: 0 }}>↑</span>
-                <span style={{ fontSize: "11px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {item.pickupLocation}
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
-                <span style={{ fontSize: "11px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {item.destination}
                 </span>
               </div>
@@ -245,7 +250,7 @@ export default function PendingDeliveriesPanel({
                     color: "var(--success)", cursor: "pointer", fontSize: "11px",
                     fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
                   }}
-                >↑ Chargé</button>
+                >Activer</button>
               ) : (
                 <>
                   {isComplete && (
@@ -259,14 +264,14 @@ export default function PendingDeliveriesPanel({
                     >✓ Livré</button>
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); onFocusDelivery(item.deliveryId); }}
+                    onClick={(e) => { e.stopPropagation(); onMarkDelivery(item.deliveryId); }}
                     style={{
-                      background: isFocused ? "rgba(56,189,248,0.15)" : "none",
-                      border: `1px solid ${isFocused ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
-                      color: isFocused ? "var(--cyan)" : "var(--text-muted)",
+                      background: isMarked ? "rgba(56,189,248,0.15)" : "none",
+                      border: `1px solid ${isMarked ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
+                      color: isMarked ? "var(--cyan)" : "var(--text-muted)",
                       cursor: "pointer", fontSize: "11px", padding: "3px 8px", borderRadius: "2px",
                     }}
-                  >{isFocused ? "◉" : "◎"}</button>
+                  >{isMarked ? "◉ Marqué" : "◎ Marquer"}</button>
                 </>
               )}
               <button
@@ -279,13 +284,13 @@ export default function PendingDeliveriesPanel({
                   cursor: item.state === "waiting" ? "default" : "pointer",
                   fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
                 }}
-              >↩</button>
+              >↩ Annuler</button>
             </div>
           </div>
         </div>
 
         {/* Détail des fragments (état loaded, sélectionné) */}
-        {showDetails && deliveryFragments.length > 0 && (
+        {showDetails && (
           <div style={{
             background: "rgba(4,10,18,0.8)",
             border: `1px solid ${borderColor}`,
@@ -355,34 +360,77 @@ export default function PendingDeliveriesPanel({
             color: "var(--accent)",
             userSelect: "none",
             visibility: visible ? "visible" : "hidden",
+            position: "relative",
           }}>
-            {active ? "▶ Cliquez sur une soute dans la vue 3D" : "▶ Cliquez sur une livraison pour la placer dans la soute"}
+            {/* Texte long — toujours en flux pour fixer la hauteur */}
+            <span style={{ opacity: active ? 0 : 1 }}>▶ Cliquez sur une livraison pour la placer dans la soute</span>
+            {/* Texte court — superposé pour ne pas changer la hauteur */}
+            <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: active ? 1 : 0 }}>▶ Cliquez sur une soute dans la vue 3D</span>
           </div>
         );
       })()}
 
       {/* Chargées */}
-      {loadedCount > 0 && (
-        <>
-          <div className="section-header" style={{ color: "var(--accent)" }}>En soute</div>
-          {sortedItems.filter((i) => i.state === "loaded").map((item) => renderItem(item))}
-        </>
-      )}
+      <div style={{ display: "flex", alignItems: "center", marginTop: "12px", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
+        <div className="section-header" style={{ color: "var(--accent)", marginBottom: 0, flex: 1 }}>En soute</div>
+        {viderConfirm ? (
+          <>
+            <button onClick={() => { onClearPlacement(); setViderConfirm(false); }} style={{
+              background: "none", border: "1px solid rgba(224,80,80,0.35)",
+              color: "var(--danger)", cursor: "pointer",
+              fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px", marginRight: "4px",
+            }}>✓ Confirmer</button>
+            <button onClick={() => setViderConfirm(false)} style={{
+              background: "none", border: "1px solid var(--border-glow)",
+              color: "var(--text-muted)", cursor: "pointer",
+              fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px",
+            }}>✕ Annuler</button>
+          </>
+        ) : (
+          <button onClick={() => setViderConfirm(true)} style={{
+            background: "none", border: "1px solid rgba(224,80,80,0.35)",
+            color: "var(--danger)", cursor: "pointer",
+            fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px",
+          }}>✕ Vider la soute</button>
+        )}
+      </div>
+      {loadedCount > 0 && sortedItems.filter((i) => i.state === "loaded").map((item) => renderItem(item))}
+
+      <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
+        <button
+          onClick={onCancelSelection}
+          disabled={!isSelecting}
+          style={{
+            flex: 1, background: "none",
+            border: `1px solid ${isSelecting ? "rgba(180,200,220,0.5)" : "var(--border)"}`,
+            color: isSelecting ? "var(--text)" : "var(--text-dim)",
+            cursor: isSelecting ? "pointer" : "default",
+            fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px",
+            opacity: isSelecting ? 1 : 0.35,
+          }}
+        >✕ Annuler sélection</button>
+        <button
+          onClick={onClearMarked}
+          disabled={markedDeliveryIds.length === 0}
+          style={{
+            flex: 1, background: "none",
+            border: `1px solid ${markedDeliveryIds.length > 0 ? "rgba(180,200,220,0.5)" : "var(--border)"}`,
+            color: markedDeliveryIds.length > 0 ? "var(--text)" : "var(--text-dim)",
+            cursor: markedDeliveryIds.length > 0 ? "pointer" : "default",
+            fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px",
+            opacity: markedDeliveryIds.length > 0 ? 1 : 0.35,
+          }}
+        >✕ Annuler marquage</button>
+      </div>
 
       {/* En attente */}
       {waitingCount > 0 && (
         <>
-          <div className="section-header" style={{ color: "var(--text-dim)", marginTop: loadedCount > 0 ? "12px" : "0" }}>
+          <div className="section-header" style={{ color: "var(--text-dim)", marginTop: "12px" }}>
             En attente
           </div>
           {sortedItems.filter((i) => i.state === "waiting").map((item) => renderItem(item))}
         </>
-      )}
-
-      {isSelecting && (
-        <button onClick={onCancelSelection} className="btn-secondary" style={{ width: "100%", fontSize: "12px", marginTop: "4px" }}>
-          ✕ Annuler la sélection
-        </button>
       )}
 
       {/* Livrées */}
@@ -404,11 +452,11 @@ export default function PendingDeliveriesPanel({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {archived.commodity}
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
                     {archived.contractName}
                   </span>
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "3px", display: "flex", gap: "5px", alignItems: "baseline" }}>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "3px", display: "flex", gap: "5px", alignItems: "baseline" }}>
                   <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: "10px" }}>↓</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{archived.destination}</span>
                 </div>

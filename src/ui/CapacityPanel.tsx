@@ -3,8 +3,6 @@ type Props = {
   shipCapacityScu: number;
   maxCrateCapacity: { scu: number; count: number }[];
   totalDeliveredScu: number;
-  pendingCount: number;
-  onNavigateToPlacement: () => void;
 };
 
 export default function CapacityPanel({
@@ -12,8 +10,6 @@ export default function CapacityPanel({
   shipCapacityScu,
   maxCrateCapacity,
   totalDeliveredScu,
-  pendingCount,
-  onNavigateToPlacement,
 }: Props) {
   const available = Math.max(0, shipCapacityScu - totalPlacedScu);
   const fillPct = Math.min(100, (totalPlacedScu / shipCapacityScu) * 100);
@@ -83,16 +79,6 @@ export default function CapacityPanel({
         </div>
       )}
 
-      {pendingCount > 0 && (
-        <div style={{ marginTop: "8px", borderTop: "1px solid var(--border)", paddingTop: "6px", textAlign: "right" }}>
-          <span
-            style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--accent)", cursor: "pointer" }}
-            onClick={onNavigateToPlacement}
-          >
-            {pendingCount} en attente →
-          </span>
-        </div>
-      )}
     </div>
   );
 }

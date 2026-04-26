@@ -26,7 +26,7 @@ type Props = {
   onEndDrag?: () => void;
   dragRotation?: number;
   onRotate?: () => void;
-  focusedDeliveryId?: string | null;
+  markedDeliveryIds?: string[];
   isAssigningDelivery?: boolean;
   onBayClick?: (bayId: string) => void;
 };
@@ -50,7 +50,7 @@ export default function CargoScene({
   onEndDrag = () => {},
   dragRotation = 0,
   onRotate = () => {},
-  focusedDeliveryId = null,
+  markedDeliveryIds = [],
   isAssigningDelivery = false,
   onBayClick = () => {},
 }: Props) {
@@ -140,7 +140,7 @@ export default function CargoScene({
         }}
       >
         <color attach="background" args={["#060c12"]} />
-        <SceneInvalidator deps={[placedCrates, selectedCrateId, hoveredCell, draggedCrateId, isAssigningDelivery, focusedDeliveryId]} />
+        <SceneInvalidator deps={[placedCrates, selectedCrateId, hoveredCell, draggedCrateId, isAssigningDelivery, markedDeliveryIds]} />
         <ambientLight intensity={0.8} color="#a0c0d8" />
         <directionalLight position={[10, 20, 8]} intensity={0.9} color="#ffffff" />
 
@@ -161,7 +161,7 @@ export default function CargoScene({
         {placedCrates.map((crate) => {
           const bay = ship.cargoBays.find((b) => b.id === crate.bayId);
           if (!bay) return null;
-          const isDimmed = focusedDeliveryId !== null && crate.deliveryId !== focusedDeliveryId;
+          const isDimmed = markedDeliveryIds.length > 0 && !markedDeliveryIds.includes(crate.deliveryId ?? "");
           return (
             <CrateMesh
               key={crate.id}

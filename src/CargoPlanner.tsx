@@ -6,7 +6,6 @@ import ContractList from "./ui/ContractList";
 import ContractForm from "./ui/ContractForm";
 import PendingDeliveriesPanel from "./ui/PendingDeliveriesPanel";
 import CapacityPanel from "./ui/CapacityPanel";
-import OrganisationPanel from "./ui/OrganisationPanel";
 import CargoScene from "./scene/CargoScene";
 
 import { ships } from "./data/ships";
@@ -61,10 +60,9 @@ export default function CargoPlanner() {
   // États UI non persistés
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<SelectedDelivery>(null);
-  const [resetConfirm, setResetConfirm] = useState(false);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
-  const [focusedDeliveryId, setFocusedDeliveryId] = useState<string | null>(null);
+  const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
   const [contractFormKey, setContractFormKey] = useState(0);
 
   const { canUndo, push: pushToHistory, pop: popHistory } = useHistory();
@@ -164,6 +162,14 @@ export default function CargoPlanner() {
 
   const allCrates = useMemo(() => createCratesFromContracts(contracts), [contracts]);
 
+  const deliveryScuMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const contract of contracts)
+      for (const delivery of contract.deliveries)
+        map.set(delivery.id, delivery.scu);
+    return map;
+  }, [contracts]);
+
   const deliveryColors = useMemo(() => {
     const map = new Map<string, string>();
     for (const crate of allCrates) {
@@ -172,13 +178,6 @@ export default function CargoPlanner() {
     return map;
   }, [allCrates]);
 
-  const deliveryScuMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const contract of contracts)
-      for (const delivery of contract.deliveries)
-        map.set(delivery.id, delivery.scu);
-    return map;
-  }, [contracts]);
 
   const totalPlacedScu = useMemo(() => placedCrates.reduce((sum, c) => sum + c.size, 0), [placedCrates]);
   const totalDeliveredScu = useMemo(() => archivedDeliveries.reduce((sum, a) => sum + a.totalScu, 0), [archivedDeliveries]);
@@ -271,7 +270,6 @@ export default function CargoPlanner() {
     setPlacedCrates([]);
     setFragments([]);
     setSelectedDelivery(null);
-    setResetConfirm(false);
     drag.clear();
   }
 
@@ -344,14 +342,6 @@ export default function CargoPlanner() {
     pushHistorySnapshot();
     setContracts(reordered);
     setPlacedCrates(buildFromFragments(reordered, fragments, shipId, sortMode));
-    drag.clear();
-  }
-
-  function organizeCargo(mode: SortMode) {
-    pushHistorySnapshot();
-    setSortMode(mode);
-    setPlacedCrates(buildFromFragments(contracts, fragments, shipId, mode));
-    setEditingContract(null);
     drag.clear();
   }
 
@@ -517,14 +507,24 @@ export default function CargoPlanner() {
         shipCapacityScu={shipCapacityScu}
         maxCrateCapacity={maxCrateCapacity}
         totalDeliveredScu={totalDeliveredScu}
-        pendingCount={pendingCount}
-        onNavigateToPlacement={() => setActiveTab("placement")}
       />
     </>
   );
 
   const contractsTabContent = (
     <>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+        {deleteAllConfirm ? (
+          <>
+            <button onClick={deleteAllContracts} className="btn-danger" style={{ flex: 1 }}>Confirmer</button>
+            <button onClick={() => setDeleteAllConfirm(false)} className="btn-secondary" style={{ flex: 1, fontSize: "11px" }}>Annuler suppression</button>
+          </>
+        ) : (
+          <button onClick={() => setDeleteAllConfirm(true)} disabled={contracts.length === 0} className="btn-danger" style={{ flex: 1 }}>
+            ✕ Supprimer tous les contrats
+          </button>
+        )}
+      </div>
       <ContractForm
         key={contractFormKey}
         onAdd={addContract}
@@ -542,42 +542,16 @@ export default function CargoPlanner() {
         onReorder={reorderContracts}
         onRetractFragment={handleRetractFragment}
       />
-      {contracts.length > 0 && (
-        <div className="scifi-panel" style={{ marginBottom: "10px" }}>
-          <div className="corner-tl" /><div className="corner-br" />
-          {deleteAllConfirm ? (
-            <>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--danger)", textAlign: "center", marginBottom: "8px" }}>
-                Tous les contrats et caisses seront supprimés.
-              </div>
-              <div style={{ display: "flex", gap: "6px" }}>
-                <button onClick={deleteAllContracts} className="btn-danger" style={{ flex: 1 }}>Confirmer</button>
-                <button onClick={() => setDeleteAllConfirm(false)} className="btn-secondary" style={{ flex: 1 }}>Annuler</button>
-              </div>
-            </>
-          ) : (
-            <button onClick={() => setDeleteAllConfirm(true)} className="btn-danger" style={{ width: "100%" }}>
-              ✕ Supprimer tous les contrats
-            </button>
-          )}
-        </div>
-      )}
     </>
   );
 
   const placementTabContent = (
     <>
-      <OrganisationPanel
-        sortMode={sortMode}
-        onSortModeChange={setSortMode}
-        canUndo={canUndo}
-        onUndo={undoLastAction}
-        onOrganize={() => organizeCargo(sortMode)}
-        resetConfirm={resetConfirm}
-        onRequestReset={() => setResetConfirm(true)}
-        onCancelReset={() => setResetConfirm(false)}
-        onConfirmReset={clearPlacement}
-      />
+      <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+        <button onClick={undoLastAction} disabled={!canUndo} className="btn-secondary" style={{ flex: 1 }}>
+          ↩ Annuler
+        </button>
+      </div>
       <PendingDeliveriesPanel
         contracts={contracts}
         placedScuByDelivery={placedScuByDelivery}
@@ -586,8 +560,10 @@ export default function CargoPlanner() {
         deliveryColors={deliveryColors}
         selectedDeliveryId={selectedDelivery?.deliveryId ?? null}
         highlightedDeliveryId={placedCrates.find((c) => c.id === drag.selectedCrateId)?.deliveryId ?? null}
-        focusedDeliveryId={focusedDeliveryId}
-        onFocusDelivery={(id) => setFocusedDeliveryId((prev) => prev === id ? null : id)}
+        markedDeliveryIds={markedDeliveryIds}
+        onMarkDelivery={(id) => setMarkedDeliveryIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id])}
+        onClearMarked={() => setMarkedDeliveryIds([])}
+        onClearPlacement={clearPlacement}
         activatedDeliveries={activatedDeliveries}
         onActivateDelivery={(id) => { pushHistorySnapshot(); setActivatedDeliveries((prev) => [...prev, id]); }}
         onDeactivateDelivery={(id) => {
@@ -632,7 +608,7 @@ export default function CargoPlanner() {
           onEndDrag={handleEndDrag}
           dragRotation={drag.dragRotation}
           onRotate={drag.rotate}
-          focusedDeliveryId={focusedDeliveryId}
+          markedDeliveryIds={markedDeliveryIds}
           isAssigningDelivery={selectedDelivery !== null && selectedDelivery.pendingScu > 0}
           onBayClick={handleBayClick}
         />
