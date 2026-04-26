@@ -111,10 +111,11 @@ export default function PendingDeliveriesPanel({
     return { sortedItems: [...sorted, ...waitingItems], loadedCount: loaded, waitingCount: waiting };
   }, [items]);
 
+  const [viderConfirm, setViderConfirm] = useState(false);
+
   if (items.length === 0 && archivedDeliveries.length === 0) return null;
 
   const isSelecting = selectedDeliveryId !== null;
-  const [viderConfirm, setViderConfirm] = useState(false);
   const deliveredCount = archivedDeliveries.length;
 
   function getBayLabel(bayId: string): string {

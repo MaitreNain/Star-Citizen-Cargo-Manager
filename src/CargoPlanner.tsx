@@ -23,6 +23,7 @@ import { createCratesFromContracts } from "./engine/createCratesFromContracts";
 import { placeCratesInBay } from "./engine/placeCratesInBay";
 import { placeCratesInShip } from "./engine/placeCratesInShip";
 import { resolveStackPosition } from "./engine/resolveStackPosition";
+import { applyGravity } from "./engine/applyGravity";
 import { getRotatedDimensions } from "./engine/getRotatedDimensions";
 import { sortCrates, type SortMode } from "./engine/sortCrates";
 
@@ -450,11 +451,13 @@ export default function CargoPlanner() {
 
   function moveCrate(crateId: string, newPosition: { bayId: string; x: number; y: number; z: number }, rotatedDimensions?: { x: number; y: number; z: number }) {
     setPlacedCrates((prev) => {
-      const next = prev.map((crate) =>
+      const afterMove = prev.map((crate) =>
         crate.id === crateId
           ? { ...crate, bayId: newPosition.bayId, gridPosition: { x: newPosition.x, y: newPosition.y, z: newPosition.z }, dimensions: rotatedDimensions ?? crate.dimensions }
           : crate
       );
+
+      const next = applyGravity(afterMove, ship.cargoBays);
 
       const fragmentMap = new Map<string, DeliveryFragment>();
       for (const crate of next) {

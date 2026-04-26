@@ -195,9 +195,16 @@ style.textContent = `
     letter-spacing: 0.07em;
     transition: background 0.18s, border-color 0.18s;
   }
-  .btn-danger:hover {
+  .btn-danger:hover:not(:disabled) {
     background: rgba(224,80,80,0.2);
     border-color: var(--danger);
+  }
+  .btn-danger:disabled {
+    color: var(--text-muted);
+    border-color: var(--border);
+    background: transparent;
+    opacity: 0.4;
+    cursor: default;
   }
 
   .btn-cyan {
