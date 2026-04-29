@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import AppLayout, { type TabId } from "./ui/AppLayout";
+import TutorialOverlay from "./ui/TutorialOverlay";
 import ShipSelector from "./ui/ShipSelector";
 import ContractList from "./ui/ContractList";
 import ContractForm from "./ui/ContractForm";
@@ -65,6 +66,7 @@ export default function CargoPlanner() {
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
   const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
   const [contractFormKey, setContractFormKey] = useState(0);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
   const { canUndo, push: pushToHistory, pop: popHistory } = useHistory();
   const drag = useDragState();
@@ -504,7 +506,9 @@ export default function CargoPlanner() {
 
   const headerContent = (
     <>
-      <ShipSelector value={shipId} onChange={handleShipChange} />
+      <div id="tuto-ship">
+        <ShipSelector value={shipId} onChange={handleShipChange} />
+      </div>
       <CapacityPanel
         totalPlacedScu={totalPlacedScu}
         shipCapacityScu={shipCapacityScu}
@@ -516,14 +520,16 @@ export default function CargoPlanner() {
 
   const contractsTabContent = (
     <>
-      <ContractForm
-        key={contractFormKey}
-        onAdd={addContract}
-        onUpdate={updateContract}
-        contracts={contracts}
-        editingContract={editingContract}
-        onCancelEdit={() => setEditingContract(null)}
-      />
+      <div id="tuto-form">
+        <ContractForm
+          key={contractFormKey}
+          onAdd={addContract}
+          onUpdate={updateContract}
+          contracts={contracts}
+          editingContract={editingContract}
+          onCancelEdit={() => setEditingContract(null)}
+        />
+      </div>
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>
@@ -536,15 +542,17 @@ export default function CargoPlanner() {
           </button>
         )}
       </div>
-      <ContractList
-        contracts={contracts}
-        bays={ship.cargoBays}
-        fragments={fragments}
-        onDelete={deleteContract}
-        onEdit={(c) => setEditingContract(c)}
-        onReorder={reorderContracts}
-        onRetractFragment={handleRetractFragment}
-      />
+      <div id="tuto-list">
+        <ContractList
+          contracts={contracts}
+          bays={ship.cargoBays}
+          fragments={fragments}
+          onDelete={deleteContract}
+          onEdit={(c) => setEditingContract(c)}
+          onReorder={reorderContracts}
+          onRetractFragment={handleRetractFragment}
+        />
+      </div>
     </>
   );
 
@@ -555,42 +563,45 @@ export default function CargoPlanner() {
           ↩ Annuler
         </button>
       </div>
-      <PendingDeliveriesPanel
-        contracts={contracts}
-        placedScuByDelivery={placedScuByDelivery}
-        fragments={fragments}
-        bays={ship.cargoBays}
-        deliveryColors={deliveryColors}
-        selectedDeliveryId={selectedDelivery?.deliveryId ?? null}
-        highlightedDeliveryId={placedCrates.find((c) => c.id === drag.selectedCrateId)?.deliveryId ?? null}
-        markedDeliveryIds={markedDeliveryIds}
-        onMarkDelivery={(id) => setMarkedDeliveryIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id])}
-        onClearMarked={() => setMarkedDeliveryIds([])}
-        onClearPlacement={clearPlacement}
-        activatedDeliveries={activatedDeliveries}
-        onActivateDelivery={(id) => { pushHistorySnapshot(); setActivatedDeliveries((prev) => [...prev, id]); }}
-        onDeactivateDelivery={(id) => {
-          pushHistorySnapshot();
-          setActivatedDeliveries((prev) => prev.filter((d) => d !== id));
-          setPlacedCrates((prev) => prev.filter((c) => c.deliveryId !== id));
-          setFragments((prev) => prev.filter((f) => f.deliveryId !== id));
-          if (selectedDelivery?.deliveryId === id) setSelectedDelivery(null);
-        }}
-        onSelectDelivery={(deliveryId, contractId, scu) => {
-          if (!activatedDeliveries.includes(deliveryId)) return;
-          setSelectedDelivery({ deliveryId, contractId, pendingScu: scu });
-          drag.setSelectedCrateId(null);
-        }}
-        onCancelSelection={() => setSelectedDelivery(null)}
-        onRetractFragment={handleRetractFragment}
-        archivedDeliveries={archivedDeliveries}
-        onArchiveDelivery={archiveDelivery}
-        onRestoreDelivery={restoreDelivery}
-      />
+      <div id="tuto-deliveries">
+        <PendingDeliveriesPanel
+          contracts={contracts}
+          placedScuByDelivery={placedScuByDelivery}
+          fragments={fragments}
+          bays={ship.cargoBays}
+          deliveryColors={deliveryColors}
+          selectedDeliveryId={selectedDelivery?.deliveryId ?? null}
+          highlightedDeliveryId={placedCrates.find((c) => c.id === drag.selectedCrateId)?.deliveryId ?? null}
+          markedDeliveryIds={markedDeliveryIds}
+          onMarkDelivery={(id) => setMarkedDeliveryIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id])}
+          onClearMarked={() => setMarkedDeliveryIds([])}
+          onClearPlacement={clearPlacement}
+          activatedDeliveries={activatedDeliveries}
+          onActivateDelivery={(id) => { pushHistorySnapshot(); setActivatedDeliveries((prev) => [...prev, id]); }}
+          onDeactivateDelivery={(id) => {
+            pushHistorySnapshot();
+            setActivatedDeliveries((prev) => prev.filter((d) => d !== id));
+            setPlacedCrates((prev) => prev.filter((c) => c.deliveryId !== id));
+            setFragments((prev) => prev.filter((f) => f.deliveryId !== id));
+            if (selectedDelivery?.deliveryId === id) setSelectedDelivery(null);
+          }}
+          onSelectDelivery={(deliveryId, contractId, scu) => {
+            if (!activatedDeliveries.includes(deliveryId)) return;
+            setSelectedDelivery({ deliveryId, contractId, pendingScu: scu });
+            drag.setSelectedCrateId(null);
+          }}
+          onCancelSelection={() => setSelectedDelivery(null)}
+          onRetractFragment={handleRetractFragment}
+          archivedDeliveries={archivedDeliveries}
+          onArchiveDelivery={archiveDelivery}
+          onRestoreDelivery={restoreDelivery}
+        />
+      </div>
     </>
   );
 
   return (
+    <>
     <AppLayout
       header={headerContent}
       contractsTab={contractsTabContent}
@@ -598,6 +609,7 @@ export default function CargoPlanner() {
       pendingCount={pendingCount}
       activeTab={activeTab}
       onTabChange={setActiveTab}
+      onStartTutorial={() => setTutorialOpen(true)}
       content={
         <CargoScene
           ship={ship}
@@ -617,5 +629,12 @@ export default function CargoPlanner() {
         />
       }
     />
+    {tutorialOpen && (
+      <TutorialOverlay
+        onClose={() => setTutorialOpen(false)}
+        onChangeTab={setActiveTab}
+      />
+    )}
+    </>
   );
 }

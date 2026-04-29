@@ -392,6 +392,7 @@ if (!document.head.querySelector("[data-scifi-styles]")) {
 
 export type TabId = "contracts" | "placement";
 
+
 const SESSION_KEY = "cargo-planner-session-start";
 
 function getSessionStart(): number {
@@ -441,6 +442,8 @@ type Props = {
   onTabChange?: (tab: TabId) => void;
   // Vue 3D
   content: React.ReactNode;
+  // Tutoriel
+  onStartTutorial?: () => void;
 };
 
 export default function AppLayout({
@@ -451,6 +454,7 @@ export default function AppLayout({
   activeTab: controlledTab,
   onTabChange,
   content,
+  onStartTutorial,
 }: Props) {
   const [isNarrow, setIsNarrow] = useState(window.innerWidth < 1100);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1100);
@@ -478,8 +482,26 @@ export default function AppLayout({
       <div className="hud-bar">
         <div className="hud-dot" />
         <span className="hud-title">Cargo Planner</span>
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "10px" }}>
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <SessionTimer />
+          {onStartTutorial && (
+            <button
+              onClick={onStartTutorial}
+              title="Guide d'utilisation"
+              style={{
+                background: "none",
+                border: "1px solid var(--border-glow)",
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                lineHeight: 1,
+                padding: "2px 7px",
+                borderRadius: "2px",
+                letterSpacing: "0.04em",
+              }}
+            >?</button>
+          )}
           <span className="hud-status">● ONLINE</span>
         </span>
       </div>
@@ -496,6 +518,7 @@ export default function AppLayout({
           Contrats
         </button>
         <button
+          id="tuto-tab-placement"
           className={`tab-btn${activeTab === "placement" ? " active" : ""}`}
           onClick={() => setTab("placement")}
         >
@@ -526,7 +549,7 @@ export default function AppLayout({
   if (isNarrow) {
     return (
       <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "var(--bg)", position: "relative" }}>
-        <div style={{ width: "100%", height: "100%" }}>{content}</div>
+        <div id="tuto-scene" style={{ width: "100%", height: "100%" }}>{content}</div>
 
         <button
           onClick={() => setSidebarOpen((p) => !p)}
@@ -569,7 +592,7 @@ export default function AppLayout({
         {sidebarContent}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+      <div id="tuto-scene" style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
         {content}
       </div>
     </div>
