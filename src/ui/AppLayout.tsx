@@ -481,7 +481,7 @@ export default function AppLayout({
       {/* HUD */}
       <div className="hud-bar">
         <div className="hud-dot" />
-        <span className="hud-title">Cargo Planner</span>
+        <span className="hud-title">Cargo Manager</span>
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <SessionTimer />
           <span className="hud-status">● ONLINE</span>
