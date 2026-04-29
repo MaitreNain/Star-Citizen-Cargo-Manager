@@ -484,27 +484,39 @@ export default function AppLayout({
         <span className="hud-title">Cargo Planner</span>
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <SessionTimer />
-          {onStartTutorial && (
-            <button
-              onClick={onStartTutorial}
-              title="Guide d'utilisation"
-              style={{
-                background: "none",
-                border: "1px solid var(--border-glow)",
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                lineHeight: 1,
-                padding: "2px 7px",
-                borderRadius: "2px",
-                letterSpacing: "0.04em",
-              }}
-            >?</button>
-          )}
           <span className="hud-status">● ONLINE</span>
         </span>
       </div>
+
+      {/* Bouton tutoriel */}
+      {onStartTutorial && (
+        <button
+          onClick={onStartTutorial}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            width: "100%",
+            marginBottom: "12px",
+            padding: "8px 12px",
+            background: "rgba(56,189,248,0.07)",
+            border: "1px solid var(--cyan)",
+            borderRadius: "3px",
+            color: "var(--cyan)",
+            cursor: "pointer",
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            boxShadow: "0 0 12px rgba(56,189,248,0.15), inset 0 0 12px rgba(56,189,248,0.04)",
+          }}
+        >
+          <span style={{ fontSize: "13px" }}>▶</span>
+          Tutoriel — Comment utiliser l'app
+        </button>
+      )}
 
       {/* Header fixe (vaisseau + SCU) */}
       {header}
