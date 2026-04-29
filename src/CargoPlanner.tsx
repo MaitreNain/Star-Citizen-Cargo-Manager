@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import AppLayout, { type TabId } from "./ui/AppLayout";
-import TutorialOverlay from "./ui/TutorialOverlay";
+import TutorialOverlay, { TUTORIAL_DEMO_CONTRACT } from "./ui/TutorialOverlay";
 import ShipSelector from "./ui/ShipSelector";
 import ContractList from "./ui/ContractList";
 import ContractForm from "./ui/ContractForm";
@@ -51,7 +51,7 @@ function saveToStorage(data: object) {
 export default function CargoPlanner() {
   const saved = useMemo(() => loadFromStorage(), []);
 
-  const [shipId, setShipId] = useState<string>(saved?.shipId ?? ships[0].id);
+  const [shipId, setShipId] = useState<string>(saved?.shipId ?? "c2-hercules-starlifter");
   const [contracts, setContracts] = useState<Contract[]>(saved?.contracts ?? initialContracts);
   const [fragments, setFragments] = useState<DeliveryFragment[]>(saved?.fragments ?? []);
   const [placedCrates, setPlacedCrates] = useState<PlacedCrateWithMeta[]>(saved?.placedCrates ?? []);
@@ -77,6 +77,20 @@ export default function CargoPlanner() {
 
   const ship = useMemo(() => ships.find((s) => s.id === shipId)!, [shipId]);
   const shipCapacityScu = useMemo(() => ship.cargoBays.reduce((sum, bay) => sum + bay.size.x * bay.size.y * bay.size.z, 0), [ship]);
+
+  const demoPlacedCrates = useMemo((): PlacedCrateWithMeta[] => {
+    if (!tutorialOpen || ship.cargoBays.length === 0) return [];
+    const crates = createCratesFromContracts([TUTORIAL_DEMO_CONTRACT]);
+    const withBay = crates.map((c) => ({
+      ...c,
+      assignedBayId: c.deliveryId === "__demo_d1__"
+        ? ship.cargoBays[0].id
+        : (ship.cargoBays[1]?.id ?? ship.cargoBays[0].id),
+    }));
+    const sorted = sortCrates(withBay, "destination");
+    const result = placeCratesInShip(sorted, ship);
+    return result.placed as PlacedCrateWithMeta[];
+  }, [tutorialOpen, ship]);
 
   const maxCrateCapacity = useMemo(() => {
     const sizes = [32, 24, 16, 8, 4, 2, 1];
@@ -551,6 +565,9 @@ export default function CargoPlanner() {
           onEdit={(c) => setEditingContract(c)}
           onReorder={reorderContracts}
           onRetractFragment={handleRetractFragment}
+          demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
+          onArchiveDelivery={archiveDelivery}
+          onRestoreDelivery={restoreDelivery}
         />
       </div>
     </>
@@ -595,6 +612,7 @@ export default function CargoPlanner() {
           archivedDeliveries={archivedDeliveries}
           onArchiveDelivery={archiveDelivery}
           onRestoreDelivery={restoreDelivery}
+          demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
         />
       </div>
     </>
@@ -613,7 +631,7 @@ export default function CargoPlanner() {
       content={
         <CargoScene
           ship={ship}
-          placedCrates={placedCrates}
+          placedCrates={tutorialOpen ? [...placedCrates, ...demoPlacedCrates] : placedCrates}
           selectedCrateId={drag.selectedCrateId}
           onSelectCrate={handleSelectCrate}
           hoveredCell={drag.hoveredCell}

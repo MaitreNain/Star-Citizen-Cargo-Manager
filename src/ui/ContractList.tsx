@@ -10,6 +10,7 @@ type Props = {
   onEdit: (contract: Contract) => void;
   onReorder: (reordered: Contract[]) => void;
   onRetractFragment: (fragment: DeliveryFragment) => void;
+  demoContract?: Contract;
 };
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -33,6 +34,7 @@ export default function ContractList({
   onEdit,
   onReorder,
   onRetractFragment,
+  demoContract,
 }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
@@ -71,7 +73,9 @@ export default function ContractList({
     onReorder(reordered.map((c, i) => ({ ...c, deliveryOrder: i + 1 })));
   }
 
-  if (contracts.length === 0) return null;
+  if (contracts.length === 0 && !demoContract) return null;
+
+  const allContracts = demoContract ? [demoContract, ...contracts] : contracts;
 
   return (
     <div className="scifi-panel" style={{ marginBottom: "10px" }}>
@@ -79,7 +83,8 @@ export default function ContractList({
       <div className="corner-br" />
       <div className="section-header">Contrats</div>
 
-      {contracts.map((contract, index) => {
+      {allContracts.map((contract, index) => {
+        const isDemo = contract.id === "__tutorial_demo__";
         const { totalScu, placedScu } = contractStats.get(contract.id) ?? { totalScu: 0, placedScu: 0 };
         const hasFragments = contract.deliveries.some((d) => (fragmentsByDelivery.get(d.id)?.length ?? 0) > 0);
         const isOverflow = placedScu < totalScu && hasFragments;
@@ -87,11 +92,11 @@ export default function ContractList({
         return (
           <div
             key={contract.id}
-            draggable
-            onDragStart={() => setDragIndex(index)}
+            draggable={!isDemo}
+            onDragStart={() => { if (!isDemo) setDragIndex(index); }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => {
-              if (dragIndex !== null && dragIndex !== index) moveContract(dragIndex, index);
+              if (!isDemo && dragIndex !== null && dragIndex !== index) moveContract(dragIndex, index);
               setDragIndex(null);
             }}
             onDragEnd={() => setDragIndex(null)}
@@ -117,6 +122,11 @@ export default function ContractList({
                 <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text)", letterSpacing: "0.04em" }}>
                   {contract.name}
                 </span>
+                {isDemo && (
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 5px", borderRadius: "2px", opacity: 0.7 }}>
+                    EXEMPLE
+                  </span>
+                )}
                 {isOverflow && (
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--danger)", border: "1px solid var(--danger)", padding: "1px 5px", borderRadius: "2px" }}>
                     ⚠ DÉBORDEMENT
@@ -201,14 +211,16 @@ export default function ContractList({
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: "6px" }}>
-                <button onClick={() => onEdit(contract)} className="btn-secondary" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
-                  Modifier
-                </button>
-                <button onClick={() => onDelete(contract.id)} className="btn-danger" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
-                  Supprimer
-                </button>
-              </div>
+              {!isDemo && (
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button onClick={() => onEdit(contract)} className="btn-secondary" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
+                    Modifier
+                  </button>
+                  <button onClick={() => onDelete(contract.id)} className="btn-danger" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
+                    Supprimer
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );

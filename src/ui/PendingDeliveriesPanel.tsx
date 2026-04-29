@@ -19,6 +19,7 @@ type DeliveryItem = {
   totalScu: number;
   pendingScu: number;
   state: "waiting" | "loaded";
+  isDemo?: boolean;
 };
 
 type Props = {
@@ -42,6 +43,7 @@ type Props = {
   archivedDeliveries: ArchivedDelivery[];
   onArchiveDelivery: (deliveryId: string) => void;
   onRestoreDelivery: (archived: ArchivedDelivery) => void;
+  demoContract?: Contract;
 };
 
 export default function PendingDeliveriesPanel({
@@ -65,6 +67,7 @@ export default function PendingDeliveriesPanel({
   archivedDeliveries,
   onArchiveDelivery,
   onRestoreDelivery,
+  demoContract,
 }: Props) {
   const highlightedRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +80,25 @@ export default function PendingDeliveriesPanel({
   const items = useMemo(() => {
     const archivedIds = new Set(archivedDeliveries.map((a) => a.deliveryId));
     const result: DeliveryItem[] = [];
+
+    if (demoContract) {
+      for (const delivery of demoContract.deliveries) {
+        result.push({
+          contractId: demoContract.id,
+          contractName: demoContract.name,
+          contractColor: demoContract.color,
+          deliveryId: delivery.id,
+          destination: delivery.destination,
+          commodity: delivery.commodity,
+          pickupLocation: delivery.pickupLocation,
+          totalScu: delivery.scu,
+          pendingScu: 0,
+          state: "loaded",
+          isDemo: true,
+        });
+      }
+    }
+
     for (const contract of contracts) {
       for (const delivery of contract.deliveries) {
         if (delivery.scu <= 0) continue;
@@ -98,7 +120,7 @@ export default function PendingDeliveriesPanel({
       }
     }
     return result;
-  }, [contracts, placedScuByDelivery, activatedDeliveries, archivedDeliveries]);
+  }, [contracts, placedScuByDelivery, activatedDeliveries, archivedDeliveries, demoContract]);
 
   const { sortedItems, loadedCount, waitingCount } = useMemo(() => {
     let loaded = 0, waiting = 0;
@@ -124,7 +146,8 @@ export default function PendingDeliveriesPanel({
   }
 
   function renderItem(item: DeliveryItem) {
-    const isSelected = selectedDeliveryId === item.deliveryId;
+    const isDemo = item.isDemo === true;
+    const isSelected = !isDemo && selectedDeliveryId === item.deliveryId;
     const isComplete = item.pendingScu <= 0 && item.state === "loaded";
     const deliveryFragments = fragments.filter((f) => f.deliveryId === item.deliveryId);
     const showDetails = isSelected && deliveryFragments.length > 0;
@@ -164,7 +187,7 @@ export default function PendingDeliveriesPanel({
         {/* Carte livraison */}
         <div
           onClick={() => {
-            if (isWaiting) return;
+            if (isDemo || isWaiting) return;
             if (isSelected) onCancelSelection();
             else onSelectDelivery(item.deliveryId, item.contractId, item.pendingScu);
           }}
@@ -243,7 +266,11 @@ export default function PendingDeliveriesPanel({
 
             {/* Ligne 5 : boutons alignés à droite */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-              {isWaiting ? (
+              {isDemo ? (
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 5px", borderRadius: "2px", opacity: 0.7, alignSelf: "center" }}>
+                  EXEMPLE
+                </span>
+              ) : isWaiting ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
                   style={{
@@ -275,17 +302,19 @@ export default function PendingDeliveriesPanel({
                   >{isMarked ? "◉ Marqué" : "◎ Marquer"}</button>
                 </>
               )}
-              <button
-                onClick={(e) => { e.stopPropagation(); if (item.state === "loaded") onDeactivateDelivery(item.deliveryId); }}
-                disabled={item.state === "waiting"}
-                style={{
-                  background: "none",
-                  border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
-                  color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
-                  cursor: item.state === "waiting" ? "default" : "pointer",
-                  fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
-                }}
-              >↩ Annuler</button>
+              {!isDemo && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (item.state === "loaded") onDeactivateDelivery(item.deliveryId); }}
+                  disabled={item.state === "waiting"}
+                  style={{
+                    background: "none",
+                    border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
+                    color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
+                    cursor: item.state === "waiting" ? "default" : "pointer",
+                    fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
+                  }}
+                >↩ Annuler</button>
+              )}
             </div>
           </div>
         </div>
