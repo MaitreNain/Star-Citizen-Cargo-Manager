@@ -516,6 +516,14 @@ export default function CargoPlanner() {
 
   const contractsTabContent = (
     <>
+      <ContractForm
+        key={contractFormKey}
+        onAdd={addContract}
+        onUpdate={updateContract}
+        contracts={contracts}
+        editingContract={editingContract}
+        onCancelEdit={() => setEditingContract(null)}
+      />
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>
@@ -528,14 +536,6 @@ export default function CargoPlanner() {
           </button>
         )}
       </div>
-      <ContractForm
-        key={contractFormKey}
-        onAdd={addContract}
-        onUpdate={updateContract}
-        contracts={contracts}
-        editingContract={editingContract}
-        onCancelEdit={() => setEditingContract(null)}
-      />
       <ContractList
         contracts={contracts}
         bays={ship.cargoBays}
