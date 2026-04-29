@@ -566,8 +566,6 @@ export default function CargoPlanner() {
           onReorder={reorderContracts}
           onRetractFragment={handleRetractFragment}
           demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
-          onArchiveDelivery={archiveDelivery}
-          onRestoreDelivery={restoreDelivery}
         />
       </div>
     </>
