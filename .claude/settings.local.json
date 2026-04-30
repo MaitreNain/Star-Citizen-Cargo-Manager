@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npm run *)",
+      "Bash(grep -v \"^dist\\\\|^$\\\\|chunkSize\\\\|dynamic import\\\\|manualChunks\\\\|rollupOptions\\\\|Adjust\")",
+      "Bash(grep -v \"^dist\\\\|^$\\\\|chunkSize\\\\|dynamic import\\\\|manualChunks\\\\|rollupOptions\\\\|Adjust\\\\|computing\\\\|built in\")",
+      "Bash(grep -v \"dist/\\\\|chunkSize\\\\|dynamic import\\\\|manualChunks\\\\|rollupOptions\\\\|Adjust\\\\|computing\\\\|built in\\\\|transforming\\\\|rendering\\\\|modules\\\\|^$\")",
+      "Bash(grep -v \"dist/\\\\|chunkSize\\\\|dynamic import\\\\|manualChunks\\\\|rollupOptions\\\\|Adjust\\\\|computing\\\\|built in\\\\|transforming\\\\|rendering\\\\|modules\\\\|^$\\\\|^>\")"
     ]
   }
 }
