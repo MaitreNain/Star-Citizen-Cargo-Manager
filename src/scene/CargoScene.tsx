@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 
 import CargoBayMesh from "./CargoBayMesh";
+import CompoundBayMesh from "./CompoundBayMesh";
 import CrateMesh from "./CrateMesh";
 import CratePreviewMesh from "./CratePreviewMesh";
 import OrientationMarkers from "./OrientationMarkers";
@@ -10,6 +11,7 @@ import OrientationMarkers from "./OrientationMarkers";
 import { checkCollision } from "../engine/checkCollision";
 import { resolveStackPosition } from "../engine/resolveStackPosition";
 import { getRotatedDimensions } from "../engine/getRotatedDimensions";
+import { buildCompoundBays } from "../engine/buildCompoundBays";
 
 import type { Ship } from "../types/Ship";
 import type { HoveredCell, PlacedCrateWithMeta } from "../types/planner";
@@ -56,6 +58,45 @@ export default function CargoScene({
 }: Props) {
   const draggedCrate = placedCrates.find((c) => c.id === draggedCrateId);
 
+  const { compoundBays, individualBays } = useMemo(
+    () => buildCompoundBays(ship.cargoBays),
+    [ship.cargoBays]
+  );
+
+  // Calcule les numéros d'affichage de chaque soute (individuelles et composées)
+  const bayDisplayInfo = useMemo(() => {
+    const individual = new Map<string, number>();
+    const compound = new Map<string, number[]>();
+    const processedGroups = new Set<string>();
+    let num = 1;
+    for (const bay of ship.cargoBays) {
+      if (!bay.group) {
+        individual.set(bay.id, num++);
+      } else if (!processedGroups.has(bay.group)) {
+        processedGroups.add(bay.group);
+        compound.set(bay.group, [num++]);
+      }
+    }
+    return { individual, compound };
+  }, [ship.cargoBays]);
+
+  // Résout l'offset world d'une caisse (soute individuelle ou composée)
+  function resolveBayOffset(bayId: string) {
+    const bay = ship.cargoBays.find((b) => b.id === bayId);
+    if (bay) return bay.offset;
+    const cb = compoundBays.find((c) => c.id === bayId);
+    return cb?.worldOffset ?? { x: 0, y: 0, z: 0 };
+  }
+
+  // Résout une soute (individuelle ou virtuelle composée) pour resolveStackPosition
+  function resolveBayForStack(bayId: string) {
+    const bay = ship.cargoBays.find((b) => b.id === bayId);
+    if (bay) return bay;
+    const cb = compoundBays.find((c) => c.id === bayId);
+    if (cb) return { id: cb.id, size: cb.boundingBox, sections: cb.sections };
+    return null;
+  }
+
   // Touche R pour pivoter pendant le drag de caisse
   const onRotateRef = useRef(onRotate);
   onRotateRef.current = onRotate;
@@ -93,12 +134,13 @@ export default function CargoScene({
   let preview: React.ReactNode = null;
 
   if (draggedCrate && hoveredCell) {
-    const bay = ship.cargoBays.find((b) => b.id === hoveredCell.bayId);
-    if (bay) {
+    const bayForStack = resolveBayForStack(hoveredCell.bayId);
+    if (bayForStack) {
+      const bayOffset = resolveBayOffset(hoveredCell.bayId);
       const rotatedDimensions = getRotatedDimensions(draggedCrate.dimensions, dragRotation);
       const rotatedCrate = { ...draggedCrate, dimensions: rotatedDimensions };
       const resolvedPosition = resolveStackPosition(
-        rotatedCrate, { x: hoveredCell.x, y: hoveredCell.y }, bay, placedCrates
+        rotatedCrate, { x: hoveredCell.x, y: hoveredCell.y }, bayForStack, placedCrates
       );
 
       if (resolvedPosition) {
@@ -106,21 +148,21 @@ export default function CargoScene({
           <CratePreviewMesh
             size={rotatedDimensions}
             gridPosition={resolvedPosition}
-            bayOffset={bay.offset}
+            bayOffset={bayOffset}
             valid={true}
           />
         );
       } else {
         const collides = checkCollision(
           rotatedCrate,
-          { bayId: bay.id, x: hoveredCell.x, y: hoveredCell.y, z: 0 },
+          { bayId: bayForStack.id, x: hoveredCell.x, y: hoveredCell.y, z: 0 },
           placedCrates
         );
         preview = (
           <CratePreviewMesh
             size={rotatedDimensions}
             gridPosition={{ x: hoveredCell.x, y: hoveredCell.y, z: 0 }}
-            bayOffset={bay.offset}
+            bayOffset={bayOffset}
             valid={!collides}
           />
         );
@@ -144,11 +186,25 @@ export default function CargoScene({
         <ambientLight intensity={0.8} color="#a0c0d8" />
         <directionalLight position={[10, 20, 8]} intensity={0.9} color="#ffffff" />
 
-        {ship.cargoBays.map((bay, index) => (
+        {/* Soutes individuelles */}
+        {individualBays.map((bay) => (
           <CargoBayMesh
             key={bay.id}
             bay={bay}
-            bayNumber={index + 1}
+            bayNumber={bayDisplayInfo.individual.get(bay.id) ?? 1}
+            isAssignTarget={isAssigningDelivery}
+            onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
+            onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
+            onBayClick={onBayClick}
+          />
+        ))}
+
+        {/* Soutes composées */}
+        {compoundBays.map((compound) => (
+          <CompoundBayMesh
+            key={compound.id}
+            compound={compound}
+            bayNumbers={bayDisplayInfo.compound.get(compound.id) ?? []}
             isAssignTarget={isAssigningDelivery}
             onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
             onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
@@ -159,8 +215,7 @@ export default function CargoScene({
         <OrientationMarkers cargoBays={ship.cargoBays} />
 
         {placedCrates.map((crate) => {
-          const bay = ship.cargoBays.find((b) => b.id === crate.bayId);
-          if (!bay) return null;
+          const bayOffset = resolveBayOffset(crate.bayId);
           const isDimmed = markedDeliveryIds.length > 0 && !markedDeliveryIds.includes(crate.deliveryId ?? "");
           return (
             <CrateMesh
@@ -168,7 +223,7 @@ export default function CargoScene({
               crateId={crate.id}
               size={crate.dimensions}
               gridPosition={crate.gridPosition}
-              bayOffset={bay.offset}
+              bayOffset={bayOffset}
               color={crate.color}
               label={crate.destination}
               selected={crate.id === selectedCrateId}

@@ -1,5 +1,7 @@
 import { checkSupport } from "./checkSupport";
+import { checkSupportInCompound } from "./placeCratesInCompoundBay";
 import { resolveStackPosition } from "./resolveStackPosition";
+import type { CompoundSection } from "../types/CompoundBay";
 
 type Vector3 = { x: number; y: number; z: number };
 
@@ -13,6 +15,7 @@ type PlacedCrateLike = {
 type CargoBayLike = {
   id: string;
   size: Vector3;
+  sections?: CompoundSection[];
 };
 
 function findElsewhere(
@@ -34,12 +37,18 @@ export function applyGravity<T extends PlacedCrateLike>(
   crates: T[],
   bays: CargoBayLike[]
 ): T[] {
-  const bayMap = new Map(bays.map(b => [b.id, b]));
+  const bayMap = new Map(bays.map((b) => [b.id, b]));
   let state = [...crates];
 
   while (true) {
     const unsupported = state
-      .filter(c => !checkSupport(c, c.gridPosition, state, c.bayId))
+      .filter((c) => {
+        const bay = bayMap.get(c.bayId);
+        if (!bay) return false;
+        return bay.sections
+          ? !checkSupportInCompound(c, c.gridPosition, state, c.bayId, bay.sections)
+          : !checkSupport(c, c.gridPosition, state, c.bayId);
+      })
       .sort((a, b) => a.gridPosition.z - b.gridPosition.z);
 
     if (unsupported.length === 0) break;
@@ -47,19 +56,22 @@ export function applyGravity<T extends PlacedCrateLike>(
     let anyMoved = false;
 
     for (const crate of unsupported) {
-      if (checkSupport(crate, crate.gridPosition, state, crate.bayId)) continue;
-
       const bay = bayMap.get(crate.bayId);
       if (!bay) continue;
 
-      const others = state.filter(c => c.id !== crate.id);
+      const supported = bay.sections
+        ? checkSupportInCompound(crate, crate.gridPosition, state, crate.bayId, bay.sections)
+        : checkSupport(crate, crate.gridPosition, state, crate.bayId);
+      if (supported) continue;
+
+      const others = state.filter((c) => c.id !== crate.id);
 
       const pos =
         resolveStackPosition(crate, { x: crate.gridPosition.x, y: crate.gridPosition.y }, bay, others) ??
         findElsewhere(crate, bay, others);
 
       if (pos) {
-        state = state.map(c =>
+        state = state.map((c) =>
           c.id === crate.id
             ? { ...c, bayId: pos.bayId, gridPosition: { x: pos.x, y: pos.y, z: pos.z } }
             : c

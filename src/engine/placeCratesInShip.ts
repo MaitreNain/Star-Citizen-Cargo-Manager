@@ -1,6 +1,8 @@
 import type { PlacedCrate } from "../types/PlacedCrate";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
 import { placeCratesInBay } from "./placeCratesInBay";
+import { placeCratesInCompoundBay } from "./placeCratesInCompoundBay";
+import { buildCompoundBays } from "./buildCompoundBays";
 
 type Crate = {
   id: string;
@@ -19,6 +21,7 @@ type Bay = {
   id: string;
   name: string;
   size: { x: number; y: number; z: number };
+  group?: string;
 };
 
 type Ship = {
@@ -36,32 +39,38 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
   const placed: PlacedCrateWithSource[] = [];
   const fragmentMap = new Map<string, DeliveryFragment>();
 
-  // Groupe les caisses par baie assignée,
-  // en préservant l'ordre d'apparition des livraisons dans le tableau d'entrée.
+  const { compoundBays, individualBays } = buildCompoundBays(ship.cargoBays);
+
+  // Index de section → groupId pour la migration des anciennes données
+  const sectionToGroup = new Map<string, string>();
+  for (const bay of ship.cargoBays) {
+    if (bay.group) sectionToGroup.set(bay.id, bay.group);
+  }
+
+  // Groupe les caisses par baie assignée (ou groupId si section d'un groupe)
   const byBay = new Map<string, Map<string, Crate[]>>();
 
   for (const crate of crates) {
     if (!crate.assignedBayId) continue;
 
-    const bayId = crate.assignedBayId;
+    // Rétro-compatibilité : si l'assignedBayId est une section appartenant à un groupe,
+    // on reporte vers le groupId
+    const bayId = sectionToGroup.get(crate.assignedBayId) ?? crate.assignedBayId;
     const deliveryId = crate.deliveryId ?? crate.id;
 
     if (!byBay.has(bayId)) byBay.set(bayId, new Map());
     const deliveryMap = byBay.get(bayId)!;
-
     if (!deliveryMap.has(deliveryId)) deliveryMap.set(deliveryId, []);
     deliveryMap.get(deliveryId)!.push(crate);
   }
 
-  for (const bay of ship.cargoBays) {
+  // Placement dans les soutes individuelles
+  for (const bay of individualBays) {
     const deliveryMap = byBay.get(bay.id);
     if (!deliveryMap || deliveryMap.size === 0) continue;
 
     const inBay = () => placed.filter((p) => p.bayId === bay.id);
 
-    // Les livraisons sont dans l'ordre d'insertion de la Map,
-    // qui correspond à l'ordre d'apparition dans le tableau crates
-    // (lui-même ordonné par deliveryOrder via createCratesFromContracts + sortCrates)
     for (const [deliveryId, deliveryCrates] of deliveryMap) {
       const result = placeCratesInBay(deliveryCrates, bay, inBay(), 0).map((placedCrate) => {
         const source = deliveryCrates.find((c) => c.id === placedCrate.id)!;
@@ -72,7 +81,6 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
 
       const placedScu = result.reduce((sum, c) => sum + c.size, 0);
       const totalScu = deliveryCrates.reduce((sum, c) => sum + c.size, 0);
-
       if (placedScu > 0) {
         const fragmentKey = `${deliveryId}::${bay.id}`;
         fragmentMap.set(fragmentKey, {
@@ -80,6 +88,37 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
           contractId: deliveryCrates[0].contractId ?? "",
           deliveryId,
           bayId: bay.id,
+          placedScu,
+          totalScu,
+        });
+      }
+    }
+  }
+
+  // Placement dans les soutes composées
+  for (const compound of compoundBays) {
+    const deliveryMap = byBay.get(compound.id);
+    if (!deliveryMap || deliveryMap.size === 0) continue;
+
+    const inCompound = () => placed.filter((p) => p.bayId === compound.id);
+
+    for (const [deliveryId, deliveryCrates] of deliveryMap) {
+      const result = placeCratesInCompoundBay(deliveryCrates, compound, inCompound()).map((placedCrate) => {
+        const source = deliveryCrates.find((c) => c.id === placedCrate.id)!;
+        return { ...source, ...placedCrate };
+      });
+
+      placed.push(...result);
+
+      const placedScu = result.reduce((sum, c) => sum + c.size, 0);
+      const totalScu = deliveryCrates.reduce((sum, c) => sum + c.size, 0);
+      if (placedScu > 0) {
+        const fragmentKey = `${deliveryId}::${compound.id}`;
+        fragmentMap.set(fragmentKey, {
+          id: fragmentKey,
+          contractId: deliveryCrates[0].contractId ?? "",
+          deliveryId,
+          bayId: compound.id,
           placedScu,
           totalScu,
         });

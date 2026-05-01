@@ -1,5 +1,8 @@
 import { checkCollision } from "./checkCollision";
 import { checkSupport } from "./checkSupport";
+import { isValidCellInCompound } from "./buildCompoundBays";
+import { checkSupportInCompound } from "./placeCratesInCompoundBay";
+import type { CompoundSection } from "../types/CompoundBay";
 
 type Vector3 = {
   x: number;
@@ -10,6 +13,7 @@ type Vector3 = {
 type CargoBayLike = {
   id: string;
   size: Vector3;
+  sections?: CompoundSection[];
 };
 
 type PlacedCrateLike = {
@@ -35,20 +39,32 @@ export function resolveStackPosition(
       z,
     };
 
-    const fits =
+    const fitsBox =
       candidate.x + movingCrate.dimensions.x <= bay.size.x &&
       candidate.y + movingCrate.dimensions.y <= bay.size.y &&
       candidate.z + movingCrate.dimensions.z <= bay.size.z;
 
-    if (!fits) continue;
+    if (!fitsBox) continue;
+
+    // Pour les soutes composées, vérifier que tous les voxels sont dans l'union
+    if (bay.sections) {
+      let allValid = true;
+      outer:
+      for (let cx = candidate.x; cx < candidate.x + movingCrate.dimensions.x; cx++)
+        for (let cy = candidate.y; cy < candidate.y + movingCrate.dimensions.y; cy++)
+          for (let cz = z; cz < z + movingCrate.dimensions.z; cz++)
+            if (!isValidCellInCompound(cx, cy, cz, bay.sections)) { allValid = false; break outer; }
+      if (!allValid) continue;
+    }
 
     const collides = checkCollision(movingCrate, candidate, placedCrates);
     if (collides) continue;
 
-    const supported = checkSupport(movingCrate, candidate, placedCrates, bay.id);
+    const supported = bay.sections
+      ? checkSupportInCompound(movingCrate, candidate, placedCrates, bay.id, bay.sections)
+      : checkSupport(movingCrate, candidate, placedCrates, bay.id);
     if (!supported) continue;
 
-    // Première position valide = la plus basse possible
     return candidate;
   }
 

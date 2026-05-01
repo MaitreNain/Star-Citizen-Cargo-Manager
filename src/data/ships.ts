@@ -96,6 +96,33 @@ export const ships: Ship[] = [
     ],
   },
 
+{
+  id: "caterpillar",
+  name: "Caterpillar",
+  cargoBays: [
+    { id: "cat-bay-1", name: "Soute 1a", size: { x: 5, y: 6, z: 2 }, offset: { x: 1, y: 20, z: 0 }, group: "Soute-1" },
+    { id: "cat-bay-2", name: "Soute 1b", size: { x: 5, y: 4, z: 1 }, offset: { x: 1, y: 22, z: 2 }, group: "Soute-1" },
+
+    { id: "cat-bay-3", name: "Soute 2a", size: { x: 7, y: 4, z: 2 }, offset: { x: 0, y: 14, z: 0 }, group: "Soute-2" },
+    { id: "cat-bay-4", name: "Soute 2b", size: { x: 6, y: 4, z: 2 }, offset: { x: 0, y: 14, z: 2 }, group: "Soute-2" },
+    { id: "cat-bay-5", name: "Soute 2c", size: { x: 5, y: 1, z: 4 }, offset: { x: 0, y: 13, z: 0 }, group: "Soute-2" },
+
+    { id: "cat-bay-6", name: "Soute 3a", size: { x: 7, y: 4, z: 2 }, offset: { x: 0, y: 7, z: 0 }, group: "Soute-3" },
+    { id: "cat-bay-7", name: "Soute 3b", size: { x: 6, y: 4, z: 2 }, offset: { x: 0, y: 7, z: 2 }, group: "Soute-3" },
+    { id: "cat-bay-8", name: "Soute 3c", size: { x: 5, y: 1, z: 4 }, offset: { x: 0, y: 6, z: 0 }, group: "Soute-3" },
+
+    { id: "cat-bay-9", name: "Soute 4a", size: { x: 7, y: 4, z: 2 }, offset: { x: 0, y: 0, z: 0 }, group: "Soute-4" },
+    { id: "cat-bay-10", name: "Soute 4b", size: { x: 6, y: 4, z: 2 }, offset: { x: 0, y: 0, z: 2 }, group: "Soute-4" },
+    { id: "cat-bay-11", name: "Soute 4c", size: { x: 5, y: 1, z: 4 }, offset: { x: 0, y: -1, z: 0 }, group: "Soute-4" },
+
+    { id: "cat-bay-12", name: "Soute 5a", size: { x: 7, y: 4, z: 2 }, offset: { x: 0, y: -7, z: 0 }, group: "Soute-5" },
+    { id: "cat-bay-13", name: "Soute 5b", size: { x: 6, y: 4, z: 2 }, offset: { x: 0, y: -7, z: 2 }, group: "Soute-5" },
+    { id: "cat-bay-14", name: "Soute 5c", size: { x: 5, y: 1, z: 4 }, offset: { x: 0, y: -8, z: 0 }, group: "Soute-5" },
+
+
+  ],
+},
+
   {
     id: "constellation-andromeda",
     name: "Constellation Andromeda",
@@ -509,18 +536,8 @@ export const ships: Ship[] = [
     { id: "idris-m-bay-14", name: "Soute 14", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 32, z: 0 } },
     { id: "idris-m-bay-15", name: "Soute 15", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 37, z: 0 } },
     { id: "idris-m-bay-16", name: "Soute 16", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 47, z: 0 } },
-    {
-      id: "idris-m-bay-17",
-      name: "Soute 17",
-      size: { x: 18, y: 4, z: 2 },
-      offset: { x: 12, y: 0, z: 0 },
-    },
-    {
-      id: "idris-m-bay-18",
-      name: "Soute 18",
-      size: { x: 14, y: 5, z: 2 },
-      offset: { x: 14, y: 6, z: 0 },
-    },
+    { id: "idris-m-bay-17", name: "Soute 17", size: { x: 18, y: 4, z: 2 }, offset: { x: 12, y: 0, z: 0 }, },
+    { id: "idris-m-bay-18", name: "Soute 18", size: { x: 14, y: 5, z: 2 }, offset: { x: 14, y: 6, z: 0 }, },
   ],
 },
 
@@ -528,18 +545,8 @@ export const ships: Ship[] = [
     id: "m2-hercules-starlifter",
     name: "M2 Hercules",
     cargoBays: [
-      {
-        id: "m2-bay-1",
-        name: "Soute 1",
-        size: { x: 8, y: 15, z: 3 },
-        offset: { x: 0, y: -7, z: 0 },
-      },
-      {
-        id: "m2-bay-2",
-        name: "Soute 2",
-        size: { x: 6, y: 9, z: 3 },
-        offset: { x: 1, y: 9, z: 0 },
-      },
+      { id: "m2-bay-1", name: "Soute 1", size: { x: 8, y: 15, z: 3 }, offset: { x: 0, y: -7, z: 0 }, },
+      { id: "m2-bay-2", name: "Soute 2", size: { x: 6, y: 9, z: 3 }, offset: { x: 1, y: 9, z: 0 }, },
     ],
   },
 
@@ -547,18 +554,8 @@ export const ships: Ship[] = [
     id: "mercury-star-runner",
     name: "Mercury Star Runner",
     cargoBays: [
-      {
-        id: "mercury-star-runner-bay-1",
-        name: "Soute 1",
-        size: { x: 6, y: 6, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-      {
-        id: "mercury-star-runner-bay-2",
-        name: "Soute 2",
-        size: { x: 1, y: 3, z: 2 },
-        offset: { x: -2, y: 0, z: 0 },
-      },
+      { id: "mercury-star-runner-bay-1", name: "Soute 1", size: { x: 6, y: 6, z: 3 }, offset: { x: 0, y: 0, z: 0 }, },
+      { id: "mercury-star-runner-bay-2", name: "Soute 2", size: { x: 1, y: 3, z: 2 }, offset: { x: -2, y: 0, z: 0 }, },
     ],
   },
 
@@ -566,12 +563,7 @@ export const ships: Ship[] = [
     id: "nomad",
     name: "Nomad",
     cargoBays: [
-      {
-        id: "nomad-bay-1",
-        name: "Soute 1",
-        size: { x: 3, y: 4, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
+      { id: "nomad-bay-1", name: "Soute 1", size: { x: 3, y: 4, z: 2 }, offset: { x: 0, y: 0, z: 0 }, },
     ],
   },
 
@@ -579,96 +571,26 @@ export const ships: Ship[] = [
     id: "prowler-utility",
     name: "Prowler Utility",
     cargoBays: [
-      {
-        id: "prowler-utility-bay-1",
-        name: "Soute 1",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: -3, y: 0, z: 0 },
-      },
-      {
-        id: "prowler-utility-bay-2",
-        name: "Soute 2",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: 1, y: 0, z: 0 },
-      },
+      { id: "prowler-utility-bay-1", name: "Soute 1", size: { x: 2, y: 4, z: 2 }, offset: { x: -3, y: 0, z: 0 }, },
+      { id: "prowler-utility-bay-2", name: "Soute 2", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 0 }, },
     ],
   },
 {
   id: "reclaimer",
   name: "Reclaimer",
   cargoBays: [
-    {
-      id: "reclaimer-bay-1",
-      name: "Soute 1",
-      size: { x: 5, y: 5, z: 2 },
-      offset: { x: -3, y: 0, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-2",
-      name: "Soute 2",
-      size: { x: 5, y: 5, z: 2 },
-      offset: { x: 3, y: 0, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-3",
-      name: "Soute 3",
-      size: { x: 5, y: 7, z: 2 },
-      offset: { x: -3, y: -11, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-4",
-      name: "Soute 4",
-      size: { x: 5, y: 7, z: 2 },
-      offset: { x: 3, y: -11, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-5",
-      name: "Soute 5",
-      size: { x: 3, y: 2, z: 3 },
-      offset: { x: 11, y: 3, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-6",
-      name: "Soute 6",
-      size: { x: 3, y: 2, z: 3 },
-      offset: { x: 16, y: 3, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-7",
-      name: "Soute 7",
-      size: { x: 3, y: 3, z: 3 },
-      offset: { x: 11, y: -2, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-8",
-      name: "Soute 8",
-      size: { x: 3, y: 3, z: 3 },
-      offset: { x: 16, y: -2, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-9",
-      name: "Soute 9",
-      size: { x: 3, y: 3, z: 3 },
-      offset: { x: 11, y: -7, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-10",
-      name: "Soute 10",
-      size: { x: 3, y: 3, z: 3 },
-      offset: { x: 16, y: -7, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-11",
-      name: "Soute 11",
-      size: { x: 3, y: 2, z: 3 },
-      offset: { x: 11, y: -11, z: 0 },
-    },
-    {
-      id: "reclaimer-bay-12",
-      name: "Soute 12",
-      size: { x: 3, y: 2, z: 3 },
-      offset: { x: 16, y: -11, z: 0 },
-    },
+    { id: "reclaimer-bay-1", name: "Soute 1", size: { x: 5, y: 5, z: 2 }, offset: { x: -3, y: 0, z: 0 }, },
+    { id: "reclaimer-bay-2", name: "Soute 2", size: { x: 5, y: 5, z: 2 }, offset: { x: 3, y: 0, z: 0 }, },
+    { id: "reclaimer-bay-3", name: "Soute 3", size: { x: 5, y: 7, z: 2 }, offset: { x: -3, y: -11, z: 0 }, },
+    { id: "reclaimer-bay-4", name: "Soute 4", size: { x: 5, y: 7, z: 2 }, offset: { x: 3, y: -11, z: 0 }, },
+    { id: "reclaimer-bay-5", name: "Soute 5", size: { x: 3, y: 2, z: 3 }, offset: { x: 11, y: 3, z: 0 }, },
+    { id: "reclaimer-bay-6", name: "Soute 6", size: { x: 3, y: 2, z: 3 }, offset: { x: 16, y: 3, z: 0 }, },
+    { id: "reclaimer-bay-7", name: "Soute 7", size: { x: 3, y: 3, z: 3 }, offset: { x: 11, y: -2, z: 0 }, },
+    { id: "reclaimer-bay-8", name: "Soute 8", size: { x: 3, y: 3, z: 3 }, offset: { x: 16, y: -2, z: 0 }, },
+    { id: "reclaimer-bay-9", name: "Soute 9", size: { x: 3, y: 3, z: 3 }, offset: { x: 11, y: -7, z: 0 }, },
+    { id: "reclaimer-bay-10", name: "Soute 10", size: { x: 3, y: 3, z: 3 }, offset: { x: 16, y: -7, z: 0 }, },
+    { id: "reclaimer-bay-11", name: "Soute 11", size: { x: 3, y: 2, z: 3 }, offset: { x: 11, y: -11, z: 0 }, },
+    { id: "reclaimer-bay-12", name: "Soute 12", size: { x: 3, y: 2, z: 3 }, offset: { x: 16, y: -11, z: 0 }, },
 
   ],
 },
@@ -677,12 +599,7 @@ export const ships: Ship[] = [
     id: "shiv",
     name: "Shiv",
     cargoBays: [
-      {
-        id: "shiv-bay-1",
-        name: "Soute 1",
-        size: { x: 2, y: 8, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
+      { id: "shiv-bay-1", name: "Soute 1", size: { x: 2, y: 8, z: 2 }, offset: { x: 0, y: 0, z: 0 }, },
     ],
   },
 
@@ -690,30 +607,10 @@ export const ships: Ship[] = [
     id: "starlancer-max",
     name: "Starlancer MAX",
     cargoBays: [
-      {
-        id: "starlancer-max-bay-1",
-        name: "Soute 1",
-        size: { x: 2, y: 16, z: 2 },
-        offset: { x: -2, y: 0, z: 0 },
-      },
-      {
-        id: "starlancer-max-bay-2",
-        name: "Soute 2",
-        size: { x: 2, y: 16, z: 2 },
-        offset: { x: 2, y: 0, z: 0 },
-      },
-      {
-        id: "starlancer-max-bay-3",
-        name: "Soute 3",
-        size: { x: 2, y: 8, z: 3 },
-        offset: { x: -4, y: -10, z: 0 },
-      },
-      {
-        id: "starlancer-max-bay-4",
-        name: "Soute 4",
-        size: { x: 2, y: 8, z: 3 },
-        offset: { x: 4, y: -10, z: 0 },
-      },
+      { id: "starlancer-max-bay-1", name: "Soute 1", size: { x: 2, y: 16, z: 2 }, offset: { x: -2, y: 0, z: 0 }, },
+      { id: "starlancer-max-bay-2", name: "Soute 2", size: { x: 2, y: 16, z: 2 }, offset: { x: 2, y: 0, z: 0 },},
+      { id: "starlancer-max-bay-3", name: "Soute 3", size: { x: 2, y: 8, z: 3 }, offset: { x: -4, y: -10, z: 0 }, },
+      { id: "starlancer-max-bay-4", name: "Soute 4", size: { x: 2, y: 8, z: 3 }, offset: { x: 4, y: -10, z: 0 }, },
     ],
   },
 
@@ -721,18 +618,8 @@ export const ships: Ship[] = [
     id: "starlancer-tac",
     name: "Starlancer TAC",
     cargoBays: [
-      {
-        id: "starlancer-tac-bay-1",
-        name: "Soute 1",
-        size: { x: 2, y: 8, z: 3 },
-        offset: { x: -4, y: 0, z: 0 },
-      },
-      {
-        id: "starlancer-tac-bay-2",
-        name: "Soute 2",
-        size: { x: 2, y: 8, z: 3 },
-        offset: { x: 4, y: 0, z: 0 },
-      },
+      { id: "starlancer-tac-bay-1", name: "Soute 1", size: { x: 2, y: 8, z: 3 }, offset: { x: -4, y: 0, z: 0 }, },
+      { id: "starlancer-tac-bay-2", name: "Soute 2", size: { x: 2, y: 8, z: 3 }, offset: { x: 4, y: 0, z: 0 }, },
     ],
   },
 
@@ -740,36 +627,11 @@ export const ships: Ship[] = [
     id: "starfarer",
     name: "Starfarer",
     cargoBays: [
-      {
-        id: "starfarer-bay-1",
-        name: "Soute 1",
-        size: { x: 5, y: 7, z: 5 },
-        offset: { x: -2, y: -2, z: 0 },
-      },
-      {
-        id: "starfarer-bay-2",
-        name: "Soute 2",
-        size: { x: 2, y: 5, z: 5 },
-        offset: { x: 6, y: 0, z: 0 },
-      },
-      {
-        id: "starfarer-bay-3",
-        name: "Soute 3",
-        size: { x: 2, y: 5, z: 5 },
-        offset: { x: -7, y: 0, z: 0 },
-      },
-      {
-        id: "starfarer-bay-4",
-        name: "Soute 4",
-        size: { x: 2, y: 2, z: 2 },
-        offset: { x: 6, y: -2, z: 0 },
-      },
-      {
-        id: "starfarer-bay-5",
-        name: "Soute 5",
-        size: { x: 2, y: 2, z: 2 },
-        offset: { x: -7, y: -2, z: 0 },
-      },
+      { id: "starfarer-bay-1", name: "Soute 1", size: { x: 5, y: 7, z: 5 }, offset: { x: -2, y: -2, z: 0 }, },
+      { id: "starfarer-bay-2", name: "Soute 2", size: { x: 2, y: 5, z: 5 }, offset: { x: 6, y: 0, z: 0 }, group: "starfarer-right", },
+      { id: "starfarer-bay-3", name: "Soute 3", size: { x: 2, y: 5, z: 5 }, offset: { x: -7, y: 0, z: 0 }, group: "starfarer-left", },
+      { id: "starfarer-bay-4", name: "Soute 4", size: { x: 2, y: 2, z: 2 }, offset: { x: 6, y: -2, z: 0 }, group: "starfarer-right", },
+      { id: "starfarer-bay-5", name: "Soute 5", size: { x: 2, y: 2, z: 2 }, offset: { x: -7, y: -2, z: 0 }, group: "starfarer-left", },
     ],
   },
 
@@ -777,12 +639,7 @@ export const ships: Ship[] = [
     id: "valkyrie",
     name: "Valkyrie",
     cargoBays: [
-      {
-        id: "valkyrie-bay-1",
-        name: "Soute 1",
-        size: { x: 5, y: 6, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
+      { id: "valkyrie-bay-1", name: "Soute 1", size: { x: 5, y: 6, z: 3 }, offset: { x: 0, y: 0, z: 0 }, },
     ],
   },
 
@@ -790,24 +647,9 @@ export const ships: Ship[] = [
     id: "zeus-mk-ii-cl",
     name: "Zeus Mk II CL",
     cargoBays: [
-      {
-        id: "zeus-mk-ii-cl-bay-1",
-        name: "Soute 1",
-        size: { x: 5, y: 8, z: 3 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-      {
-        id: "zeus-mk-ii-cl-bay-2",
-        name: "Soute 2",
-        size: { x: 1, y: 2, z: 2 },
-        offset: { x: -1, y: 2, z: 0 },
-      },
-      {
-        id: "zeus-mk-ii-cl-bay-3",
-        name: "Soute 3",
-        size: { x: 1, y: 2, z: 2 },
-        offset: { x: 5, y: 2, z: 0 },
-      },
+      { id: "zeus-mk-ii-cl-bay-1", name: "Soute 1a", size: { x: 5, y: 8, z: 3 }, offset: { x: 0, y: 0, z: 0 }, group: "soute-1", },
+      { id: "zeus-mk-ii-cl-bay-2", name: "Soute 1b", size: { x: 1, y: 2, z: 2 }, offset: { x: -1, y: 2, z: 0 }, group: "soute-1", },
+      { id: "zeus-mk-ii-cl-bay-3", name: "Soute 1c", size: { x: 1, y: 2, z: 2 }, offset: { x: 5, y: 2, z: 0 }, group: "soute-1", },
     ],
   },
 ];

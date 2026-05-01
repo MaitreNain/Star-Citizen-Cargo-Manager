@@ -22,11 +22,13 @@ import { useDragState } from "./hooks/useDragState";
 
 import { createCratesFromContracts } from "./engine/createCratesFromContracts";
 import { placeCratesInBay } from "./engine/placeCratesInBay";
+import { placeCratesInCompoundBay } from "./engine/placeCratesInCompoundBay";
 import { placeCratesInShip } from "./engine/placeCratesInShip";
 import { resolveStackPosition } from "./engine/resolveStackPosition";
 import { applyGravity } from "./engine/applyGravity";
 import { getRotatedDimensions } from "./engine/getRotatedDimensions";
 import { sortCrates, type SortMode } from "./engine/sortCrates";
+import { buildCompoundBays, buildSingleCompoundBay, isValidCellInCompound } from "./engine/buildCompoundBays";
 
 const STORAGE_KEY = "cargo-planner-v1";
 
@@ -103,9 +105,9 @@ export default function CargoPlanner() {
       return [[a, b, c], [b, a, c]];
     }
 
-    function buildOccupied(bayId: string): Set<number> {
-      const bay = ship.cargoBays.find(b => b.id === bayId)!;
-      const W = bay.size.x, D = bay.size.y;
+    const { compoundBays: compBays, individualBays: indivBays } = buildCompoundBays(ship.cargoBays);
+
+    function buildOccupied(bayId: string, W: number, D: number): Set<number> {
       const s = new Set<number>();
       for (const c of placedCrates) {
         if (c.bayId !== bayId) continue;
@@ -121,9 +123,10 @@ export default function CargoPlanner() {
 
     const countsByScu = new Map<number, number>();
 
-    for (const bay of ship.cargoBays) {
+    // Soutes individuelles
+    for (const bay of indivBays) {
       const W = bay.size.x, D = bay.size.y, H = bay.size.z;
-      const occupied = buildOccupied(bay.id);
+      const occupied = buildOccupied(bay.id, W, D);
 
       for (const scu of sizes) {
         let count = 0;
@@ -137,6 +140,55 @@ export default function CargoPlanner() {
             for (let z = 0; z <= H - dz && !found; z++)
               for (let y = 0; y <= D - dy && !found; y++)
                 for (let x = 0; x <= W - dx && !found; x++) {
+                  let ok = true;
+                  check:
+                  for (let cx = x; cx < x + dx; cx++)
+                    for (let cy = y; cy < y + dy; cy++)
+                      for (let cz = z; cz < z + dz; cz++)
+                        if (occupied.has(cx + cy * W + cz * W * D)) { ok = false; break check; }
+                  if (ok) {
+                    for (let cx = x; cx < x + dx; cx++)
+                      for (let cy = y; cy < y + dy; cy++)
+                        for (let cz = z; cz < z + dz; cz++)
+                          occupied.add(cx + cy * W + cz * W * D);
+                    count++;
+                    found = true;
+                  }
+                }
+            if (found) break outer;
+          }
+        }
+
+        if (count > 0) countsByScu.set(scu, (countsByScu.get(scu) ?? 0) + count);
+      }
+    }
+
+    // Soutes composées
+    for (const compound of compBays) {
+      const W = compound.boundingBox.x, D = compound.boundingBox.y, H = compound.boundingBox.z;
+      const occupied = buildOccupied(compound.id, W, D);
+
+      for (const scu of sizes) {
+        let count = 0;
+        let found = true;
+
+        while (found) {
+          found = false;
+          outer:
+          for (const [dx, dy, dz] of perms(dims[scu])) {
+            if (dx > W || dy > D || dz > H) continue;
+            for (let z = 0; z <= H - dz && !found; z++)
+              for (let y = 0; y <= D - dy && !found; y++)
+                for (let x = 0; x <= W - dx && !found; x++) {
+                  // Vérifier que tous les voxels sont dans l'union des sections
+                  let allValid = true;
+                  vcheck:
+                  for (let cx = x; cx < x + dx; cx++)
+                    for (let cy = y; cy < y + dy; cy++)
+                      for (let cz = z; cz < z + dz; cz++)
+                        if (!isValidCellInCompound(cx, cy, cz, compound.sections)) { allValid = false; break vcheck; }
+                  if (!allValid) continue;
+
                   let ok = true;
                   check:
                   for (let cx = x; cx < x + dx; cx++)
@@ -373,8 +425,9 @@ export default function CargoPlanner() {
     const delivery = contract?.deliveries.find((d) => d.id === deliveryId);
     if (!delivery) return;
 
-    const bay = ship.cargoBays.find((b) => b.id === bayId);
-    if (!bay) return;
+    const individualBay = ship.cargoBays.find((b) => b.id === bayId && !b.group);
+    const compoundBay = !individualBay ? buildSingleCompoundBay(ship.cargoBays, bayId) : null;
+    if (!individualBay && !compoundBay) return;
 
     const alreadyInBay = placedCrates.filter((c) => c.bayId === bayId);
     const deliveryCrates = allCrates.filter((c) => c.deliveryId === deliveryId);
@@ -384,7 +437,11 @@ export default function CargoPlanner() {
 
     if (pendingCrates.length === 0) { setSelectedDelivery(null); return; }
 
-    const newlyPlaced = placeCratesInBay(pendingCrates, bay, alreadyInBay, 0).map((p) => {
+    const newlyPlaced = (
+      individualBay
+        ? placeCratesInBay(pendingCrates, individualBay, alreadyInBay, 0)
+        : placeCratesInCompoundBay(pendingCrates, compoundBay!, alreadyInBay)
+    ).map((p) => {
       const source = pendingCrates.find((c) => c.id === p.id)!;
       return { ...source, ...p } as PlacedCrateWithMeta;
     });
@@ -473,7 +530,13 @@ export default function CargoPlanner() {
           : crate
       );
 
-      const next = applyGravity(afterMove, ship.cargoBays);
+      // On passe toutes les soutes (individuelles + virtuelles composées) à applyGravity
+      const { compoundBays } = buildCompoundBays(ship.cargoBays);
+      const allBaysForGravity = [
+        ...ship.cargoBays,
+        ...compoundBays.map((c) => ({ id: c.id, size: c.boundingBox, sections: c.sections })),
+      ];
+      const next = applyGravity(afterMove, allBaysForGravity);
 
       const fragmentMap = new Map<string, DeliveryFragment>();
       for (const crate of next) {
@@ -505,13 +568,18 @@ export default function CargoPlanner() {
       drag.clear(); return;
     }
     const movingCrate = placedCrates.find((c) => c.id === drag.draggedCrateId);
-    const bay = ship.cargoBays.find((b) => b.id === drag.hoveredCell!.bayId);
-    if (!movingCrate || !bay) {
+    const hoveredBayId = drag.hoveredCell!.bayId;
+    const individualBay = ship.cargoBays.find((b) => b.id === hoveredBayId && !b.group);
+    const compoundBay = !individualBay ? buildSingleCompoundBay(ship.cargoBays, hoveredBayId) : null;
+    const bayForStack = individualBay
+      ?? (compoundBay ? { id: compoundBay.id, size: compoundBay.boundingBox, sections: compoundBay.sections } : null);
+
+    if (!movingCrate || !bayForStack) {
       drag.clear(); return;
     }
     const rotatedDimensions = getRotatedDimensions(movingCrate.dimensions, drag.dragRotation);
     const rotatedCrate = { ...movingCrate, dimensions: rotatedDimensions };
-    const resolvedPosition = resolveStackPosition(rotatedCrate, { x: drag.hoveredCell.x, y: drag.hoveredCell.y }, bay, placedCrates);
+    const resolvedPosition = resolveStackPosition(rotatedCrate, { x: drag.hoveredCell.x, y: drag.hoveredCell.y }, bayForStack, placedCrates);
     if (resolvedPosition) { pushHistorySnapshot(); moveCrate(drag.draggedCrateId, resolvedPosition, rotatedDimensions); }
     drag.clear();
   }

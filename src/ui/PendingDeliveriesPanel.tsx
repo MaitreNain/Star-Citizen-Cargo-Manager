@@ -26,7 +26,7 @@ type Props = {
   contracts: Contract[];
   placedScuByDelivery: Map<string, number>;
   fragments: DeliveryFragment[];
-  bays: { id: string; name: string }[];
+  bays: { id: string; name: string; group?: string }[];
   deliveryColors: Map<string, string>;
   selectedDeliveryId: string | null;
   highlightedDeliveryId: string | null;
@@ -142,7 +142,14 @@ export default function PendingDeliveriesPanel({
 
   function getBayLabel(bayId: string): string {
     const index = bays.findIndex((b) => b.id === bayId);
-    return index >= 0 ? `Soute ${index + 1}` : bayId;
+    if (index >= 0) return `Soute ${index + 1}`;
+    // Groupe composé : trouver toutes les sections membres
+    const sectionIndices = bays
+      .map((b, i) => ({ b, i }))
+      .filter(({ b }) => b.group === bayId)
+      .map(({ i }) => i + 1);
+    if (sectionIndices.length > 0) return `Soute ${sectionIndices.join("+")}`;
+    return bayId;
   }
 
   function renderItem(item: DeliveryItem) {

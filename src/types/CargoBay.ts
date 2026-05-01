@@ -5,4 +5,5 @@ export type CargoBay = {
   name: string;
   size: Vector3;
   offset: Vector3;
+  group?: string;
 };
