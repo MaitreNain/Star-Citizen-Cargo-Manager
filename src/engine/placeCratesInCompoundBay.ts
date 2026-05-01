@@ -4,6 +4,8 @@ import type { CompoundBay, CompoundSection } from "../types/CompoundBay";
 import { checkCollision } from "./checkCollision";
 import { isValidCellInCompound } from "./buildCompoundBays";
 
+type CrateLike = { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 };
+
 type CrateToPlace = {
   id: string;
   size: number;
@@ -39,7 +41,7 @@ function doesCrateFitInCompound(
 export function checkSupportInCompound(
   movingCrate: { dimensions: Vector3; id: string },
   position: Vector3,
-  placedCrates: Array<PlacedCrate>,
+  placedCrates: Array<CrateLike>,
   bayId: string,
   _sections: CompoundSection[]
 ): boolean {

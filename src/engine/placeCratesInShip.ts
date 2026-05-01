@@ -21,6 +21,7 @@ type Bay = {
   id: string;
   name: string;
   size: { x: number; y: number; z: number };
+  offset: { x: number; y: number; z: number };
   group?: string;
 };
 
