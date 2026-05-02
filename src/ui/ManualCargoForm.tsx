@@ -1,7 +1,7 @@
 import { useState, Fragment } from "react";
 import type { Contract } from "../types/Contract";
 import SearchableSelect from "./SearchableSelect";
-import { DESTINATION_OPTIONS, COMMODITY_OPTIONS } from "../data/contractOptions";
+import { DESTINATION_OPTIONS } from "../data/contractOptions";
 
 const SCU_SIZES = [1, 2, 4, 8, 16, 24, 32];
 

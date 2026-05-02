@@ -1,6 +1,6 @@
 import type { Vector3 } from "../types/Vector3";
 import type { PlacedCrate } from "../types/PlacedCrate";
-import type { CompoundBay, CompoundSection } from "../types/CompoundBay";
+import type { CompoundBay } from "../types/CompoundBay";
 import { checkCollision } from "./checkCollision";
 import { isValidCellInCompound } from "./buildCompoundBays";
 import { getRotations } from "./getRotatedDimensions";
