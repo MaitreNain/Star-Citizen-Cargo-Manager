@@ -88,6 +88,12 @@ const translations = {
 
     // SearchableSelect
     "select.filterPlaceholder": "Tape quelques lettres...",
+
+    // Scene 3D
+    "scene.bay": "SOUTE",
+    "scene.ramp": "RAMPE / ARRIÈRE",
+    "scene.front": "AVANT",
+    "scene.clickBay": "Cliquez sur une soute pour assigner",
   },
 
   en: {
@@ -177,6 +183,12 @@ const translations = {
 
     // SearchableSelect
     "select.filterPlaceholder": "Type a few letters...",
+
+    // Scene 3D
+    "scene.bay": "BAY",
+    "scene.ramp": "RAMP / REAR",
+    "scene.front": "FRONT",
+    "scene.clickBay": "Click a bay to assign",
   },
 } as const;
 

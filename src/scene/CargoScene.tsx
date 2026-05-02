@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 
@@ -56,6 +57,7 @@ export default function CargoScene({
   isAssigningDelivery = false,
   onBayClick = () => {},
 }: Props) {
+  const { t } = useLanguage();
   const draggedCrate = placedCrates.find((c) => c.id === draggedCrateId);
 
   const { compoundBays, individualBays } = useMemo(
@@ -192,6 +194,7 @@ export default function CargoScene({
             key={bay.id}
             bay={bay}
             bayNumber={bayDisplayInfo.individual.get(bay.id) ?? 1}
+            bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
             onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
             onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
@@ -205,6 +208,7 @@ export default function CargoScene({
             key={compound.id}
             compound={compound}
             bayNumbers={bayDisplayInfo.compound.get(compound.id) ?? []}
+            bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
             onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
             onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
@@ -212,7 +216,7 @@ export default function CargoScene({
           />
         ))}
 
-        <OrientationMarkers cargoBays={ship.cargoBays} />
+        <OrientationMarkers cargoBays={ship.cargoBays} rearLabel={t("scene.ramp")} frontLabel={t("scene.front")} />
 
         {placedCrates.map((crate) => {
           const bayOffset = resolveBayOffset(crate.bayId);
@@ -280,7 +284,7 @@ export default function CargoScene({
           textTransform: "uppercase", pointerEvents: "none", userSelect: "none",
           boxShadow: "0 4px 16px rgba(224,120,40,0.4)",
         }}>
-          Cliquez sur une soute pour assigner
+          {t("scene.clickBay")}
         </div>
       )}
     </div>

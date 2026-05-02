@@ -11,6 +11,7 @@ type CellPosition = { bayId: string; x: number; y: number; z: number };
 type Props = {
   compound: CompoundBay;
   bayNumbers: number[];
+  bayWord?: string;
   isAssignTarget?: boolean;
   onHoverCell?: (cell: CellPosition | null) => void;
   onPointerUpCell?: () => void;
@@ -129,7 +130,7 @@ function buildCompoundGeometry(sections: CompoundSection[]): {
 }
 
 export default function CompoundBayMesh({
-  compound, bayNumbers, isAssignTarget = false,
+  compound, bayNumbers, bayWord = "SOUTE", isAssignTarget = false,
   onHoverCell, onPointerUpCell, onBayClick,
 }: Props) {
   const { worldOffset, sections, id: groupId } = compound;
@@ -144,7 +145,7 @@ export default function CompoundBayMesh({
 
   const { wireGeo, fillGeo } = useMemo(() => buildCompoundGeometry(sections), [sections]);
 
-  const bayLabel = `SOUTE ${bayNumbers[0]}`;
+  const bayLabel = `${bayWord} ${bayNumbers[0]}`;
   const labelText = isAssignTarget ? `> ${bayLabel}` : bayLabel;
   const labelColor = highlight ? "#e07828" : isAssignTarget ? "#f8a060" : "#38bdf8";
   const spriteH = 0.5;

@@ -10,6 +10,7 @@ type CellPosition = { bayId: string; x: number; y: number; z: number };
 type Props = {
   bay: CargoBay;
   bayNumber: number;
+  bayWord?: string;
   isAssignTarget?: boolean;
   onHoverCell?: (cell: CellPosition | null) => void;
   onPointerUpCell?: () => void;
@@ -36,7 +37,7 @@ function BayWireframe({ w, h, d, highlight }: { w: number; h: number; d: number;
 }
 
 export default function CargoBayMesh({
-  bay, bayNumber, isAssignTarget = false,
+  bay, bayNumber, bayWord = "SOUTE", isAssignTarget = false,
   onHoverCell, onPointerUpCell, onBayClick,
 }: Props) {
   const { size, offset } = bay;
@@ -49,7 +50,7 @@ export default function CargoBayMesh({
     invalidate();
   }
 
-  const labelText = isAssignTarget ? `> SOUTE ${bayNumber}` : `SOUTE ${bayNumber}`;
+  const labelText = isAssignTarget ? `> ${bayWord} ${bayNumber}` : `${bayWord} ${bayNumber}`;
   const labelColor = highlight ? "#e07828" : isAssignTarget ? "#f8a060" : "#38bdf8";
   const spriteH = 0.5;
   const labelTex = useLabelTexture(labelText, labelColor);

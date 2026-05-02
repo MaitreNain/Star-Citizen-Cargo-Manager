@@ -3,7 +3,7 @@ import * as THREE from "three";
 
 type Vector3 = { x: number; y: number; z: number };
 type CargoBay = { id: string; name: string; size: Vector3; offset: Vector3 };
-type Props = { cargoBays: CargoBay[] };
+type Props = { cargoBays: CargoBay[]; rearLabel?: string; frontLabel?: string };
 
 const FONT_SIZE = 26;
 const PADDING_H = 28; // padding horizontal total
@@ -53,7 +53,7 @@ function useMarkerTexture(text: string): { texture: THREE.CanvasTexture; ratio: 
   }, [text]);
 }
 
-export default function OrientationMarkers({ cargoBays }: Props) {
+export default function OrientationMarkers({ cargoBays, rearLabel = "RAMPE / ARRIÈRE", frontLabel = "AVANT" }: Props) {
   if (cargoBays.length === 0) return null;
 
   const minX = Math.min(...cargoBays.map((b) => b.offset.x));
@@ -82,8 +82,8 @@ export default function OrientationMarkers({ cargoBays }: Props) {
 
   const spriteH = 0.5; // hauteur fixe des sprites en unités monde
 
-  const rear = useMarkerTexture("RAMPE / ARRIÈRE");
-  const front = useMarkerTexture("AVANT");
+  const rear = useMarkerTexture(rearLabel);
+  const front = useMarkerTexture(frontLabel);
 
   return (
     <group>
