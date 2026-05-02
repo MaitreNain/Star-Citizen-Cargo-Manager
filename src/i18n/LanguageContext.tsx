@@ -10,12 +10,20 @@ type LanguageContextValue = {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("fr");
+  const [locale, setLocale] = useState<Locale>(() => {
+    const saved = localStorage.getItem("locale");
+    return saved === "en" ? "en" : "fr";
+  });
+
+  function setLocaleAndSave(l: Locale) {
+    localStorage.setItem("locale", l);
+    setLocale(l);
+  }
   const translations = getTranslations(locale);
   const t = (key: TranslationKey) => translations[key];
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+    <LanguageContext.Provider value={{ locale, setLocale: setLocaleAndSave, t }}>
       {children}
     </LanguageContext.Provider>
   );
