@@ -1,4 +1,5 @@
 import { useEffect, useState, memo } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 // Inject Google Fonts once
 const fontLink = document.createElement("link");
@@ -459,6 +460,7 @@ export default function AppLayout({
   content,
   onStartTutorial,
 }: Props) {
+  const { locale, setLocale, t } = useLanguage();
   const [isNarrow, setIsNarrow] = useState(window.innerWidth < 1100);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1100);
   const [internalTab, setInternalTab] = useState<TabId>("contracts");
@@ -487,7 +489,16 @@ export default function AppLayout({
         <span className="hud-title">Cargo Manager</span>
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <SessionTimer />
-          <span className="hud-status">● ONLINE</span>
+          <span className="hud-status">{t("hud.status")}</span>
+          <button
+            onClick={() => setLocale(locale === "fr" ? "en" : "fr")}
+            style={{
+              background: "none", border: "1px solid var(--border-glow)",
+              color: "var(--text-dim)", cursor: "pointer",
+              fontFamily: "var(--font-mono)", fontSize: "9px",
+              padding: "2px 6px", borderRadius: "2px", letterSpacing: "0.08em",
+            }}
+          >{locale === "fr" ? "EN" : "FR"}</button>
         </span>
       </div>
 
@@ -517,7 +528,7 @@ export default function AppLayout({
           }}
         >
           <span style={{ fontSize: "13px" }}>▶</span>
-          Tutoriel — Comment utiliser l'app
+          {t("hud.tutorial")}
         </button>
       )}
 
@@ -530,14 +541,14 @@ export default function AppLayout({
           className={`tab-btn${activeTab === "contracts" ? " active" : ""}`}
           onClick={() => setTab("contracts")}
         >
-          Contrats
+          {t("tab.contracts")}
         </button>
         <button
           id="tuto-tab-placement"
           className={`tab-btn${activeTab === "placement" ? " active" : ""}`}
           onClick={() => setTab("placement")}
         >
-          Placement
+          {t("tab.placement")}
           {pendingCount > 0 && (
             <span className="tab-badge">{pendingCount}</span>
           )}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract } from "../types/Contract";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
 import type { ArchivedDelivery } from "../types/ArchivedDelivery";
@@ -69,6 +70,7 @@ export default function PendingDeliveriesPanel({
   onRestoreDelivery,
   demoContract,
 }: Props) {
+  const { t, locale } = useLanguage();
   const highlightedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -142,13 +144,13 @@ export default function PendingDeliveriesPanel({
 
   function getBayLabel(bayId: string): string {
     const index = bays.findIndex((b) => b.id === bayId);
-    if (index >= 0) return `Soute ${index + 1}`;
+    if (index >= 0) return `${t("contractList.bay")} ${index + 1}`;
     // Groupe composé : trouver toutes les sections membres
     const sectionIndices = bays
       .map((b, i) => ({ b, i }))
       .filter(({ b }) => b.group === bayId)
       .map(({ i }) => i + 1);
-    if (sectionIndices.length > 0) return `Soute ${sectionIndices.join("+")}`;
+    if (sectionIndices.length > 0) return `${t("contractList.bay")} ${sectionIndices.join("+")}`;
     return bayId;
   }
 
@@ -275,7 +277,7 @@ export default function PendingDeliveriesPanel({
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
               {isDemo ? (
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 5px", borderRadius: "2px", opacity: 0.7, alignSelf: "center" }}>
-                  EXEMPLE
+                  {t("pending.example")}
                 </span>
               ) : isWaiting ? (
                 <button
@@ -285,7 +287,7 @@ export default function PendingDeliveriesPanel({
                     color: "var(--success)", cursor: "pointer", fontSize: "11px",
                     fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
                   }}
-                >Activer</button>
+                >{t("pending.activate")}</button>
               ) : (
                 <>
                   {isComplete && (
@@ -296,7 +298,7 @@ export default function PendingDeliveriesPanel({
                         color: "var(--success)", cursor: "pointer", fontSize: "11px",
                         fontFamily: "var(--font-mono)", fontWeight: 700, padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
                       }}
-                    >✓ Livré</button>
+                    >{t("pending.markDone")}</button>
                   )}
                   <button
                     onClick={(e) => { e.stopPropagation(); onMarkDelivery(item.deliveryId); }}
@@ -306,7 +308,7 @@ export default function PendingDeliveriesPanel({
                       color: isMarked ? "var(--cyan)" : "var(--text-muted)",
                       cursor: "pointer", fontSize: "11px", padding: "3px 8px", borderRadius: "2px",
                     }}
-                  >{isMarked ? "◉ Marqué" : "◎ Marquer"}</button>
+                  >{isMarked ? t("pending.marked") : t("pending.mark")}</button>
                 </>
               )}
               {!isDemo && (
@@ -320,7 +322,7 @@ export default function PendingDeliveriesPanel({
                     cursor: item.state === "waiting" ? "default" : "pointer",
                     fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
                   }}
-                >↩ Annuler</button>
+                >{t("pending.deactivate")}</button>
               )}
             </div>
           </div>
@@ -355,7 +357,7 @@ export default function PendingDeliveriesPanel({
                     borderRadius: "2px", flexShrink: 0,
                   }}
                 >
-                  ↩ Retirer
+                  {t("pending.retract")}
                 </button>
               </div>
             ))}
@@ -370,13 +372,13 @@ export default function PendingDeliveriesPanel({
       <div className="corner-tl" />
       <div className="corner-br" />
 
-      <div className="section-header">Livraisons</div>
+      <div className="section-header">{t("pending.title")}</div>
 
       {/* Résumé */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "10px", fontFamily: "var(--font-mono)", fontSize: "11px", flexWrap: "wrap" }}>
-        {waitingCount > 0 && <span style={{ color: "var(--text-dim)" }}>⏳ {waitingCount} en attente</span>}
-        {loadedCount > 0 && <span style={{ color: "var(--accent)" }}>↑ {loadedCount} chargée{loadedCount > 1 ? "s" : ""}</span>}
-        {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} livrée{deliveredCount > 1 ? "s" : ""}</span>}
+        {waitingCount > 0 && <span style={{ color: "var(--text-dim)" }}>⏳ {waitingCount} {t("pending.waiting")}</span>}
+        {loadedCount > 0 && <span style={{ color: "var(--accent)" }}>↑ {loadedCount} {t("pending.loaded")}{locale === "fr" && loadedCount > 1 ? "s" : ""}</span>}
+        {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} {t("pending.delivered")}{locale === "fr" && deliveredCount > 1 ? "s" : ""}</span>}
       </div>
 
       {/* Instruction contextuelle — toujours présent pour éviter les décalages */}
@@ -400,35 +402,35 @@ export default function PendingDeliveriesPanel({
             position: "relative",
           }}>
             {/* Texte long — toujours en flux pour fixer la hauteur */}
-            <span style={{ opacity: active ? 0 : 1 }}>▶ Cliquez sur une livraison pour la placer dans la soute</span>
+            <span style={{ opacity: active ? 0 : 1 }}>{t("pending.instructionClick")}</span>
             {/* Texte court — superposé pour ne pas changer la hauteur */}
-            <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: active ? 1 : 0 }}>▶ Cliquez sur une soute dans la vue 3D</span>
+            <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: active ? 1 : 0 }}>{t("pending.instructionBay")}</span>
           </div>
         );
       })()}
 
       {/* Chargées */}
       <div style={{ display: "flex", alignItems: "center", marginTop: "12px", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
-        <div className="section-header" style={{ color: "var(--accent)", marginBottom: 0, flex: 1 }}>En soute</div>
+        <div className="section-header" style={{ color: "var(--accent)", marginBottom: 0, flex: 1 }}>{t("pending.inBay")}</div>
         {viderConfirm ? (
           <>
             <button onClick={() => { onClearPlacement(); setViderConfirm(false); }} style={{
               background: "none", border: "1px solid rgba(224,80,80,0.35)",
               color: "var(--danger)", cursor: "pointer",
               fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px", marginRight: "4px",
-            }}>✓ Confirmer</button>
+            }}>{t("pending.clearConfirm")}</button>
             <button onClick={() => setViderConfirm(false)} style={{
               background: "none", border: "1px solid var(--border-glow)",
               color: "var(--text-muted)", cursor: "pointer",
               fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px",
-            }}>✕ Annuler</button>
+            }}>{t("pending.clearCancel")}</button>
           </>
         ) : (
           <button onClick={() => setViderConfirm(true)} style={{
             background: "none", border: "1px solid rgba(224,80,80,0.35)",
             color: "var(--danger)", cursor: "pointer",
             fontSize: "11px", fontFamily: "var(--font-mono)", padding: "1px 8px", borderRadius: "2px",
-          }}>✕ Vider la soute</button>
+          }}>{t("pending.clearBay")}</button>
         )}
       </div>
       {loadedCount > 0 && sortedItems.filter((i) => i.state === "loaded").map((item) => renderItem(item))}
@@ -445,7 +447,7 @@ export default function PendingDeliveriesPanel({
             fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px",
             opacity: isSelecting ? 1 : 0.35,
           }}
-        >✕ Annuler sélection</button>
+        >{t("pending.cancelSelection")}</button>
         <button
           onClick={onClearMarked}
           disabled={markedDeliveryIds.length === 0}
@@ -457,14 +459,14 @@ export default function PendingDeliveriesPanel({
             fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px",
             opacity: markedDeliveryIds.length > 0 ? 1 : 0.35,
           }}
-        >✕ Annuler marquage</button>
+        >{t("pending.cancelMark")}</button>
       </div>
 
       {/* En attente */}
       {waitingCount > 0 && (
         <>
           <div className="section-header" style={{ color: "var(--text-dim)", marginTop: "12px" }}>
-            En attente
+            {t("pending.waitingSection")}
           </div>
           {sortedItems.filter((i) => i.state === "waiting").map((item) => renderItem(item))}
         </>
@@ -473,7 +475,7 @@ export default function PendingDeliveriesPanel({
       {/* Livrées */}
       {archivedDeliveries.length > 0 && (
         <div style={{ marginTop: "16px" }}>
-          <div className="section-header" style={{ color: "var(--success)" }}>Livrées</div>
+          <div className="section-header" style={{ color: "var(--success)" }}>{t("pending.deliveredSection")}</div>
           {archivedDeliveries.map((archived) => (
             <div key={archived.deliveryId} style={{
               display: "flex", alignItems: "center", gap: "8px",

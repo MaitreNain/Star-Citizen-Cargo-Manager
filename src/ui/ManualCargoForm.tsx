@@ -1,4 +1,5 @@
 import { useState, Fragment } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract } from "../types/Contract";
 import SearchableSelect from "./SearchableSelect";
 import { DESTINATION_OPTIONS } from "../data/contractOptions";
@@ -29,6 +30,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
   const [commodity, setCommodity] = useState("");
   const [rows, setRows] = useState<CrateRow[]>([{ id: genId(), count: 1, sizeScu: 0 }]);
 
+  const { t } = useLanguage();
   const totalScu = rows.reduce((sum, r) => sum + Math.max(0, r.count) * r.sizeScu, 0);
   const canSubmit = name.trim().length > 0 && destination.trim().length > 0 && totalScu > 0;
 
@@ -89,7 +91,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
         className="section-header"
         style={{ marginBottom: open ? "14px" : 0, userSelect: "none" }}
       >
-        Chargement personnalisé
+        {t("manualForm.title")}
         <span className="toggle-arrow" style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
           {open ? "▲" : "▼"}
         </span>
@@ -99,19 +101,19 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
         <div onClick={(e) => e.stopPropagation()} style={{ cursor: "default" }}>
           {/* Nom */}
           <div style={{ marginBottom: "8px" }}>
-            <label className="scifi-label">Nom du chargement</label>
+            <label className="scifi-label">{t("manualForm.name")}</label>
             <input
               className="scifi-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nom du chargement"
+              placeholder={t("manualForm.namePlaceholder")}
             />
           </div>
 
           <div style={{ marginBottom: "2px" }}>
             <SearchableSelect
-              label="Chargement (opt.)"
-              placeholder="Origine..."
+              label={t("manualForm.pickupLocation")}
+              placeholder={t("manualForm.pickupPlaceholder")}
               value={pickupLocation}
               options={DESTINATION_OPTIONS}
               onChange={setPickupLocation}
@@ -120,8 +122,8 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
 
           <div style={{ marginBottom: "4px" }}>
             <SearchableSelect
-              label="Destination"
-              placeholder="Tap pour filtrer..."
+              label={t("manualForm.destination")}
+              placeholder={t("manualForm.destinationPlaceholder")}
               value={destination}
               options={DESTINATION_OPTIONS}
               onChange={setDestination}
@@ -132,7 +134,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
           <div style={{ border: "1px solid var(--border-glow)", borderRadius: "2px", marginBottom: "10px", overflow: "hidden" }}>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 10px", background: "rgba(30,74,110,0.2)", borderBottom: "1px solid var(--border-glow)" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-dim)", textTransform: "uppercase" }}>Caisses</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-dim)", textTransform: "uppercase" }}>{t("manualForm.crates")}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: totalScu > 0 ? "var(--accent)" : "var(--text-muted)" }}>
                 {totalScu > 0 ? `${totalScu} SCU` : "—"}
               </span>
@@ -141,9 +143,9 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
             <div style={{ padding: "8px 10px 4px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: "4px 8px", alignItems: "center" }}>
 
-                <label className="scifi-label" style={{ margin: 0 }}>Quantité</label>
+                <label className="scifi-label" style={{ margin: 0 }}>{t("manualForm.quantity")}</label>
                 <span />
-                <label className="scifi-label" style={{ margin: 0 }}>Taille</label>
+                <label className="scifi-label" style={{ margin: 0 }}>{t("manualForm.size")}</label>
                 <span />
 
                 {rows.map((row) => (
@@ -181,7 +183,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
                       onChange={(e) => updateRow(row.id, "sizeScu", parseInt(e.target.value))}
                       className="scifi-input"
                     >
-                      <option value={0} disabled>— Choisir —</option>
+                      <option value={0} disabled>{t("manualForm.choosePlaceholder")}</option>
                       {SCU_SIZES.map((s) => (
                         <option key={s} value={s}>{s} SCU</option>
                       ))}
@@ -211,7 +213,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
                   color: "var(--text-dim)", cursor: "pointer",
                   fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: "2px",
                 }}
-              >+ Ligne</button>
+              >{t("manualForm.addRow")}</button>
             </div>
 
           </div>
@@ -222,7 +224,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
             className="btn-primary"
             style={{ width: "100%" }}
           >
-            ✓ Ajouter le chargement
+            {t("manualForm.submit")}
           </button>
         </div>
       )}

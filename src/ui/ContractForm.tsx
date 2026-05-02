@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract, ContractDelivery } from "../types/Contract";
 import SearchableSelect from "./SearchableSelect";
 import { DESTINATION_OPTIONS, COMMODITY_OPTIONS } from "../data/contractOptions";
@@ -29,6 +30,7 @@ function createEmptyDelivery(): ContractDelivery {
 }
 
 export default function ContractForm({ onAdd, onUpdate, contracts, editingContract, onCancelEdit }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [maxSize, setMaxSize] = useState<number | "">("")
@@ -131,7 +133,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
         className="section-header"
         style={{ marginBottom: open ? undefined : 0, userSelect: "none" }}
       >
-        {editingContract ? "Modifier contrat" : "Contrat de Hauling"}
+        {editingContract ? t("contractForm.titleEdit") : t("contractForm.title")}
         <span className="toggle-arrow" style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
           {open ? "▲" : "▼"}
         </span>
@@ -141,7 +143,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
       {/* Nom */}
       <div style={{ marginBottom: "12px" }}>
-        <label className="scifi-label">Nom du contrat</label>
+        <label className="scifi-label">{t("contractForm.name")}</label>
         <input
           type="text"
           value={name}
@@ -153,13 +155,13 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
       {/* Taille max */}
       <div style={{ marginBottom: "14px" }}>
-        <label className="scifi-label">Taille max des caisses</label>
+        <label className="scifi-label">{t("contractForm.maxSize")}</label>
         <select
           value={maxSize}
           onChange={(e) => setMaxSize(e.target.value === "" ? "" : Number(e.target.value))}
           className="scifi-input"
         >
-          <option value="">— Choisir —</option>
+          <option value="">{t("contractForm.choosePlaceholder")}</option>
           {ALLOWED_CONTAINER_SIZES.map((size) => (
             <option key={size} value={size}>{size} SCU</option>
           ))}
@@ -168,7 +170,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
       {/* Livraisons */}
       <div style={{ marginBottom: "8px" }}>
-        <label className="scifi-label">Livraisons</label>
+        <label className="scifi-label">{t("contractForm.deliveries")}</label>
 
         {deliveries.map((delivery, index) => {
           const isFirst = index === 0;
@@ -182,7 +184,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
             <div key={delivery.id} className="delivery-row">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--accent)", letterSpacing: "0.1em" }}>
-                  LIVRAISON_{String(index + 1).padStart(2, "0")}
+                  {t("contractForm.deliveryLabel")}{String(index + 1).padStart(2, "0")}
                 </span>
                 <button
                   type="button"
@@ -199,7 +201,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
               {/* 1. Quantité SCU */}
               <div style={{ marginBottom: "10px" }}>
-                <label className="scifi-label">Quantité (SCU)</label>
+                <label className="scifi-label">{t("contractForm.scu")}</label>
                 <input
                   ref={isFirst ? firstScuRef : undefined}
                   type="number"
@@ -220,8 +222,8 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
               {/* 2. Ressource */}
               <SearchableSelect
-                label="Ressource"
-                placeholder="Tape quelques lettres..."
+                label={t("contractForm.commodity")}
+                placeholder={t("select.filterPlaceholder")}
                 value={delivery.commodity}
                 options={COMMODITY_OPTIONS}
                 onChange={(value) => updateDelivery(delivery.id, { commodity: value })}
@@ -229,10 +231,9 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
                 onTabNext={() => destinationRef.current?.focus()}
               />
 
-              {/* 3. Destination */}
               <SearchableSelect
-                label="Destination"
-                placeholder="Tape quelques lettres..."
+                label={t("contractForm.destination")}
+                placeholder={t("select.filterPlaceholder")}
                 value={delivery.destination}
                 options={DESTINATION_OPTIONS}
                 onChange={(value) => updateDelivery(delivery.id, { destination: value })}
@@ -247,11 +248,10 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
                 }
               />
 
-              {/* 4. Lieu de chargement (obligatoire) */}
               <div style={{ marginBottom: "6px" }}>
-                <label className="scifi-label">Lieu de chargement</label>
+                <label className="scifi-label">{t("contractForm.pickupLocation")}</label>
                 <SearchableSelect
-                  placeholder="Où charger cette livraison..."
+                  placeholder={t("contractForm.pickupPlaceholder")}
                   value={delivery.pickupLocation ?? ""}
                   options={DESTINATION_OPTIONS}
                   onChange={(value) => updateDelivery(delivery.id, { pickupLocation: value })}
@@ -263,16 +263,16 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
       </div>
 
       <button type="button" onClick={addDeliveryRow} className="btn-secondary" style={{ width: "100%", marginBottom: "12px" }}>
-        + Ajouter une livraison
+        {t("contractForm.addDelivery")}
       </button>
 
       <div style={{ display: "flex", gap: "8px" }}>
         <button type="button" onClick={submit} className="btn-primary" style={{ flex: 1 }}>
-          {editingContract ? "Enregistrer" : "Ajouter"}
+          {editingContract ? t("contractForm.save") : t("contractForm.submit")}
         </button>
         {editingContract && (
           <button type="button" onClick={() => { onCancelEdit(); resetForm(); }} className="btn-secondary" style={{ flex: 1 }}>
-            Annuler
+            {t("contractForm.cancel")}
           </button>
         )}
       </div>

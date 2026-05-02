@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract } from "../types/Contract";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
 
@@ -36,6 +37,7 @@ export default function ContractList({
   onRetractFragment,
   demoContract,
 }: Props) {
+  const { t } = useLanguage();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const fragmentsByDelivery = useMemo(() => {
@@ -63,7 +65,7 @@ export default function ContractList({
 
   function getBayLabel(bayId: string): string {
     const index = bays.findIndex((b) => b.id === bayId);
-    return index >= 0 ? `Soute ${index + 1}` : bayId;
+    return index >= 0 ? `${t("contractList.bay")} ${index + 1}` : bayId;
   }
 
   function moveContract(from: number, to: number) {
@@ -81,7 +83,7 @@ export default function ContractList({
     <div className="scifi-panel" style={{ marginBottom: "10px" }}>
       <div className="corner-tl" />
       <div className="corner-br" />
-      <div className="section-header">Contrats</div>
+      <div className="section-header">{t("contractList.title")}</div>
 
       {allContracts.map((contract, index) => {
         const isDemo = contract.id === "__tutorial_demo__";
@@ -129,7 +131,7 @@ export default function ContractList({
                 )}
                 {isOverflow && (
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--danger)", border: "1px solid var(--danger)", padding: "1px 5px", borderRadius: "2px" }}>
-                    ⚠ DÉBORDEMENT
+                    {t("contractList.overflow")}
                   </span>
                 )}
                 <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--cyan)" }}>
@@ -139,13 +141,13 @@ export default function ContractList({
 
               {/* Meta */}
               <div style={{ display: "flex", gap: "16px", marginBottom: "10px" }}>
-                <Stat label="Max caisse" value={`${contract.maxContainerSize} SCU`} />
+                <Stat label={t("contractList.maxCrate")} value={`${contract.maxContainerSize} SCU`} />
               </div>
 
               {/* Destinations */}
               <div style={{ marginBottom: "10px" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "6px" }}>
-                  Destinations
+                  {t("contractList.destinations")}
                 </div>
                 {contract.deliveries.map((delivery) => {
                   const deliveryFragments = fragmentsByDelivery.get(delivery.id) ?? [];
@@ -189,7 +191,7 @@ export default function ContractList({
                               fontFamily: "var(--font-mono)", padding: "1px 5px", borderRadius: "2px",
                             }}
                           >
-                            ↩ Retirer
+                            {t("contractList.retract")}
                           </button>
                         </div>
                       ))}
@@ -202,7 +204,7 @@ export default function ContractList({
                           borderRight: "1px solid var(--border)",
                           borderBottom: "1px solid var(--border)",
                         }}>
-                          ⚠ {remaining} SCU restants à placer
+                          ⚠ {remaining} {t("contractList.remaining")}
                         </div>
                       )}
                     </div>
@@ -214,10 +216,10 @@ export default function ContractList({
               {!isDemo && (
                 <div style={{ display: "flex", gap: "6px" }}>
                   <button onClick={() => onEdit(contract)} className="btn-secondary" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
-                    Modifier
+                    {t("contractList.edit")}
                   </button>
                   <button onClick={() => onDelete(contract.id)} className="btn-danger" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
-                    Supprimer
+                    {t("contractList.delete")}
                   </button>
                 </div>
               )}

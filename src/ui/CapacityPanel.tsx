@@ -1,3 +1,5 @@
+import { useLanguage } from "../i18n/LanguageContext";
+
 type Props = {
   totalPlacedScu: number;
   shipCapacityScu: number;
@@ -11,6 +13,7 @@ export default function CapacityPanel({
   maxCrateCapacity,
   totalDeliveredScu,
 }: Props) {
+  const { t } = useLanguage();
   const available = Math.max(0, shipCapacityScu - totalPlacedScu);
   const fillPct = Math.min(100, (totalPlacedScu / shipCapacityScu) * 100);
   const remainingPct = 100 - fillPct;
@@ -35,7 +38,7 @@ export default function CapacityPanel({
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          En soute
+          {t("capacity.inBay")}
         </span>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
           {totalPlacedScu}
@@ -45,7 +48,7 @@ export default function CapacityPanel({
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Disponible
+          {t("capacity.available")}
         </span>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: availableColor }}>
           {available} SCU
@@ -71,7 +74,7 @@ export default function CapacityPanel({
 
       <div style={{ visibility: totalDeliveredScu > 0 ? "visible" : "hidden" }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-dim)" }}>
-          ✓ {totalDeliveredScu} SCU livrés
+          ✓ {totalDeliveredScu} {t("capacity.delivered")}
         </span>
       </div>
 

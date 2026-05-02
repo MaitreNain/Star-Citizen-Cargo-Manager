@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "./i18n/LanguageContext";
 
 import AppLayout, { type TabId } from "./ui/AppLayout";
 import TutorialOverlay, { TUTORIAL_DEMO_CONTRACT } from "./ui/TutorialOverlay";
@@ -70,6 +71,7 @@ export default function CargoPlanner() {
   const [contractFormKey, setContractFormKey] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
+  const { t } = useLanguage();
   const { canUndo, push: pushToHistory, pop: popHistory } = useHistory();
   const drag = useDragState();
 
@@ -603,12 +605,12 @@ export default function CargoPlanner() {
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>
-            <button onClick={deleteAllContracts} className="btn-danger" style={{ flex: 1 }}>Confirmer</button>
-            <button onClick={() => setDeleteAllConfirm(false)} className="btn-secondary" style={{ flex: 1, fontSize: "11px" }}>Annuler suppression</button>
+            <button onClick={deleteAllContracts} className="btn-danger" style={{ flex: 1 }}>{t("planner.deleteConfirm")}</button>
+            <button onClick={() => setDeleteAllConfirm(false)} className="btn-secondary" style={{ flex: 1, fontSize: "11px" }}>{t("planner.deleteCancel")}</button>
           </>
         ) : (
           <button onClick={() => setDeleteAllConfirm(true)} disabled={contracts.length === 0} className="btn-danger" style={{ flex: 1 }}>
-            ✕ Supprimer tous les contrats
+            {t("planner.deleteAll")}
           </button>
         )}
       </div>
@@ -631,7 +633,7 @@ export default function CargoPlanner() {
     <>
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         <button onClick={undoLastAction} disabled={!canUndo} className="btn-secondary" style={{ flex: 1 }}>
-          ↩ Annuler
+          {t("planner.undo")}
         </button>
       </div>
       <div id="tuto-deliveries">
