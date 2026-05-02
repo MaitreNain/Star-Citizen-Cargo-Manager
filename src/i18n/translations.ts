@@ -91,7 +91,7 @@ const translations = {
 
     // Scene 3D
     "scene.bay": "SOUTE",
-    "scene.ramp": "RAMPE / ARRIÈRE",
+    "scene.ramp": "ARRIÈRE",
     "scene.front": "AVANT",
     "scene.clickBay": "Cliquez sur une soute pour assigner",
   },
@@ -186,7 +186,7 @@ const translations = {
 
     // Scene 3D
     "scene.bay": "BAY",
-    "scene.ramp": "RAMP / REAR",
+    "scene.ramp": "REAR",
     "scene.front": "FRONT",
     "scene.clickBay": "Click a bay to assign",
   },
