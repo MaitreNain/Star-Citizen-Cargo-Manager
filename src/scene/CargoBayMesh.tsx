@@ -3,6 +3,7 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { CargoBay } from "../types/CargoBay";
 import BayGrid from "./BayGrid";
+import { useLabelTexture } from "./useLabelTexture";
 
 type CellPosition = { bayId: string; x: number; y: number; z: number };
 
@@ -14,42 +15,6 @@ type Props = {
   onPointerUpCell?: () => void;
   onBayClick?: (bayId: string) => void;
 };
-
-function useLabelTexture(text: string, color: string): { texture: THREE.CanvasTexture; ratio: number } {
-  return useMemo(() => {
-    const fontSize = 26;
-    const paddingH = 28;
-    const paddingV = 16;
-    const canvasH = fontSize + paddingV * 2;
-
-    const measure = document.createElement("canvas");
-    const mctx = measure.getContext("2d")!;
-    mctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    const textWidth = mctx.measureText(text).width;
-    const canvasW = Math.ceil(textWidth + paddingH * 2);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = canvasW;
-    canvas.height = canvasH;
-    const ctx = canvas.getContext("2d")!;
-
-    ctx.fillStyle = "rgba(6,12,18,0.88)";
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, canvasW / 2, canvasH / 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    return { texture, ratio: canvasW / canvasH };
-  }, [text, color]);
-}
 
 function BayWireframe({ w, h, d, highlight }: { w: number; h: number; d: number; highlight: boolean }) {
   const geometry = useMemo(() => {
@@ -110,7 +75,6 @@ export default function CargoBayMesh({
         </mesh>
       )}
 
-      {/* Sprite label — GPU only */}
       <sprite
         position={[size.x / 2, size.z + 0.55, size.y / 2]}
         scale={[labelTex.ratio * spriteH, spriteH, 1]}
@@ -119,7 +83,6 @@ export default function CargoBayMesh({
         <spriteMaterial map={labelTex.texture} transparent depthTest={false} />
       </sprite>
 
-      {/* Plan invisible détection souris */}
       <mesh
         position={[size.x / 2, 0.01, size.y / 2]}
         rotation={[-Math.PI / 2, 0, 0]}

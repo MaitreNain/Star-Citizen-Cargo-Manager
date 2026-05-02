@@ -42,13 +42,11 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
 
   const { compoundBays, individualBays } = buildCompoundBays(ship.cargoBays);
 
-  // Index de section → groupId pour la migration des anciennes données
   const sectionToGroup = new Map<string, string>();
   for (const bay of ship.cargoBays) {
     if (bay.group) sectionToGroup.set(bay.id, bay.group);
   }
 
-  // Groupe les caisses par baie assignée (ou groupId si section d'un groupe)
   const byBay = new Map<string, Map<string, Crate[]>>();
 
   for (const crate of crates) {
@@ -65,7 +63,6 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
     deliveryMap.get(deliveryId)!.push(crate);
   }
 
-  // Placement dans les soutes individuelles
   for (const bay of individualBays) {
     const deliveryMap = byBay.get(bay.id);
     if (!deliveryMap || deliveryMap.size === 0) continue;
@@ -96,7 +93,6 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
     }
   }
 
-  // Placement dans les soutes composées
   for (const compound of compoundBays) {
     const deliveryMap = byBay.get(compound.id);
     if (!deliveryMap || deliveryMap.size === 0) continue;

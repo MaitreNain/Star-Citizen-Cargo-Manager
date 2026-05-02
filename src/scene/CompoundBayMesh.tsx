@@ -4,6 +4,7 @@ import * as THREE from "three";
 import type { CompoundBay, CompoundSection } from "../types/CompoundBay";
 import { isValidCellInCompound } from "../engine/buildCompoundBays";
 import BayGrid from "./BayGrid";
+import { useLabelTexture } from "./useLabelTexture";
 
 type CellPosition = { bayId: string; x: number; y: number; z: number };
 
@@ -16,75 +17,34 @@ type Props = {
   onBayClick?: (bayId: string) => void;
 };
 
-function useLabelTexture(text: string, color: string): { texture: THREE.CanvasTexture; ratio: number } {
-  return useMemo(() => {
-    const fontSize = 26;
-    const paddingH = 28;
-    const paddingV = 16;
-    const canvasH = fontSize + paddingV * 2;
-
-    const measure = document.createElement("canvas");
-    const mctx = measure.getContext("2d")!;
-    mctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    const textWidth = mctx.measureText(text).width;
-    const canvasW = Math.ceil(textWidth + paddingH * 2);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = canvasW;
-    canvas.height = canvasH;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "rgba(6,12,18,0.88)";
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, canvasW / 2, canvasH / 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    return { texture, ratio: canvasW / canvasH };
-  }, [text, color]);
-}
-
 /**
- * Calcule les arêtes de la silhouette extérieure de l'union des sections.
+ * Calcule les arêtes (wireframe) ET les triangles (fill) de la silhouette extérieure
+ * de l'union des sections en un seul passage.
  *
- * Principe : regrouper d'abord toutes les cellules extérieures par PLAN DE FACE
- * (axe + direction + position fixe) en combinant TOUTES les sections. Ce n'est
- * qu'après cette fusion qu'on calcule les arêtes — ainsi la bordure entre deux
- * sections adjacentes n'est jamais dessinée car leurs cellules appartiennent au
- * même ensemble continu.
+ * Passe 1 : pour chaque plan de face (axe + direction + valeur fixe), collecter
+ * les cellules extérieures de TOUTES les sections combinées.
+ * Passe 2 : générer les arêtes et les triangles depuis l'ensemble fusionné —
+ * les bordures internes entre sections adjacentes ne sont jamais dessinées.
  *
- * Mapping game (gx,gy,gz) → THREE local : pts.push(gx, gz, gy)
+ * Mapping game (gx,gy,gz) → THREE local : (gx, gz, gy)
  */
-function buildCompoundWireframe(sections: CompoundSection[]): THREE.BufferGeometry {
-  const pts: number[] = [];
+function buildCompoundGeometry(sections: CompoundSection[]): {
+  wireGeo: THREE.BufferGeometry;
+  fillGeo: THREE.BufferGeometry;
+} {
+  const edgePts: number[] = [];
+  const fillPts: number[] = [];
 
-  function addEdge(gx1:number,gy1:number,gz1:number, gx2:number,gy2:number,gz2:number) {
-    pts.push(gx1,gz1,gy1, gx2,gz2,gy2);
-  }
-
-  // Clé de plan de face : "axe:dir:valeur_fixe"
-  // axe "x" → cellules (u=gy, v=gz), toGame=(f,u,v)→[f,u,v]
-  // axe "y" → cellules (u=gx, v=gz), toGame=(f,u,v)→[u,f,v]
-  // axe "z" → cellules (u=gx, v=gy), toGame=(f,u,v)→[u,v,f]
+  // Passe 1 — cellules extérieures par plan de face
   const byFacePlane = new Map<string, Set<string>>();
-
   function getPlane(key: string) {
     if (!byFacePlane.has(key)) byFacePlane.set(key, new Set());
     return byFacePlane.get(key)!;
   }
 
-  // Passe 1 : collecter les cellules extérieures, TOUTES SECTIONS CONFONDUES par plan
   for (const s of sections) {
     const { localOffset: o, size: sz } = s;
 
-    // ±x
     for (let gy = o.y; gy < o.y + sz.y; gy++)
       for (let gz = o.z; gz < o.z + sz.z; gz++) {
         if (!isValidCellInCompound(o.x + sz.x, gy, gz, sections))
@@ -93,7 +53,6 @@ function buildCompoundWireframe(sections: CompoundSection[]): THREE.BufferGeomet
           getPlane(`x:-:${o.x}`).add(`${gy},${gz}`);
       }
 
-    // ±y
     for (let gx = o.x; gx < o.x + sz.x; gx++)
       for (let gz = o.z; gz < o.z + sz.z; gz++) {
         if (!isValidCellInCompound(gx, o.y + sz.y, gz, sections))
@@ -102,7 +61,6 @@ function buildCompoundWireframe(sections: CompoundSection[]): THREE.BufferGeomet
           getPlane(`y:-:${o.y}`).add(`${gx},${gz}`);
       }
 
-    // ±z
     for (let gx = o.x; gx < o.x + sz.x; gx++)
       for (let gy = o.y; gy < o.y + sz.y; gy++) {
         if (!isValidCellInCompound(gx, gy, o.z + sz.z, sections))
@@ -112,30 +70,62 @@ function buildCompoundWireframe(sections: CompoundSection[]): THREE.BufferGeomet
       }
   }
 
-  // Passe 2 : pour chaque plan, tracer les arêtes frontière de l'ensemble fusionné
+  // Passe 2 — arêtes et triangles depuis l'ensemble fusionné par plan
   for (const [key, cells] of byFacePlane) {
-    const [axisStr, , fvalStr] = key.split(":");
+    const [axisStr, dir, fvalStr] = key.split(":");
     const f = parseInt(fvalStr);
 
-    const toGame: (u: number, v: number) => [number, number, number] =
-      axisStr === "x" ? (u, v) => [f, u, v]
-      : axisStr === "y" ? (u, v) => [u, f, v]
-      : (u, v) => [u, v, f];
+    // Mapping (f, u, v) → THREE local (gx, gz, gy) selon l'axe :
+    //   x: u=gy, v=gz  →  (f, v, u)
+    //   y: u=gx, v=gz  →  (u, v, f)
+    //   z: u=gx, v=gy  →  (u, f, v)
+    const corner: (u: number, v: number) => [number, number, number] =
+      axisStr === "x" ? (u, v) => [f, v, u]
+      : axisStr === "y" ? (u, v) => [u, v, f]
+      : (u, v) => [u, f, v];
+
+    // Winding CCW pour normale sortante (FrontSide) :
+    //   x:+ → flip, x:- → normal
+    //   y:+ → normal, y:- → flip
+    //   z:+ → flip, z:- → normal
+    const flip =
+      (axisStr === "x" && dir === "+") ||
+      (axisStr === "y" && dir === "-") ||
+      (axisStr === "z" && dir === "+");
 
     for (const cellKey of cells) {
       const [u, v] = cellKey.split(",").map(Number);
       const has = (du: number, dv: number) => cells.has(`${u + du},${v + dv}`);
 
-      if (!has(-1, 0)) { const [a,b,c]=toGame(u,v);   const [d,e,g]=toGame(u,v+1);   addEdge(a,b,c,d,e,g); }
-      if (!has(+1, 0)) { const [a,b,c]=toGame(u+1,v); const [d,e,g]=toGame(u+1,v+1); addEdge(a,b,c,d,e,g); }
-      if (!has(0, -1)) { const [a,b,c]=toGame(u,v);   const [d,e,g]=toGame(u+1,v);   addEdge(a,b,c,d,e,g); }
-      if (!has(0, +1)) { const [a,b,c]=toGame(u,v+1); const [d,e,g]=toGame(u+1,v+1); addEdge(a,b,c,d,e,g); }
+      const [a0,b0,c0] = corner(u,   v  );
+      const [a1,b1,c1] = corner(u,   v+1);
+      const [a2,b2,c2] = corner(u+1, v+1);
+      const [a3,b3,c3] = corner(u+1, v  );
+
+      // Arêtes : bords sans voisin uniquement
+      if (!has(-1, 0)) edgePts.push(a0,b0,c0, a1,b1,c1);
+      if (!has(+1, 0)) edgePts.push(a3,b3,c3, a2,b2,c2);
+      if (!has(0, -1)) edgePts.push(a0,b0,c0, a3,b3,c3);
+      if (!has(0, +1)) edgePts.push(a1,b1,c1, a2,b2,c2);
+
+      // Triangles : winding selon la normale sortante
+      if (!flip) {
+        fillPts.push(a0,b0,c0, a3,b3,c3, a2,b2,c2);
+        fillPts.push(a0,b0,c0, a2,b2,c2, a1,b1,c1);
+      } else {
+        fillPts.push(a0,b0,c0, a1,b1,c1, a2,b2,c2);
+        fillPts.push(a0,b0,c0, a2,b2,c2, a3,b3,c3);
+      }
     }
   }
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
+  const wireGeo = new THREE.BufferGeometry();
+  wireGeo.setAttribute("position", new THREE.Float32BufferAttribute(edgePts, 3));
+
+  const fillGeo = new THREE.BufferGeometry();
+  fillGeo.setAttribute("position", new THREE.Float32BufferAttribute(fillPts, 3));
+
+  return { wireGeo, fillGeo };
 }
 
 export default function CompoundBayMesh({
@@ -152,7 +142,7 @@ export default function CompoundBayMesh({
     invalidate();
   }
 
-  const wireGeo = useMemo(() => buildCompoundWireframe(sections), [sections]);
+  const { wireGeo, fillGeo } = useMemo(() => buildCompoundGeometry(sections), [sections]);
 
   const bayLabel = `SOUTE ${bayNumbers[0]}`;
   const labelText = isAssignTarget ? `> ${bayLabel}` : bayLabel;
@@ -175,34 +165,33 @@ export default function CompoundBayMesh({
 
   return (
     <group>
-      {/* Wireframe fusionné — une seule géométrie pour l'union des sections */}
       <group position={[worldOffset.x, worldOffset.z, worldOffset.y]}>
         <lineSegments geometry={wireGeo}>
           <lineBasicMaterial color={highlight ? "#e07828" : "#1e4a6e"} />
         </lineSegments>
+
+        {isAssignTarget && (
+          <mesh geometry={fillGeo}>
+            <meshBasicMaterial
+              color={hovered ? "#e07828" : "#38bdf8"}
+              transparent
+              opacity={hovered ? 0.08 : 0.03}
+              side={THREE.FrontSide}
+              depthWrite={false}
+            />
+          </mesh>
+        )}
       </group>
 
-      {/* Par section : grille + plan de détection souris */}
       {sections.map((section) => {
         const wx = worldOffset.x + section.localOffset.x;
         const wy = worldOffset.y + section.localOffset.y;
         const wz = worldOffset.z + section.localOffset.z;
-        const { x: sw, y: sd, z: sh } = section.size;
+        const { x: sw, y: sd } = section.size;
 
         return (
           <group key={section.id} position={[wx, wz, wy]}>
             {section.localOffset.z === 0 && <BayGrid width={sw} depth={sd} />}
-
-            {isAssignTarget && (
-              <mesh position={[sw / 2, sh / 2, sd / 2]}>
-                <boxGeometry args={[sw, sh, sd]} />
-                <meshBasicMaterial
-                  color={hovered ? "#e07828" : "#38bdf8"}
-                  transparent
-                  opacity={hovered ? 0.08 : 0.03}
-                />
-              </mesh>
-            )}
 
             <mesh
               position={[sw / 2, 0.01, sd / 2]}
@@ -231,7 +220,6 @@ export default function CompoundBayMesh({
         );
       })}
 
-      {/* Label centré sur le bounding box */}
       <sprite
         position={[worldOffset.x + bbCenterX, worldOffset.z + bbMaxZ + 0.55, worldOffset.y + bbCenterY]}
         scale={[labelTex.ratio * spriteH, spriteH, 1]}

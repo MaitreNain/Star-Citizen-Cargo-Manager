@@ -6,6 +6,7 @@ import ShipSelector from "./ui/ShipSelector";
 import ContractList from "./ui/ContractList";
 import ContractForm from "./ui/ContractForm";
 import PendingDeliveriesPanel from "./ui/PendingDeliveriesPanel";
+import ManualCargoForm from "./ui/ManualCargoForm";
 import CapacityPanel from "./ui/CapacityPanel";
 import CargoScene from "./scene/CargoScene";
 
@@ -61,7 +62,6 @@ export default function CargoPlanner() {
   const [archivedDeliveries, setArchivedDeliveries] = useState<ArchivedDelivery[]>(saved?.archivedDeliveries ?? []);
   const [activatedDeliveries, setActivatedDeliveries] = useState<string[]>(saved?.activatedDeliveries ?? []);
 
-  // États UI non persistés
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<SelectedDelivery>(null);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
@@ -265,8 +265,6 @@ export default function CargoPlanner() {
     return count;
   }, [contracts, placedScuByDelivery, archivedDeliveries, activatedDeliveries]);
 
-  // ── Snapshot helpers ──────────────────────────────────────────────────────
-
   function getSnapshot(): PlannerSnapshot {
     return { shipId, contracts, placedCrates, fragments, archivedDeliveries, activatedDeliveries, sortMode };
   }
@@ -289,8 +287,6 @@ export default function CargoPlanner() {
       drag.clear();
     });
   }
-
-  // ── Placement ─────────────────────────────────────────────────────────────
 
   function buildFromFragments(
     nextContracts: Contract[],
@@ -355,8 +351,6 @@ export default function CargoPlanner() {
     drag.clear();
   }
 
-  // ── Contrats ──────────────────────────────────────────────────────────────
-
   function handleShipChange(nextShipId: string) {
     pushHistorySnapshot();
     setShipId(nextShipId);
@@ -414,8 +408,6 @@ export default function CargoPlanner() {
     drag.clear();
   }
 
-  // ── Livraisons ────────────────────────────────────────────────────────────
-
   function handleBayClick(bayId: string) {
     if (!selectedDelivery) return;
     pushHistorySnapshot();
@@ -447,7 +439,7 @@ export default function CargoPlanner() {
     });
 
     const placedScu = newlyPlaced.reduce((sum, c) => sum + c.size, 0);
-    if (placedScu === 0) { setSelectedDelivery({ ...selectedDelivery }); return; }
+    if (placedScu === 0) return;
 
     const nextPlacedCrates = [...placedCrates, ...newlyPlaced];
     const fragmentKey = `${deliveryId}::${bayId}`;
@@ -520,8 +512,6 @@ export default function CargoPlanner() {
     setArchivedDeliveries((prev) => prev.filter((a) => a.deliveryId !== archived.deliveryId));
   }
 
-  // ── Drag ──────────────────────────────────────────────────────────────────
-
   function moveCrate(crateId: string, newPosition: { bayId: string; x: number; y: number; z: number }, rotatedDimensions?: { x: number; y: number; z: number }) {
     setPlacedCrates((prev) => {
       const afterMove = prev.map((crate) =>
@@ -530,7 +520,6 @@ export default function CargoPlanner() {
           : crate
       );
 
-      // On passe toutes les soutes (individuelles + virtuelles composées) à applyGravity
       const { compoundBays } = buildCompoundBays(ship.cargoBays);
       const allBaysForGravity = [
         ...ship.cargoBays,
@@ -584,8 +573,6 @@ export default function CargoPlanner() {
     drag.clear();
   }
 
-  // ── Onglets ───────────────────────────────────────────────────────────────
-
   const headerContent = (
     <>
       <div id="tuto-ship">
@@ -612,6 +599,7 @@ export default function CargoPlanner() {
           onCancelEdit={() => setEditingContract(null)}
         />
       </div>
+      <ManualCargoForm onAdd={addContract} contractsCount={contracts.length} />
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>

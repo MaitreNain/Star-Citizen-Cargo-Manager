@@ -29,6 +29,7 @@ function createEmptyDelivery(): ContractDelivery {
 }
 
 export default function ContractForm({ onAdd, onUpdate, contracts, editingContract, onCancelEdit }: Props) {
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [maxSize, setMaxSize] = useState<number | "">("")
   const [deliveries, setDeliveries] = useState<ContractDelivery[]>([createEmptyDelivery()]);
@@ -41,6 +42,7 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
 
   useEffect(() => {
     if (editingContract) {
+      setOpen(true);
       setName(editingContract.name);
       setMaxSize(editingContract.maxContainerSize);
       setDeliveries(editingContract.deliveries.length > 0 ? editingContract.deliveries : [createEmptyDelivery()]);
@@ -117,13 +119,25 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
   }
 
   return (
-    <div className="scifi-panel">
+    <div
+      className="scifi-panel"
+      style={{ cursor: "pointer" }}
+      onClick={() => setOpen((o) => !o)}
+    >
       <div className="corner-tl" />
       <div className="corner-br" />
 
-      <div className="section-header">
-        {editingContract ? "Modifier contrat" : "Nouveau contrat"}
+      <div
+        className="section-header"
+        style={{ marginBottom: open ? undefined : 0, userSelect: "none" }}
+      >
+        {editingContract ? "Modifier contrat" : "Contrat de Hauling"}
+        <span className="toggle-arrow" style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
+          {open ? "▲" : "▼"}
+        </span>
       </div>
+
+      {open && <div onClick={(e) => e.stopPropagation()} style={{ cursor: "default" }}>
 
       {/* Nom */}
       <div style={{ marginBottom: "12px" }}>
@@ -262,6 +276,8 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
           </button>
         )}
       </div>
+
+      </div>}
     </div>
   );
 }

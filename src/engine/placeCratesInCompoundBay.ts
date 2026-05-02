@@ -3,6 +3,7 @@ import type { PlacedCrate } from "../types/PlacedCrate";
 import type { CompoundBay, CompoundSection } from "../types/CompoundBay";
 import { checkCollision } from "./checkCollision";
 import { isValidCellInCompound } from "./buildCompoundBays";
+import { getRotations } from "./getRotatedDimensions";
 
 type CrateLike = { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 };
 
@@ -17,33 +18,11 @@ type CrateToPlace = {
   color?: string;
 };
 
-function doesCrateFitInCompound(
-  crateSize: Vector3,
-  position: Vector3,
-  sections: CompoundSection[],
-  boundingBox: Vector3
-): boolean {
-  if (
-    position.x < 0 || position.y < 0 || position.z < 0 ||
-    position.x + crateSize.x > boundingBox.x ||
-    position.y + crateSize.y > boundingBox.y ||
-    position.z + crateSize.z > boundingBox.z
-  ) return false;
-
-  for (let x = position.x; x < position.x + crateSize.x; x++)
-    for (let y = position.y; y < position.y + crateSize.y; y++)
-      for (let z = position.z; z < position.z + crateSize.z; z++)
-        if (!isValidCellInCompound(x, y, z, sections)) return false;
-
-  return true;
-}
-
 export function checkSupportInCompound(
   movingCrate: { dimensions: Vector3; id: string },
   position: Vector3,
   placedCrates: Array<CrateLike>,
-  bayId: string,
-  _sections: CompoundSection[]
+  bayId: string
 ): boolean {
   if (position.z === 0) return true;
 
@@ -64,12 +43,6 @@ export function checkSupportInCompound(
   return true;
 }
 
-function getRotations(dimensions: Vector3): Vector3[] {
-  const { x, y, z } = dimensions;
-  if (x === y) return [{ x, y, z }];
-  return [{ x, y, z }, { x: y, y: x, z }];
-}
-
 function findBestPosition(
   crate: CrateToPlace,
   compound: CompoundBay,
@@ -88,21 +61,18 @@ function findBestPosition(
       for (let x = 0; x <= maxX; x++) {
         for (let z = 0; z <= maxZ; z++) {
           const position = { x, y, z };
-          if (!doesCrateFitInCompound(dims, position, sections, boundingBox)) continue;
-          const collides = checkCollision(
-            { id: crate.id, dimensions: dims },
-            { ...position, bayId },
-            alreadyPlaced
-          );
-          if (collides) continue;
-          const supported = checkSupportInCompound(
-            { id: crate.id, dimensions: dims },
-            position,
-            alreadyPlaced,
-            bayId,
-            sections
-          );
-          if (!supported) continue;
+
+          let allValid = true;
+          outer:
+          for (let cx = x; cx < x + dims.x; cx++)
+            for (let cy = y; cy < y + dims.y; cy++)
+              for (let cz = z; cz < z + dims.z; cz++)
+                if (!isValidCellInCompound(cx, cy, cz, sections)) { allValid = false; break outer; }
+          if (!allValid) continue;
+
+          if (checkCollision({ id: crate.id, dimensions: dims }, { ...position, bayId }, alreadyPlaced)) continue;
+          if (!checkSupportInCompound({ id: crate.id, dimensions: dims }, position, alreadyPlaced, bayId)) continue;
+
           return { position, dimensions: dims };
         }
       }

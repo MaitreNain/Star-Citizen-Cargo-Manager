@@ -40,7 +40,6 @@ export function createCratesFromContracts(contracts: Contract[]): PlannedCrate[]
     (a, b) => a.deliveryOrder - b.deliveryOrder
   );
 
-  // Construit la map destination → couleur en parcourant les livraisons dans l'ordre
   const destinationColors = new Map<string, string>();
   let colorIndex = 0;
   for (const contract of sortedContracts) {
@@ -60,7 +59,9 @@ export function createCratesFromContracts(contracts: Contract[]): PlannedCrate[]
       if (delivery.scu <= 0) continue;
 
       const deliveryColor = destinationColors.get(delivery.destination) ?? "#e07828";
-      const sizes = generateCrates(delivery.scu, contract.maxContainerSize);
+      const sizes = delivery.explicitCrates
+        ? delivery.explicitCrates.flatMap(({ sizeScu, count }) => Array<number>(count).fill(sizeScu))
+        : generateCrates(delivery.scu, contract.maxContainerSize);
 
       sizes.forEach((size, index) => {
         crates.push({

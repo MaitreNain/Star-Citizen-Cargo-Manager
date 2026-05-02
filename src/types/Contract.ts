@@ -3,7 +3,8 @@ export type ContractDelivery = {
   commodity: string;
   destination: string;
   scu: number;
-  pickupLocation: string; // lieu de chargement — toujours requis
+  pickupLocation: string;
+  explicitCrates?: { sizeScu: number; count: number }[];
 };
 
 export type Contract = {

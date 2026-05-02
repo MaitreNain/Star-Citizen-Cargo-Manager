@@ -100,6 +100,9 @@ style.textContent = `
     background: linear-gradient(to right, var(--accent-dim) 0%, transparent 80%);
     opacity: 0.7;
   }
+  .section-header .toggle-arrow {
+    order: 1;
+  }
 
   .scifi-input {
     width: 100%;
