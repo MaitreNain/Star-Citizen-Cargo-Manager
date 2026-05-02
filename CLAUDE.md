@@ -94,7 +94,7 @@ The fill mesh uses `side={THREE.FrontSide}` with correct winding so only exterio
 The app supports FR and EN. The active locale is stored in `localStorage` under the key `"locale"` and restored on load (defaults to `"fr"`).
 
 - **`translations.ts`** — all UI strings keyed by `TranslationKey` (derived via `keyof typeof translations.fr`). Sections: HUD, CapacityPanel, ContractForm, ManualCargoForm, CargoPlanner, ContractList, PendingDeliveriesPanel, SearchableSelect, Scene 3D. Both locales must stay in sync — add keys to both blocks together.
-- **`LanguageContext.tsx`** — `LanguageProvider` (wraps the whole app in `main.tsx`), `useLanguage()` hook returning `{ locale, setLocale, t }`. `setLocale` also writes to `localStorage`. All UI components call `t(key)` instead of hardcoding strings.
+- **`LanguageContext.tsx`** — `LanguageProvider` (wraps the whole app in `main.tsx`), `useLanguage()` hook returning `{ locale, setLocale, t }`. `setLocale` also writes to `localStorage`. All UI components call `t(key)` instead of hardcoding strings. On first load (no saved locale), the default is derived from `navigator.language`: `"fr"` if it starts with `"fr"`, `"en"` otherwise.
 - **Scene components** (`CargoBayMesh`, `CompoundBayMesh`, `OrientationMarkers`) are pure/presentational — they receive translated strings as props (`bayWord`, `rearLabel`, `frontLabel`) from `CargoScene`, which is the only scene file that calls `useLanguage()`.
 
 ### UI (`src/ui/`)
