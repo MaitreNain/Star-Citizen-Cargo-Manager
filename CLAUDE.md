@@ -45,7 +45,7 @@ Bays can be merged into a single contiguous loading space via the optional `grou
 - `isValidCellInCompound(x, y, z, sections)` — returns true if the voxel is inside at least one section. Used for crate fitting, support checks, and wireframe generation.
 - The floor is always at `z = 0`. `checkSupportInCompound` mirrors `checkSupport`: `position.z === 0` → supported (floor), otherwise all cells below must have a crate.
 - Elevated sections (`localOffset.z > 0`) do not render a `BayGrid` floor (the floor belongs to z=0 only).
-- Compound bays are assigned a single bay number in the display (not "SOUTE 2+3" but "SOUTE 2").
+- Compound bays are assigned a single bay number in the display (not "BAY 2+3" but "BAY 2").
 - Backward compat: saved `assignedBayId` pointing to a section are auto-remapped to the group ID in `placeCratesInShip`.
 
 ### Placement engine (`src/engine/`)
@@ -89,15 +89,23 @@ When a crate becomes unsupported after a drag, gravity tries `resolveStackPositi
 
 The fill mesh uses `side={THREE.FrontSide}` with correct winding so only exterior faces facing the camera render. This avoids transparency overdraw (the `DoubleSide` artefact where the bottom face stacks on the top face when looking from above).
 
+### Internationalisation (`src/i18n/`)
+
+The app supports FR and EN. The active locale is stored in `localStorage` under the key `"locale"` and restored on load (defaults to `"fr"`).
+
+- **`translations.ts`** — all UI strings keyed by `TranslationKey` (derived via `keyof typeof translations.fr`). Sections: HUD, CapacityPanel, ContractForm, ManualCargoForm, CargoPlanner, ContractList, PendingDeliveriesPanel, SearchableSelect, Scene 3D. Both locales must stay in sync — add keys to both blocks together.
+- **`LanguageContext.tsx`** — `LanguageProvider` (wraps the whole app in `main.tsx`), `useLanguage()` hook returning `{ locale, setLocale, t }`. `setLocale` also writes to `localStorage`. All UI components call `t(key)` instead of hardcoding strings.
+- **Scene components** (`CargoBayMesh`, `CompoundBayMesh`, `OrientationMarkers`) are pure/presentational — they receive translated strings as props (`bayWord`, `rearLabel`, `frontLabel`) from `CargoScene`, which is the only scene file that calls `useLanguage()`.
+
 ### UI (`src/ui/`)
 
-- **`AppLayout.tsx`** — two-panel layout: left sidebar (tabs: Contrats / Placement) + right 3D viewport. Global CSS variables and sci-fi classes (`.scifi-panel`, `.btn-primary`, etc.) are injected here.
-- **`ContractForm.tsx`** — add/edit a contract (name optional, color auto-assigned, deliveries with destination/commodity/SCU via `SearchableSelect`, max container size, required pickup location).
+- **`AppLayout.tsx`** — two-panel layout: left sidebar (tabs: Contracts / Placement) + right 3D viewport. Global CSS variables and sci-fi classes (`.scifi-panel`, `.btn-primary`, etc.) are injected here. Includes the FR/EN toggle button in the HUD.
+- **`ContractForm.tsx`** — collapsible panel (starts closed); expands automatically when editing a contract. Add/edit a contract: name, color auto-assigned, deliveries with destination/commodity/SCU via `SearchableSelect`, max container size, required pickup location.
 - **`ContractList.tsx`** — list of contracts with drag-to-reorder, per-delivery fragment progress.
 - **`PendingDeliveriesPanel.tsx`** — activate deliveries, select one to assign to a bay, archive/restore delivered shipments.
-- **`ManualCargoForm.tsx`** — collapsible form in the Placement tab to add explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Commodity and destination use `SearchableSelect` with the same option lists as `ContractForm`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly.
+- **`ManualCargoForm.tsx`** — collapsible form in the **Contracts tab** (below `ContractForm`) to add explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Destination uses `SearchableSelect`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly.
 - **`SearchableSelect.tsx`** — filterable autocomplete input backed by a string options array.
-- **`CapacityPanel.tsx`** — live SCU usage and remaining capacity breakdown by container size.
+- **`CapacityPanel.tsx`** — live SCU usage ("En soute x / xxx SCU") and remaining capacity ("Disponible x SCU") with an adaptive HSL color: `hsl(remainingPct * 1.2, 75%, 58%)` from red (0 %) to green (100 %); forced red at 0 SCU remaining.
 - **`TutorialOverlay.tsx`** — step-by-step guided tutorial triggered by the `?` button in the HUD.
 
 ### Key data flow
