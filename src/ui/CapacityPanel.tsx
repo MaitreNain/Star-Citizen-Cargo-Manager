@@ -13,12 +13,17 @@ export default function CapacityPanel({
 }: Props) {
   const available = Math.max(0, shipCapacityScu - totalPlacedScu);
   const fillPct = Math.min(100, (totalPlacedScu / shipCapacityScu) * 100);
+  const remainingPct = 100 - fillPct;
   const fillColor =
     totalPlacedScu > shipCapacityScu
       ? "var(--danger)"
       : totalPlacedScu > shipCapacityScu * 0.9
       ? "var(--accent)"
       : "var(--success)";
+  const availableColor =
+    available === 0
+      ? "var(--danger)"
+      : `hsl(${Math.round(remainingPct * 1.2)}, 75%, 58%)`;
 
   return (
     <div className="scifi-panel" style={{ marginBottom: "10px" }}>
@@ -28,22 +33,22 @@ export default function CapacityPanel({
         <div style={{ height: "100%", width: `${fillPct}%`, background: fillColor, borderRadius: "3px", transition: "width 0.3s" }} />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Disponible
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          En soute
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 700, color: available <= 0 ? "var(--danger)" : "var(--text)" }}>
-          {available}
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
+          {totalPlacedScu}
           <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 400 }}> / {shipCapacityScu} SCU</span>
         </span>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          En soute
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Disponible
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)" }}>
-          {totalPlacedScu} SCU
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: availableColor }}>
+          {available} SCU
         </span>
       </div>
 
