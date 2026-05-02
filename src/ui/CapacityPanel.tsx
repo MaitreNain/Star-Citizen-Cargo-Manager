@@ -52,11 +52,7 @@ export default function CapacityPanel({
         </span>
       </div>
 
-      <div style={{
-        display: "flex", gap: "6px", flexWrap: "wrap",
-        marginBottom: totalDeliveredScu > 0 ? "6px" : "0",
-        paddingTop: "2px",
-      }}>
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", paddingTop: "2px", marginBottom: "4px" }}>
         {maxCrateCapacity.map(({ scu, count }) => (
           <div key={scu} style={{
             display: "flex", alignItems: "center", gap: "4px",
@@ -73,16 +69,11 @@ export default function CapacityPanel({
         ))}
       </div>
 
-      {totalDeliveredScu > 0 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            ✓ Livrés
-          </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)" }}>
-            {totalDeliveredScu} SCU
-          </span>
-        </div>
-      )}
+      <div style={{ visibility: totalDeliveredScu > 0 ? "visible" : "hidden" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-dim)" }}>
+          ✓ {totalDeliveredScu} SCU livrés
+        </span>
+      </div>
 
     </div>
   );
