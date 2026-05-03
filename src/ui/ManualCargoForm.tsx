@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract } from "../types/Contract";
 import SearchableSelect from "./SearchableSelect";
@@ -19,10 +19,13 @@ type CrateRow = { id: string; count: number; sizeScu: number };
 
 type Props = {
   onAdd: (contract: Contract) => void;
+  onUpdate?: (contract: Contract) => void;
   contractsCount: number;
+  editingContract?: Contract | null;
+  onCancelEdit?: () => void;
 };
 
-export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
+export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editingContract, onCancelEdit }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [destination, setDestination] = useState("");
@@ -31,6 +34,21 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
   const [rows, setRows] = useState<CrateRow[]>([{ id: genId(), count: 1, sizeScu: 0 }]);
 
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (editingContract) {
+      const delivery = editingContract.deliveries[0];
+      setName(editingContract.name);
+      setDestination(delivery?.destination ?? "");
+      setPickupLocation(delivery?.pickupLocation ?? "");
+      setCommodity(delivery?.commodity === "Cargo" ? "" : (delivery?.commodity ?? ""));
+      setRows(
+        delivery?.explicitCrates?.map((c) => ({ id: genId(), count: c.count, sizeScu: c.sizeScu })) ??
+        [{ id: genId(), count: 1, sizeScu: 0 }]
+      );
+      setOpen(true);
+    }
+  }, [editingContract]);
   const totalScu = rows.reduce((sum, r) => sum + Math.max(0, r.count) * r.sizeScu, 0);
   const canSubmit = name.trim().length > 0 && destination.trim().length > 0 && totalScu > 0;
 
@@ -48,34 +66,51 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
 
   function handleSubmit() {
     if (!canSubmit) return;
-    const contractId = genId();
-    const deliveryId = genId();
-    const color = COLOR_PALETTE[contractsCount % COLOR_PALETTE.length];
     const validRows = rows.filter((r) => r.count > 0 && r.sizeScu > 0);
     const finalName = name.trim();
 
-    const contract: Contract = {
-      id: contractId,
-      name: finalName,
-      color,
-      maxContainerSize: Math.max(...validRows.map((r) => r.sizeScu)),
-      deliveryOrder: 0,
-      deliveries: [{
-        id: deliveryId,
-        commodity: commodity.trim() || "Cargo",
-        destination: destination.trim(),
-        pickupLocation: pickupLocation.trim(),
-        scu: totalScu,
-        explicitCrates: validRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })),
-      }],
-    };
+    if (editingContract && onUpdate) {
+      const delivery = editingContract.deliveries[0];
+      onUpdate({
+        ...editingContract,
+        name: finalName,
+        maxContainerSize: Math.max(...validRows.map((r) => r.sizeScu)),
+        deliveries: [{
+          ...delivery,
+          commodity: commodity.trim() || "Cargo",
+          destination: destination.trim(),
+          pickupLocation: pickupLocation.trim(),
+          scu: totalScu,
+          explicitCrates: validRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })),
+        }],
+      });
+      onCancelEdit?.();
+    } else {
+      const color = COLOR_PALETTE[contractsCount % COLOR_PALETTE.length];
+      const contract: Contract = {
+        id: genId(),
+        name: finalName,
+        color,
+        maxContainerSize: Math.max(...validRows.map((r) => r.sizeScu)),
+        deliveryOrder: 0,
+        deliveries: [{
+          id: genId(),
+          commodity: commodity.trim() || "Cargo",
+          destination: destination.trim(),
+          pickupLocation: pickupLocation.trim(),
+          scu: totalScu,
+          explicitCrates: validRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })),
+        }],
+      };
+      onAdd(contract);
+    }
 
-    onAdd(contract);
     setName("");
     setDestination("");
     setPickupLocation("");
     setCommodity("");
     setRows([{ id: genId(), count: 1, sizeScu: 0 }]);
+    setOpen(false);
   }
 
   return (
@@ -91,7 +126,7 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
         className="section-header"
         style={{ marginBottom: open ? "14px" : 0, userSelect: "none" }}
       >
-        {t("manualForm.title")}
+        {editingContract ? t("manualForm.titleEdit") : t("manualForm.title")}
         <span className="toggle-arrow" style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
           {open ? "▲" : "▼"}
         </span>
@@ -218,14 +253,33 @@ export default function ManualCargoForm({ onAdd, contractsCount }: Props) {
 
           </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="btn-primary"
-            style={{ width: "100%" }}
-          >
-            {t("manualForm.submit")}
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="btn-primary"
+              style={{ flex: 1 }}
+            >
+              {editingContract ? t("manualForm.save") : t("manualForm.submit")}
+            </button>
+            {editingContract && (
+              <button
+                onClick={() => {
+                  onCancelEdit?.();
+                  setOpen(false);
+                  setName("");
+                  setDestination("");
+                  setPickupLocation("");
+                  setCommodity("");
+                  setRows([{ id: genId(), count: 1, sizeScu: 0 }]);
+                }}
+                className="btn-secondary"
+                style={{ flex: 1 }}
+              >
+                {t("manualForm.cancelEdit")}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

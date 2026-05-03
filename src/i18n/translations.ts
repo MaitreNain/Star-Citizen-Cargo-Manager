@@ -45,6 +45,9 @@ const translations = {
     "manualForm.choosePlaceholder": "— Choisir —",
     "manualForm.addRow": "+ Ligne",
     "manualForm.submit": "✓ Ajouter le chargement",
+    "manualForm.titleEdit": "Modifier le chargement",
+    "manualForm.save": "✓ Enregistrer",
+    "manualForm.cancelEdit": "Annuler",
 
     // CargoPlanner
     "planner.deleteAll": "✕ Supprimer tous les contrats",
@@ -140,6 +143,9 @@ const translations = {
     "manualForm.choosePlaceholder": "— Choose —",
     "manualForm.addRow": "+ Row",
     "manualForm.submit": "✓ Add cargo",
+    "manualForm.titleEdit": "Edit cargo",
+    "manualForm.save": "✓ Save",
+    "manualForm.cancelEdit": "Cancel",
 
     // CargoPlanner
     "planner.deleteAll": "✕ Delete all contracts",

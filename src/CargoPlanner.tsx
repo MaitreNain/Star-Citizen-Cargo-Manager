@@ -64,6 +64,7 @@ export default function CargoPlanner() {
   const [activatedDeliveries, setActivatedDeliveries] = useState<string[]>(saved?.activatedDeliveries ?? []);
 
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [editingManualCargo, setEditingManualCargo] = useState<Contract | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<SelectedDelivery>(null);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
@@ -399,6 +400,7 @@ export default function CargoPlanner() {
       return prev.filter((did) => !deletedDeliveryIds.has(did));
     });
     if (editingContract?.id === id) setEditingContract(null);
+    if (editingManualCargo?.id === id) setEditingManualCargo(null);
     if (selectedDelivery?.contractId === id) setSelectedDelivery(null);
     drag.clear();
   }
@@ -601,7 +603,13 @@ export default function CargoPlanner() {
           onCancelEdit={() => setEditingContract(null)}
         />
       </div>
-      <ManualCargoForm onAdd={addContract} contractsCount={contracts.length} />
+      <ManualCargoForm
+        onAdd={addContract}
+        onUpdate={updateContract}
+        contractsCount={contracts.length}
+        editingContract={editingManualCargo}
+        onCancelEdit={() => setEditingManualCargo(null)}
+      />
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>
@@ -620,7 +628,15 @@ export default function CargoPlanner() {
           bays={ship.cargoBays}
           fragments={fragments}
           onDelete={deleteContract}
-          onEdit={(c) => setEditingContract(c)}
+          onEdit={(c) => {
+            if (c.deliveries[0]?.explicitCrates) {
+              setEditingManualCargo(c);
+              setEditingContract(null);
+            } else {
+              setEditingContract(c);
+              setEditingManualCargo(null);
+            }
+          }}
           onReorder={reorderContracts}
           onRetractFragment={handleRetractFragment}
           demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
