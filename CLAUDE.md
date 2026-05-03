@@ -14,6 +14,10 @@ npx tsc --noEmit  # Type-check only, no output
 
 No test suite exists in this project.
 
+## Analytics
+
+Vercel Analytics (`@vercel/analytics`) is installed. The `<Analytics />` component is mounted in `src/main.tsx` (outside the app tree). It is a no-op in local dev — data only flows in production on Vercel.
+
 ## Architecture
 
 Single-page React + TypeScript app rendered with Vite. The 3D viewport uses **React Three Fiber** (`@react-three/fiber`) and **Drei** (`@react-three/drei`).
@@ -103,7 +107,7 @@ The app supports FR and EN. The active locale is stored in `localStorage` under 
 - **`ContractForm.tsx`** — collapsible panel (starts closed); expands automatically when editing a contract. Add/edit a contract: name, color auto-assigned, deliveries with destination/commodity/SCU via `SearchableSelect`, max container size, required pickup location.
 - **`ContractList.tsx`** — list of contracts with drag-to-reorder, per-delivery fragment progress.
 - **`PendingDeliveriesPanel.tsx`** — activate deliveries, select one to assign to a bay, archive/restore delivered shipments.
-- **`ManualCargoForm.tsx`** — collapsible form in the **Contracts tab** (below `ContractForm`) to add explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Destination uses `SearchableSelect`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly.
+- **`ManualCargoForm.tsx`** — collapsible form in the **Contracts tab** (below `ContractForm`) to add or edit explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Destination uses `SearchableSelect`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly. Supports editing via `editingContract` / `onUpdate` / `onCancelEdit` props — `CargoPlanner` routes edits here (instead of `ContractForm`) when `deliveries[0].explicitCrates` is present.
 - **`SearchableSelect.tsx`** — filterable autocomplete input backed by a string options array.
 - **`CapacityPanel.tsx`** — live SCU usage ("En soute x / xxx SCU") and remaining capacity ("Disponible x SCU") with an adaptive HSL color: `hsl(remainingPct * 1.2, 75%, 58%)` from red (0 %) to green (100 %); forced red at 0 SCU remaining.
 - **`TutorialOverlay.tsx`** — step-by-step guided tutorial triggered by the `?` button in the HUD.
