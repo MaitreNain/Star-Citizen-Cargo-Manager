@@ -34,6 +34,21 @@ import { buildCompoundBays, buildSingleCompoundBay, isValidCellInCompound } from
 
 const STORAGE_KEY = "cargo-planner-v1";
 
+function buildFragmentsFromCrates(
+  crates: PlacedCrateWithMeta[],
+  deliveryScuMap: Map<string, number>
+): DeliveryFragment[] {
+  const map = new Map<string, DeliveryFragment>();
+  for (const crate of crates) {
+    if (!crate.deliveryId) continue;
+    const key = `${crate.deliveryId}::${crate.bayId}`;
+    if (!map.has(key))
+      map.set(key, { id: key, contractId: crate.contractId ?? "", deliveryId: crate.deliveryId, bayId: crate.bayId, placedScu: 0, totalScu: deliveryScuMap.get(crate.deliveryId) ?? 0 });
+    map.get(key)!.placedScu += crate.size;
+  }
+  return Array.from(map.values());
+}
+
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -82,6 +97,13 @@ export default function CargoPlanner() {
 
   const ship = useMemo(() => ships.find((s) => s.id === shipId)!, [shipId]);
   const shipCapacityScu = useMemo(() => ship.cargoBays.reduce((sum, bay) => sum + bay.size.x * bay.size.y * bay.size.z, 0), [ship]);
+  const allBaysForGravity = useMemo(() => {
+    const { compoundBays } = buildCompoundBays(ship.cargoBays);
+    return [
+      ...ship.cargoBays,
+      ...compoundBays.map((c) => ({ id: c.id, size: c.boundingBox, sections: c.sections })),
+    ];
+  }, [ship]);
 
   const demoPlacedCrates = useMemo((): PlacedCrateWithMeta[] => {
     if (!tutorialOpen || ship.cargoBays.length === 0) return [];
@@ -388,10 +410,11 @@ export default function CargoPlanner() {
   function deleteContract(id: string) {
     pushHistorySnapshot();
     const nextContracts = contracts.filter((c) => c.id !== id).map((c, i) => ({ ...c, deliveryOrder: i + 1 }));
-    const nextFragments = fragments.filter((f) => f.contractId !== id);
+    const remaining = placedCrates.filter((c) => c.contractId !== id);
+    const afterGravity = applyGravity(remaining, allBaysForGravity);
     setContracts(nextContracts);
-    setFragments(nextFragments);
-    setPlacedCrates(buildFromFragments(nextContracts, nextFragments, shipId, sortMode));
+    setPlacedCrates(afterGravity);
+    setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
     setArchivedDeliveries((prev) => prev.filter((a) => a.contractId !== id));
     setActivatedDeliveries((prev) => {
       const deletedDeliveryIds = new Set(
@@ -470,8 +493,12 @@ export default function CargoPlanner() {
 
   function archiveDelivery(deliveryId: string) {
     pushHistorySnapshot();
-    const deliveryFragments = fragments.filter((f) => f.deliveryId === deliveryId);
-    const deliveryCrates = placedCrates.filter((c) => c.deliveryId === deliveryId);
+
+    const deliveryCrates: PlacedCrateWithMeta[] = [];
+    const remaining: PlacedCrateWithMeta[] = [];
+    for (const c of placedCrates) {
+      (c.deliveryId === deliveryId ? deliveryCrates : remaining).push(c);
+    }
     if (deliveryCrates.length === 0) return;
 
     let destination = "", commodity = "", contractName = "", contractId = "", color = "";
@@ -491,57 +518,27 @@ export default function CargoPlanner() {
 
     const archived: ArchivedDelivery = {
       deliveryId, contractId, contractName, destination, commodity, totalScu, color,
-      fragments: deliveryFragments,
-      placedCratesSnapshot: deliveryCrates.map((c) => ({
-        id: c.id, bayId: c.bayId,
-        gridPosition: { ...c.gridPosition },
-        dimensions: { ...c.dimensions },
-        size: c.size,
-        contractId: c.contractId, contractName: c.contractName,
-        deliveryId: c.deliveryId, destination: c.destination,
-        commodity: c.commodity, color: c.color,
-      })),
     };
 
     setArchivedDeliveries((prev) => [...prev, archived]);
-    setPlacedCrates((prev) => prev.filter((c) => c.deliveryId !== deliveryId));
-    setFragments((prev) => prev.filter((f) => f.deliveryId !== deliveryId));
-    if (selectedDelivery?.deliveryId === deliveryId) setSelectedDelivery(null);
-  }
 
-  function restoreDelivery(archived: ArchivedDelivery) {
-    pushHistorySnapshot();
-    setPlacedCrates((prev) => [...prev, ...archived.placedCratesSnapshot as PlacedCrateWithMeta[]]);
-    setFragments((prev) => [...prev, ...archived.fragments]);
-    setArchivedDeliveries((prev) => prev.filter((a) => a.deliveryId !== archived.deliveryId));
+    const afterGravity = applyGravity(remaining, allBaysForGravity);
+    setPlacedCrates(afterGravity);
+    setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
+    if (selectedDelivery?.deliveryId === deliveryId) setSelectedDelivery(null);
   }
 
   function moveCrate(crateId: string, newPosition: { bayId: string; x: number; y: number; z: number }, rotatedDimensions?: { x: number; y: number; z: number }) {
     setPlacedCrates((prev) => {
-      const afterMove = prev.map((crate) =>
-        crate.id === crateId
-          ? { ...crate, bayId: newPosition.bayId, gridPosition: { x: newPosition.x, y: newPosition.y, z: newPosition.z }, dimensions: rotatedDimensions ?? crate.dimensions }
-          : crate
+      const next = applyGravity(
+        prev.map((crate) =>
+          crate.id === crateId
+            ? { ...crate, bayId: newPosition.bayId, gridPosition: { x: newPosition.x, y: newPosition.y, z: newPosition.z }, dimensions: rotatedDimensions ?? crate.dimensions }
+            : crate
+        ),
+        allBaysForGravity
       );
-
-      const { compoundBays } = buildCompoundBays(ship.cargoBays);
-      const allBaysForGravity = [
-        ...ship.cargoBays,
-        ...compoundBays.map((c) => ({ id: c.id, size: c.boundingBox, sections: c.sections })),
-      ];
-      const next = applyGravity(afterMove, allBaysForGravity);
-
-      const fragmentMap = new Map<string, DeliveryFragment>();
-      for (const crate of next) {
-        if (!crate.deliveryId) continue;
-        const key = `${crate.deliveryId}::${crate.bayId}`;
-        if (!fragmentMap.has(key)) {
-          fragmentMap.set(key, { id: key, contractId: crate.contractId ?? "", deliveryId: crate.deliveryId, bayId: crate.bayId, placedScu: 0, totalScu: deliveryScuMap.get(crate.deliveryId) ?? 0 });
-        }
-        fragmentMap.get(key)!.placedScu += crate.size;
-      }
-
-      setFragments(Array.from(fragmentMap.values()));
+      setFragments(buildFragmentsFromCrates(next, deliveryScuMap));
       return next;
     });
   }
@@ -627,6 +624,8 @@ export default function CargoPlanner() {
           contracts={contracts}
           bays={ship.cargoBays}
           fragments={fragments}
+          archivedDeliveryIds={useMemo(() => new Set(archivedDeliveries.map((a) => a.deliveryId)), [archivedDeliveries])}
+          shipCapacityScu={shipCapacityScu}
           onDelete={deleteContract}
           onEdit={(c) => {
             if (c.deliveries[0]?.explicitCrates) {
@@ -683,7 +682,6 @@ export default function CargoPlanner() {
           onRetractFragment={handleRetractFragment}
           archivedDeliveries={archivedDeliveries}
           onArchiveDelivery={archiveDelivery}
-          onRestoreDelivery={restoreDelivery}
           demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
         />
       </div>

@@ -7,6 +7,8 @@ type Props = {
   contracts: Contract[];
   bays: { id: string; name: string }[];
   fragments: DeliveryFragment[];
+  archivedDeliveryIds: Set<string>;
+  shipCapacityScu: number;
   onDelete: (id: string) => void;
   onEdit: (contract: Contract) => void;
   onReorder: (reordered: Contract[]) => void;
@@ -14,23 +16,13 @@ type Props = {
   demoContract?: Contract;
 };
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: "13px", color: "var(--text)", fontWeight: 600 }}>
-        {value}
-      </div>
-    </div>
-  );
-}
 
 export default function ContractList({
   contracts,
   bays,
   fragments,
+  archivedDeliveryIds,
+  shipCapacityScu,
   onDelete,
   onEdit,
   onReorder,
@@ -87,9 +79,8 @@ export default function ContractList({
 
       {allContracts.map((contract, index) => {
         const isDemo = contract.id === "__tutorial_demo__";
-        const { totalScu, placedScu } = contractStats.get(contract.id) ?? { totalScu: 0, placedScu: 0 };
-        const hasFragments = contract.deliveries.some((d) => (fragmentsByDelivery.get(d.id)?.length ?? 0) > 0);
-        const isOverflow = placedScu < totalScu && hasFragments;
+        const { totalScu } = contractStats.get(contract.id) ?? { totalScu: 0 };
+        const isOverflow = totalScu > shipCapacityScu;
 
         return (
           <div
@@ -114,82 +105,68 @@ export default function ContractList({
 
             <div style={{ paddingLeft: "10px" }}>
               {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                <div style={{
-                  width: "8px", height: "8px",
-                  background: contract.color,
-                  boxShadow: `0 0 6px ${contract.color}`,
-                  flexShrink: 0,
-                }} />
-                <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text)", letterSpacing: "0.04em" }}>
-                  {contract.name}
-                </span>
-                {isDemo && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 5px", borderRadius: "2px", opacity: 0.7 }}>
-                    EXEMPLE
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+                  <div style={{ width: "7px", height: "7px", borderRadius: "1px", background: contract.color, boxShadow: `0 0 6px ${contract.color}`, flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text)", letterSpacing: "0.03em" }}>
+                    {contract.name}
                   </span>
-                )}
-                {isOverflow && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--danger)", border: "1px solid var(--danger)", padding: "1px 5px", borderRadius: "2px" }}>
-                    {t("contractList.overflow")}
-                  </span>
-                )}
-                <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--cyan)" }}>
-                  {totalScu} SCU
-                </span>
-              </div>
-
-              {/* Meta */}
-              <div style={{ display: "flex", gap: "16px", marginBottom: "10px" }}>
-                <Stat label={t("contractList.maxCrate")} value={`${contract.maxContainerSize} SCU`} />
-              </div>
-
-              {/* Destinations */}
-              <div style={{ marginBottom: "10px" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "6px" }}>
-                  {t("contractList.destinations")}
                 </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "14px" }}>
+                  {isDemo && <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 4px", borderRadius: "2px", opacity: 0.7 }}>EXEMPLE</span>}
+                  {isOverflow && <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--danger)", border: "1px solid var(--danger)", padding: "1px 4px", borderRadius: "2px" }}>{t("contractList.overflow")}</span>}
+                  <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)" }}>
+                    max&nbsp;{contract.maxContainerSize}&nbsp;SCU
+                  </span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--cyan)" }}>
+                    {totalScu}&nbsp;SCU
+                  </span>
+                </div>
+              </div>
+
+              {/* Livraisons */}
+              <div style={{ marginBottom: "8px", display: "flex", flexDirection: "column", gap: "3px" }}>
                 {contract.deliveries.map((delivery) => {
                   const deliveryFragments = fragmentsByDelivery.get(delivery.id) ?? [];
                   const placed = deliveryFragments.reduce((sum, f) => sum + f.placedScu, 0);
                   const remaining = delivery.scu - placed;
+                  const isArchived = archivedDeliveryIds.has(delivery.id);
 
                   return (
-                    <div key={delivery.id} style={{ marginBottom: "4px" }}>
-                      {/* Ligne livraison */}
+                    <div key={delivery.id}>
                       <div style={{
-                        display: "flex", justifyContent: "space-between",
-                        padding: "5px 8px",
-                        background: "#040a10",
-                        border: "1px solid var(--border)",
-                        fontSize: "13px",
+                        padding: "4px 8px",
+                        background: isArchived ? "rgba(34,211,160,0.07)" : "#040a10",
+                        border: `1px solid ${isArchived ? "rgba(34,211,160,0.25)" : "var(--border)"}`,
+                        borderRadius: "2px",
                       }}>
-                        <span style={{ color: "var(--text)" }}>{delivery.destination}</span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-dim)" }}>
-                          {delivery.commodity} · {delivery.scu} SCU
-                        </span>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                          <span style={{ fontSize: "11px", color: isArchived ? "var(--success)" : "var(--text-dim)", flexShrink: 0 }}>
+                            {isArchived ? "✓" : "◦"}
+                          </span>
+                          <span style={{ fontSize: "12px", color: isArchived ? "var(--success)" : "var(--text)" }}>
+                            {delivery.destination}
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: isArchived ? "rgba(34,211,160,0.5)" : "var(--text-muted)", paddingLeft: "17px", marginTop: "1px" }}>
+                          {delivery.commodity}&nbsp;·&nbsp;{delivery.scu}&nbsp;SCU
+                        </div>
                       </div>
 
-                      {/* Fragments */}
                       {deliveryFragments.map((frag) => (
                         <div key={frag.id} style={{
-                          display: "flex", alignItems: "center", gap: "8px",
-                          padding: "3px 8px 3px 16px",
-                          background: "rgba(4,10,18,0.6)",
+                          display: "flex", alignItems: "center", gap: "6px",
+                          padding: "2px 8px 2px 20px",
                           borderLeft: "1px solid var(--border)",
                           borderRight: "1px solid var(--border)",
                           borderBottom: "1px solid var(--border)",
                         }}>
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--cyan)", flex: 1 }}>
-                            {getBayLabel(frag.bayId)} · {frag.placedScu} SCU
+                            {getBayLabel(frag.bayId)}&nbsp;·&nbsp;{frag.placedScu}&nbsp;SCU
                           </span>
                           <button
                             onClick={() => onRetractFragment(frag)}
-                            style={{
-                              background: "none", border: "1px solid rgba(224,80,80,0.25)",
-                              color: "var(--danger)", cursor: "pointer", fontSize: "10px",
-                              fontFamily: "var(--font-mono)", padding: "1px 5px", borderRadius: "2px",
-                            }}
+                            style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "11px", fontFamily: "var(--font-mono)", padding: "0 2px" }}
                           >
                             {t("contractList.retract")}
                           </button>
@@ -197,13 +174,7 @@ export default function ContractList({
                       ))}
 
                       {remaining > 0 && placed > 0 && (
-                        <div style={{
-                          fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--danger)",
-                          padding: "3px 8px",
-                          borderLeft: "1px solid var(--border)",
-                          borderRight: "1px solid var(--border)",
-                          borderBottom: "1px solid var(--border)",
-                        }}>
+                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--danger)", padding: "2px 8px 2px 20px", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
                           ⚠ {remaining} {t("contractList.remaining")}
                         </div>
                       )}
@@ -214,11 +185,11 @@ export default function ContractList({
 
               {/* Actions */}
               {!isDemo && (
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <button onClick={() => onEdit(contract)} className="btn-secondary" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
+                  <button onClick={() => onEdit(contract)} style={{ background: "none", border: "1px solid var(--border-glow)", color: "var(--text-muted)", cursor: "pointer", fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: "2px" }}>
                     {t("contractList.edit")}
                   </button>
-                  <button onClick={() => onDelete(contract.id)} className="btn-danger" style={{ flex: 1, fontSize: "12px", padding: "8px" }}>
+                  <button onClick={() => onDelete(contract.id)} style={{ background: "none", border: "1px solid rgba(224,80,80,0.25)", color: "var(--danger)", cursor: "pointer", fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: "2px" }}>
                     {t("contractList.delete")}
                   </button>
                 </div>

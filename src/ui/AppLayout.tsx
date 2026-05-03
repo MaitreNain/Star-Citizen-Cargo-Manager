@@ -51,6 +51,9 @@ style.textContent = `
   ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
 
+  button:not(:disabled) { transition: filter 0.15s; }
+  button:not(:disabled):hover { filter: brightness(2.3); }
+
   select {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23e07828'/%3E%3C/svg%3E");

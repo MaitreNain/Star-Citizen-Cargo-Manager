@@ -43,7 +43,6 @@ type Props = {
   onRetractFragment: (fragment: DeliveryFragment) => void;
   archivedDeliveries: ArchivedDelivery[];
   onArchiveDelivery: (deliveryId: string) => void;
-  onRestoreDelivery: (archived: ArchivedDelivery) => void;
   demoContract?: Contract;
 };
 
@@ -67,11 +66,11 @@ export default function PendingDeliveriesPanel({
   onRetractFragment,
   archivedDeliveries,
   onArchiveDelivery,
-  onRestoreDelivery,
   demoContract,
 }: Props) {
   const { t, locale } = useLanguage();
   const highlightedRef = useRef<HTMLDivElement>(null);
+  const [confirmingDeliveryId, setConfirmingDeliveryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (highlightedDeliveryId && highlightedRef.current) {
@@ -187,13 +186,14 @@ export default function PendingDeliveriesPanel({
             ? "rgba(56,189,248,0.08)"
             : "#040a10";
 
+    const scuColor = isComplete ? "var(--success)" : isWaiting ? "var(--text)" : "var(--accent)";
+
     return (
       <div
         key={item.deliveryId}
         style={{ marginBottom: "6px" }}
         ref={isHighlighted ? highlightedRef : undefined}
       >
-        {/* Carte livraison */}
         <div
           onClick={() => {
             if (isDemo || isWaiting) return;
@@ -201,7 +201,6 @@ export default function PendingDeliveriesPanel({
             else onSelectDelivery(item.deliveryId, item.contractId, item.pendingScu);
           }}
           style={{
-            padding: "0",
             background: bgColor,
             borderTop: `1px solid ${borderColor}`,
             borderRight: `1px solid ${borderColor}`,
@@ -213,102 +212,107 @@ export default function PendingDeliveriesPanel({
             opacity: isWaiting ? 0.8 : 1,
             transition: "background 0.15s, border-color 0.15s",
             boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
-            overflow: "hidden",
           }}
         >
-          {/* Zone principale : infos + SCU + boutons */}
-          <div style={{ padding: "10px 12px" }}>
+          <div style={{ padding: "8px 10px", paddingLeft: "10px" }}>
 
-            {/* Ligne 1 : point coloré + ressource + SCU */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <div style={{
-                width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
-                background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
-                border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
-                boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 6px ${deliveryColor}`,
-              }} />
-              <span style={{
-                flex: 1, minWidth: 0,
-                fontSize: "13px", fontWeight: 700, color: "var(--text)",
-                letterSpacing: "0.03em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                {item.commodity}
-              </span>
-              <span style={{
-                fontFamily: "var(--font-mono)", flexShrink: 0,
-                fontSize: isComplete ? "12px" : "13px",
-                fontWeight: 700,
-                color: isComplete ? "var(--success)" : isWaiting ? "var(--text)" : "var(--accent)",
-              }}>
-                {isComplete ? "✓ " : ""}{item.pendingScu > 0 ? item.pendingScu : item.totalScu}
-                <span style={{ fontSize: "10px", fontWeight: 400, marginLeft: "2px" }}>
-                  {item.pendingScu < item.totalScu && item.pendingScu > 0 ? `/ ${item.totalScu} ` : ""}SCU
+            {/* Header */}
+            <div style={{ marginBottom: "6px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "3px" }}>
+                <div style={{
+                  width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
+                  background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
+                  border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
+                  boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 6px ${deliveryColor}`,
+                }} />
+                <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text)", letterSpacing: "0.03em", flex: 1 }}>
+                  {item.commodity}
                 </span>
-              </span>
-              {isHighlighted && <span style={{ color: "#facc15", fontSize: "13px", flexShrink: 0 }}>◀</span>}
-            </div>
-
-            {/* Ligne 2 : contrat */}
-            <div style={{
-              fontFamily: "var(--font-mono)", fontSize: "11px",
-              color: "var(--text-muted)", marginBottom: "5px", paddingLeft: "15px",
-              letterSpacing: "0.04em",
-            }}>
-              {item.contractName}
-            </div>
-
-            {/* Lignes 3-4 : chargement et livraison — pleine largeur */}
-            <div style={{ paddingLeft: "15px", display: "flex", flexDirection: "column", gap: "3px", marginBottom: "8px" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--success)", flexShrink: 0 }}>↑</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {item.pickupLocation}
+                {isHighlighted && <span style={{ color: "#facc15", fontSize: "12px", flexShrink: 0 }}>◀</span>}
+                <span style={{ fontFamily: "var(--font-mono)", flexShrink: 0, fontSize: "12px", fontWeight: 700, color: scuColor }}>
+                  {isComplete ? "✓ " : ""}{item.pendingScu > 0 ? item.pendingScu : item.totalScu}
+                  <span style={{ fontSize: "10px", fontWeight: 400, marginLeft: "2px" }}>
+                    {item.pendingScu < item.totalScu && item.pendingScu > 0 ? `/ ${item.totalScu} ` : ""}SCU
+                  </span>
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {item.destination}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "14px" }}>
+                {isDemo && <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 4px", borderRadius: "2px", opacity: 0.7 }}>{t("pending.example")}</span>}
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>
+                  {item.contractName}
                 </span>
               </div>
             </div>
 
-            {/* Ligne 5 : boutons alignés à droite */}
+            {/* Locations */}
+            <div style={{ paddingLeft: "14px", display: "flex", flexDirection: "column", gap: "2px", marginBottom: "7px" }}>
+              {item.pickupLocation && (
+                <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--success)", flexShrink: 0 }}>↑</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.pickupLocation}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
+                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.destination}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-              {isDemo ? (
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 5px", borderRadius: "2px", opacity: 0.7, alignSelf: "center" }}>
-                  {t("pending.example")}
-                </span>
-              ) : isWaiting ? (
+              {isWaiting ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
                   style={{
                     background: "rgba(34,211,160,0.08)", border: "1px solid rgba(34,211,160,0.35)",
                     color: "var(--success)", cursor: "pointer", fontSize: "11px",
-                    fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                    fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
                   }}
                 >{t("pending.activate")}</button>
               ) : (
                 <>
-                  {isComplete && (
+                  {!isDemo && isComplete && (confirmingDeliveryId === item.deliveryId ? (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onArchiveDelivery(item.deliveryId); setConfirmingDeliveryId(null); }}
+                        style={{
+                          background: "rgba(34,211,160,0.15)", border: "1px solid rgba(34,211,160,0.6)",
+                          color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                          fontFamily: "var(--font-mono)", fontWeight: 700, padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                        }}
+                      >{t("pending.confirmDelivery")}</button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmingDeliveryId(null); }}
+                        style={{
+                          background: "none", border: "1px solid var(--border-glow)",
+                          color: "var(--text-muted)", cursor: "pointer", fontSize: "11px",
+                          fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
+                        }}
+                      >✕</button>
+                    </>
+                  ) : (
+                    !isDemo && isComplete && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmingDeliveryId(item.deliveryId); }}
+                        style={{
+                          background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
+                          color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                          fontFamily: "var(--font-mono)", fontWeight: 700, padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                        }}
+                      >{t("pending.markDone")}</button>
+                    )
+                  ))}
+                  {!isDemo && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); onArchiveDelivery(item.deliveryId); }}
+                      onClick={(e) => { e.stopPropagation(); onMarkDelivery(item.deliveryId); }}
                       style={{
-                        background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
-                        color: "var(--success)", cursor: "pointer", fontSize: "11px",
-                        fontFamily: "var(--font-mono)", fontWeight: 700, padding: "3px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                        background: isMarked ? "rgba(56,189,248,0.15)" : "none",
+                        border: `1px solid ${isMarked ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
+                        color: isMarked ? "var(--cyan)" : "var(--text-muted)",
+                        cursor: "pointer", fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
                       }}
-                    >{t("pending.markDone")}</button>
+                    >{isMarked ? t("pending.marked") : t("pending.mark")}</button>
                   )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onMarkDelivery(item.deliveryId); }}
-                    style={{
-                      background: isMarked ? "rgba(56,189,248,0.15)" : "none",
-                      border: `1px solid ${isMarked ? "rgba(56,189,248,0.5)" : "var(--border-glow)"}`,
-                      color: isMarked ? "var(--cyan)" : "var(--text-muted)",
-                      cursor: "pointer", fontSize: "11px", padding: "3px 8px", borderRadius: "2px",
-                    }}
-                  >{isMarked ? t("pending.marked") : t("pending.mark")}</button>
                 </>
               )}
               {!isDemo && (
@@ -320,7 +324,7 @@ export default function PendingDeliveriesPanel({
                     border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
                     color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
                     cursor: item.state === "waiting" ? "default" : "pointer",
-                    fontSize: "12px", padding: "3px 8px", borderRadius: "2px",
+                    fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
                   }}
                 >{t("pending.deactivate")}</button>
               )}
@@ -328,7 +332,7 @@ export default function PendingDeliveriesPanel({
           </div>
         </div>
 
-        {/* Détail des fragments (état loaded, sélectionné) */}
+        {/* Fragment details (selected, loaded) */}
         {showDetails && (
           <div style={{
             background: "rgba(4,10,18,0.8)",
@@ -340,21 +344,17 @@ export default function PendingDeliveriesPanel({
             {deliveryFragments.map((frag) => (
               <div key={frag.id} style={{
                 display: "flex", alignItems: "center",
-                padding: "4px 10px 4px 18px", gap: "8px",
+                padding: "3px 10px 3px 18px", gap: "8px",
               }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--cyan)", flexShrink: 0 }}>
-                  {getBayLabel(frag.bayId)}
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)", flex: 1 }}>
-                  {frag.placedScu} SCU
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--cyan)", flex: 1 }}>
+                  {getBayLabel(frag.bayId)}&nbsp;·&nbsp;{frag.placedScu}&nbsp;SCU
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); onRetractFragment(frag); }}
                   style={{
-                    background: "none", border: "1px solid rgba(224,80,80,0.25)",
-                    color: "var(--danger)", cursor: "pointer", fontSize: "11px",
-                    fontFamily: "var(--font-mono)", padding: "1px 6px",
-                    borderRadius: "2px", flexShrink: 0,
+                    background: "none", border: "none",
+                    color: "var(--text-muted)", cursor: "pointer", fontSize: "11px",
+                    fontFamily: "var(--font-mono)", padding: "0 2px", flexShrink: 0,
                   }}
                 >
                   {t("pending.retract")}
@@ -478,42 +478,38 @@ export default function PendingDeliveriesPanel({
           <div className="section-header" style={{ color: "var(--success)" }}>{t("pending.deliveredSection")}</div>
           {archivedDeliveries.map((archived) => (
             <div key={archived.deliveryId} style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              padding: "8px 10px 8px 14px", marginBottom: "6px",
+              marginBottom: "6px",
               background: "rgba(34,211,160,0.04)",
               borderTop: "1px solid rgba(34,211,160,0.2)",
               borderRight: "1px solid rgba(34,211,160,0.2)",
               borderBottom: "1px solid rgba(34,211,160,0.2)",
               borderLeft: `4px solid ${archived.color}`,
-              borderRadius: "2px", opacity: 0.8,
+              borderRadius: "3px", opacity: 0.85,
             }}>
-              <div style={{ width: "12px", flexShrink: 0, color: "var(--success)", fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-ui)", textAlign: "center" }}>✓</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {archived.commodity}
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text-muted)", marginLeft: "6px", fontWeight: 400 }}>
-                    {archived.contractName}
-                  </span>
+              <div style={{ padding: "8px 10px" }}>
+                <div style={{ marginBottom: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "3px" }}>
+                    <div style={{ width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0, background: "var(--success)", boxShadow: "0 0 5px var(--success)" }} />
+                    <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-dim)", letterSpacing: "0.03em", flex: 1 }}>
+                      {archived.commodity}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)", fontWeight: 700, flexShrink: 0 }}>
+                      ✓&nbsp;{archived.totalScu}&nbsp;SCU
+                    </span>
+                  </div>
+                  <div style={{ paddingLeft: "14px" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>
+                      {archived.contractName}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "3px", display: "flex", gap: "5px", alignItems: "baseline" }}>
-                  <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: "10px" }}>↓</span>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{archived.destination}</span>
+                <div style={{ paddingLeft: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
+                    <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{archived.destination}</span>
+                  </div>
                 </div>
               </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)", fontWeight: 700, flexShrink: 0, marginRight: "4px" }}>
-                ✓ {archived.totalScu} SCU
-              </div>
-              <button
-                onClick={() => onRestoreDelivery(archived)}
-                title="Annuler la livraison"
-                style={{
-                  background: "none", border: "1px solid rgba(224,80,80,0.3)",
-                  color: "var(--danger)", cursor: "pointer", fontSize: "12px",
-                  padding: "3px 6px", borderRadius: "2px", flexShrink: 0,
-                }}
-              >
-                ↩
-              </button>
             </div>
           ))}
         </div>
