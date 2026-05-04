@@ -587,12 +587,15 @@ export default function CargoPlanner() {
         maxCrateCapacity={maxCrateCapacity}
         totalDeliveredScu={totalDeliveredScu}
       />
+      <button onClick={undoLastAction} disabled={!canUndo} className="btn-secondary" style={{ width: "100%", marginBottom: "4px" }}>
+        {t("planner.undo")}
+      </button>
     </>
   );
 
   const contractsTabContent = (
     <>
-      <div id="tuto-form">
+      <div id="tuto-form" style={{ marginTop: "20px" }}>
         <ContractForm
           key={contractFormKey}
           onAdd={addContract}
@@ -648,11 +651,6 @@ export default function CargoPlanner() {
 
   const placementTabContent = (
     <>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-        <button onClick={undoLastAction} disabled={!canUndo} className="btn-secondary" style={{ flex: 1 }}>
-          {t("planner.undo")}
-        </button>
-      </div>
       <div id="tuto-deliveries">
         <PendingDeliveriesPanel
           contracts={contracts}

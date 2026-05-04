@@ -541,7 +541,7 @@ export default function AppLayout({
       {header}
 
       {/* Onglets */}
-      <div className="tab-bar">
+      <div className="tab-bar" style={{ marginTop: "20px" }}>
         <button
           className={`tab-btn${activeTab === "contracts" ? " active" : ""}`}
           onClick={() => setTab("contracts")}
