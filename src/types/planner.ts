@@ -21,12 +21,6 @@ export type PlacedCrateWithMeta = {
   assignedBayId?: string;
 };
 
-export type SelectedDelivery = {
-  deliveryId: string;
-  contractId: string;
-  pendingScu: number;
-} | null;
-
 export type PlannerSnapshot = {
   shipId: string;
   contracts: Contract[];

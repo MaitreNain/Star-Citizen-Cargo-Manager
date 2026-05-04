@@ -17,7 +17,8 @@ import { contracts as initialContracts } from "./data/contracts";
 import type { Contract } from "./types/Contract";
 import type { DeliveryFragment } from "./types/DeliveryFragment";
 import type { ArchivedDelivery } from "./types/ArchivedDelivery";
-import type { PlacedCrateWithMeta, SelectedDelivery, PlannerSnapshot } from "./types/planner";
+import type { PlacedCrateWithMeta, PlannerSnapshot } from "./types/planner";
+import type { PlannedCrate } from "./engine/createCratesFromContracts";
 
 import { useHistory } from "./hooks/useHistory";
 import { useDragState } from "./hooks/useDragState";
@@ -80,7 +81,7 @@ export default function CargoPlanner() {
 
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [editingManualCargo, setEditingManualCargo] = useState<Contract | null>(null);
-  const [selectedDelivery, setSelectedDelivery] = useState<SelectedDelivery>(null);
+  const [crateSelection, setCrateSelection] = useState<Map<string, number>>(new Map());
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
   const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
@@ -272,6 +273,29 @@ export default function CargoPlanner() {
     return map;
   }, [allCrates]);
 
+  const pendingCratesByDelivery = useMemo(() => {
+    const placedIds = new Set(placedCrates.map((c) => c.id));
+    const sizesByDelivery = new Map<string, Map<number, number>>();
+    for (const crate of allCrates) {
+      if (placedIds.has(crate.id)) continue;
+      if (!sizesByDelivery.has(crate.deliveryId)) sizesByDelivery.set(crate.deliveryId, new Map());
+      const sizeMap = sizesByDelivery.get(crate.deliveryId)!;
+      sizeMap.set(crate.size, (sizeMap.get(crate.size) ?? 0) + 1);
+    }
+    const result = new Map<string, { sizeScu: number; count: number }[]>();
+    for (const [deliveryId, sizeMap] of sizesByDelivery) {
+      result.set(deliveryId, Array.from(sizeMap.entries())
+        .map(([sizeScu, count]) => ({ sizeScu, count }))
+        .sort((a, b) => b.sizeScu - a.sizeScu));
+    }
+    return result;
+  }, [allCrates, placedCrates]);
+
+  const totalSelectedCrates = useMemo(() => {
+    let total = 0;
+    for (const count of crateSelection.values()) total += count;
+    return total;
+  }, [crateSelection]);
 
   const totalPlacedScu = useMemo(() => placedCrates.reduce((sum, c) => sum + c.size, 0), [placedCrates]);
   const totalDeliveredScu = useMemo(() => archivedDeliveries.reduce((sum, a) => sum + a.totalScu, 0), [archivedDeliveries]);
@@ -309,7 +333,7 @@ export default function CargoPlanner() {
       setActivatedDeliveries(last.activatedDeliveries);
       setSortMode(last.sortMode);
       setEditingContract(null);
-      setSelectedDelivery(null);
+      setCrateSelection(new Map());
       drag.clear();
     });
   }
@@ -360,7 +384,7 @@ export default function CargoPlanner() {
     pushHistorySnapshot();
     setPlacedCrates([]);
     setFragments([]);
-    setSelectedDelivery(null);
+    setCrateSelection(new Map());
     drag.clear();
   }
 
@@ -372,7 +396,7 @@ export default function CargoPlanner() {
     setArchivedDeliveries([]);
     setActivatedDeliveries([]);
     setEditingContract(null);
-    setSelectedDelivery(null);
+    setCrateSelection(new Map());
     setDeleteAllConfirm(false);
     drag.clear();
   }
@@ -382,7 +406,7 @@ export default function CargoPlanner() {
     setShipId(nextShipId);
     setFragments([]);
     setPlacedCrates([]);
-    setSelectedDelivery(null);
+    setCrateSelection(new Map());
     setEditingContract(null);
     drag.clear();
   }
@@ -403,7 +427,7 @@ export default function CargoPlanner() {
     setFragments(nextFragments);
     setPlacedCrates(buildFromFragments(nextContracts, nextFragments, shipId, sortMode));
     setEditingContract(null);
-    setSelectedDelivery(null);
+    setCrateSelection(new Map());
     drag.clear();
   }
 
@@ -412,19 +436,23 @@ export default function CargoPlanner() {
     const nextContracts = contracts.filter((c) => c.id !== id).map((c, i) => ({ ...c, deliveryOrder: i + 1 }));
     const remaining = placedCrates.filter((c) => c.contractId !== id);
     const afterGravity = applyGravity(remaining, allBaysForGravity);
+    const deletedDeliveryIds = new Set(
+      contracts.find((c) => c.id === id)?.deliveries.map((d) => d.id) ?? []
+    );
     setContracts(nextContracts);
     setPlacedCrates(afterGravity);
     setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
     setArchivedDeliveries((prev) => prev.filter((a) => a.contractId !== id));
-    setActivatedDeliveries((prev) => {
-      const deletedDeliveryIds = new Set(
-        contracts.find((c) => c.id === id)?.deliveries.map((d) => d.id) ?? []
-      );
-      return prev.filter((did) => !deletedDeliveryIds.has(did));
+    setActivatedDeliveries((prev) => prev.filter((did) => !deletedDeliveryIds.has(did)));
+    setCrateSelection((prev) => {
+      const next = new Map(prev);
+      for (const key of next.keys()) {
+        if (deletedDeliveryIds.has(key.split("::")[0])) next.delete(key);
+      }
+      return next;
     });
     if (editingContract?.id === id) setEditingContract(null);
     if (editingManualCargo?.id === id) setEditingManualCargo(null);
-    if (selectedDelivery?.contractId === id) setSelectedDelivery(null);
     drag.clear();
   }
 
@@ -436,53 +464,61 @@ export default function CargoPlanner() {
   }
 
   function handleBayClick(bayId: string) {
-    if (!selectedDelivery) return;
+    if (totalSelectedCrates === 0) return;
     pushHistorySnapshot();
-
-    const { deliveryId, contractId } = selectedDelivery;
-    const contract = contracts.find((c) => c.id === contractId);
-    const delivery = contract?.deliveries.find((d) => d.id === deliveryId);
-    if (!delivery) return;
 
     const individualBay = ship.cargoBays.find((b) => b.id === bayId && !b.group);
     const compoundBay = !individualBay ? buildSingleCompoundBay(ship.cargoBays, bayId) : null;
     if (!individualBay && !compoundBay) return;
 
     const alreadyInBay = placedCrates.filter((c) => c.bayId === bayId);
-    const deliveryCrates = allCrates.filter((c) => c.deliveryId === deliveryId);
-    const scuAlreadyPlaced = fragments.filter((f) => f.deliveryId === deliveryId).reduce((sum, f) => sum + f.placedScu, 0);
     const placedCrateIds = new Set(placedCrates.map((c) => c.id));
-    const pendingCrates = deliveryCrates.filter((c) => !placedCrateIds.has(c.id));
 
-    if (pendingCrates.length === 0) { setSelectedDelivery(null); return; }
+    // Collect pending crates matching the selection
+    const remaining = new Map(crateSelection);
+    const cratesToPlace: PlannedCrate[] = [];
+    for (const crate of allCrates) {
+      if (placedCrateIds.has(crate.id)) continue;
+      const key = `${crate.deliveryId}::${crate.size}`;
+      const wanted = remaining.get(key) ?? 0;
+      if (wanted > 0) {
+        cratesToPlace.push(crate);
+        remaining.set(key, wanted - 1);
+      }
+    }
+    if (cratesToPlace.length === 0) return;
 
     const newlyPlaced = (
       individualBay
-        ? placeCratesInBay(pendingCrates, individualBay, alreadyInBay, 0)
-        : placeCratesInCompoundBay(pendingCrates, compoundBay!, alreadyInBay)
+        ? placeCratesInBay(cratesToPlace, individualBay, alreadyInBay, 0)
+        : placeCratesInCompoundBay(cratesToPlace, compoundBay!, alreadyInBay)
     ).map((p) => {
-      const source = pendingCrates.find((c) => c.id === p.id)!;
+      const source = cratesToPlace.find((c) => c.id === p.id)!;
       return { ...source, ...p } as PlacedCrateWithMeta;
     });
 
-    const placedScu = newlyPlaced.reduce((sum, c) => sum + c.size, 0);
-    if (placedScu === 0) return;
+    if (newlyPlaced.length === 0) return;
 
     const nextPlacedCrates = [...placedCrates, ...newlyPlaced];
-    const fragmentKey = `${deliveryId}::${bayId}`;
-    const existingFragment = fragments.find((f) => f.id === fragmentKey);
-    const updatedFragment: DeliveryFragment = {
-      id: fragmentKey, contractId, deliveryId, bayId,
-      placedScu: (existingFragment?.placedScu ?? 0) + placedScu,
-      totalScu: delivery.scu,
-    };
-    const nextFragments = [...fragments.filter((f) => f.id !== fragmentKey), updatedFragment];
-
     setPlacedCrates(nextPlacedCrates);
-    setFragments(nextFragments);
+    setFragments(buildFragmentsFromCrates(nextPlacedCrates, deliveryScuMap));
 
-    const remaining = delivery.scu - (scuAlreadyPlaced + placedScu);
-    setSelectedDelivery(remaining > 0 ? { deliveryId, contractId, pendingScu: remaining } : null);
+    // Remove placed crates from selection (keep unplaced if bay was full)
+    const placedByKey = new Map<string, number>();
+    for (const c of newlyPlaced) {
+      const key = `${c.deliveryId}::${c.sizeScu}`;
+      placedByKey.set(key, (placedByKey.get(key) ?? 0) + 1);
+    }
+    setCrateSelection((prev) => {
+      const next = new Map(prev);
+      for (const [key, count] of placedByKey) {
+        const current = next.get(key) ?? 0;
+        const newCount = current - count;
+        if (newCount <= 0) next.delete(key);
+        else next.set(key, newCount);
+      }
+      return next;
+    });
   }
 
   function handleRetractFragment(fragment: DeliveryFragment) {
@@ -526,7 +562,13 @@ export default function CargoPlanner() {
     const afterGravity = applyGravity(remaining, allBaysForGravity);
     setPlacedCrates(afterGravity);
     setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
-    if (selectedDelivery?.deliveryId === deliveryId) setSelectedDelivery(null);
+    setCrateSelection((prev) => {
+      const next = new Map(prev);
+      for (const key of next.keys()) {
+        if (key.startsWith(`${deliveryId}::`)) next.delete(key);
+      }
+      return next;
+    });
   }
 
   function deactivateDelivery(id: string) {
@@ -536,7 +578,13 @@ export default function CargoPlanner() {
     const afterGravity = applyGravity(remaining, allBaysForGravity);
     setPlacedCrates(afterGravity);
     setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
-    if (selectedDelivery?.deliveryId === id) setSelectedDelivery(null);
+    setCrateSelection((prev) => {
+      const next = new Map(prev);
+      for (const key of next.keys()) {
+        if (key.startsWith(`${id}::`)) next.delete(key);
+      }
+      return next;
+    });
   }
 
   function moveCrate(crateId: string, newPosition: { bayId: string; x: number; y: number; z: number }, rotatedDimensions?: { x: number; y: number; z: number }) {
@@ -560,7 +608,7 @@ export default function CargoPlanner() {
   }
 
   function handleStartDrag(crateId: string) {
-    if (selectedDelivery) return;
+    if (totalSelectedCrates > 0) return;
     drag.startDrag(crateId);
   }
 
@@ -666,7 +714,21 @@ export default function CargoPlanner() {
           fragments={fragments}
           bays={ship.cargoBays}
           deliveryColors={deliveryColors}
-          selectedDeliveryId={selectedDelivery?.deliveryId ?? null}
+          crateSelection={crateSelection}
+          pendingCratesByDelivery={pendingCratesByDelivery}
+          totalSelectedCrates={totalSelectedCrates}
+          onUpdateCrateSelection={(key, delta) => {
+            setCrateSelection((prev) => {
+              const next = new Map(prev);
+              const current = next.get(key) ?? 0;
+              const newVal = current + delta;
+              if (newVal <= 0) next.delete(key);
+              else next.set(key, newVal);
+              return next;
+            });
+            drag.setSelectedCrateId(null);
+          }}
+          onClearCrateSelection={() => setCrateSelection(new Map())}
           highlightedDeliveryId={placedCrates.find((c) => c.id === drag.selectedCrateId)?.deliveryId ?? null}
           markedDeliveryIds={markedDeliveryIds}
           onMarkDelivery={(id) => setMarkedDeliveryIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id])}
@@ -675,12 +737,6 @@ export default function CargoPlanner() {
           activatedDeliveries={activatedDeliveries}
           onActivateDelivery={(id) => { pushHistorySnapshot(); setActivatedDeliveries((prev) => [...prev, id]); }}
           onDeactivateDelivery={deactivateDelivery}
-          onSelectDelivery={(deliveryId, contractId, scu) => {
-            if (!activatedDeliveries.includes(deliveryId)) return;
-            setSelectedDelivery({ deliveryId, contractId, pendingScu: scu });
-            drag.setSelectedCrateId(null);
-          }}
-          onCancelSelection={() => setSelectedDelivery(null)}
           onRetractFragment={handleRetractFragment}
           archivedDeliveries={archivedDeliveries}
           onArchiveDelivery={archiveDelivery}
@@ -714,7 +770,7 @@ export default function CargoPlanner() {
           dragRotation={drag.dragRotation}
           onRotate={drag.rotate}
           markedDeliveryIds={markedDeliveryIds}
-          isAssigningDelivery={selectedDelivery !== null && selectedDelivery.pendingScu > 0}
+          isAssigningDelivery={totalSelectedCrates > 0}
           onBayClick={handleBayClick}
         />
       }
