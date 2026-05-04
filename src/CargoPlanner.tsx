@@ -530,6 +530,16 @@ export default function CargoPlanner() {
     if (selectedDelivery?.deliveryId === deliveryId) setSelectedDelivery(null);
   }
 
+  function deactivateDelivery(id: string) {
+    pushHistorySnapshot();
+    setActivatedDeliveries((prev) => prev.filter((d) => d !== id));
+    const remaining = placedCrates.filter((c) => c.deliveryId !== id);
+    const afterGravity = applyGravity(remaining, allBaysForGravity);
+    setPlacedCrates(afterGravity);
+    setFragments(buildFragmentsFromCrates(afterGravity, deliveryScuMap));
+    if (selectedDelivery?.deliveryId === id) setSelectedDelivery(null);
+  }
+
   function moveCrate(crateId: string, newPosition: { bayId: string; x: number; y: number; z: number }, rotatedDimensions?: { x: number; y: number; z: number }) {
     setPlacedCrates((prev) => {
       const next = applyGravity(
@@ -666,13 +676,7 @@ export default function CargoPlanner() {
           onClearPlacement={clearPlacement}
           activatedDeliveries={activatedDeliveries}
           onActivateDelivery={(id) => { pushHistorySnapshot(); setActivatedDeliveries((prev) => [...prev, id]); }}
-          onDeactivateDelivery={(id) => {
-            pushHistorySnapshot();
-            setActivatedDeliveries((prev) => prev.filter((d) => d !== id));
-            setPlacedCrates((prev) => prev.filter((c) => c.deliveryId !== id));
-            setFragments((prev) => prev.filter((f) => f.deliveryId !== id));
-            if (selectedDelivery?.deliveryId === id) setSelectedDelivery(null);
-          }}
+          onDeactivateDelivery={deactivateDelivery}
           onSelectDelivery={(deliveryId, contractId, scu) => {
             if (!activatedDeliveries.includes(deliveryId)) return;
             setSelectedDelivery({ deliveryId, contractId, pendingScu: scu });
