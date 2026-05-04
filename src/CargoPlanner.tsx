@@ -275,20 +275,21 @@ export default function CargoPlanner() {
 
   const totalPlacedScu = useMemo(() => placedCrates.reduce((sum, c) => sum + c.size, 0), [placedCrates]);
   const totalDeliveredScu = useMemo(() => archivedDeliveries.reduce((sum, a) => sum + a.totalScu, 0), [archivedDeliveries]);
+  const archivedDeliveryIds = useMemo(() => new Set(archivedDeliveries.map((a) => a.deliveryId)), [archivedDeliveries]);
   const pendingCount = useMemo(() => {
-    const archivedIds = new Set(archivedDeliveries.map((a) => a.deliveryId));
+    const activatedSet = new Set(activatedDeliveries);
     let count = 0;
     for (const contract of contracts) {
       for (const delivery of contract.deliveries) {
         if (delivery.scu <= 0) continue;
-        if (archivedIds.has(delivery.id)) continue;
-        if (!activatedDeliveries.includes(delivery.id)) continue;
+        if (archivedDeliveryIds.has(delivery.id)) continue;
+        if (!activatedSet.has(delivery.id)) continue;
         const placed = placedScuByDelivery.get(delivery.id) ?? 0;
         if (delivery.scu - placed > 0) count++;
       }
     }
     return count;
-  }, [contracts, placedScuByDelivery, archivedDeliveries, activatedDeliveries]);
+  }, [contracts, placedScuByDelivery, archivedDeliveryIds, activatedDeliveries]);
 
   function getSnapshot(): PlannerSnapshot {
     return { shipId, contracts, placedCrates, fragments, archivedDeliveries, activatedDeliveries, sortMode };
@@ -501,12 +502,13 @@ export default function CargoPlanner() {
     }
     if (deliveryCrates.length === 0) return;
 
-    let destination = "", commodity = "", contractName = "", contractId = "", color = "";
+    let destination = "", pickupLocation = "", commodity = "", contractName = "", contractId = "", color = "";
     let totalScu = 0;
     for (const contract of contracts) {
       const delivery = contract.deliveries.find((d) => d.id === deliveryId);
       if (delivery) {
         destination = delivery.destination;
+        pickupLocation = delivery.pickupLocation;
         commodity = delivery.commodity;
         totalScu = delivery.scu;
         contractName = contract.name;
@@ -517,7 +519,7 @@ export default function CargoPlanner() {
     }
 
     const archived: ArchivedDelivery = {
-      deliveryId, contractId, contractName, destination, commodity, totalScu, color,
+      deliveryId, contractId, contractName, destination, pickupLocation, commodity, totalScu, color,
     };
 
     setArchivedDeliveries((prev) => [...prev, archived]);
@@ -624,7 +626,7 @@ export default function CargoPlanner() {
           contracts={contracts}
           bays={ship.cargoBays}
           fragments={fragments}
-          archivedDeliveryIds={useMemo(() => new Set(archivedDeliveries.map((a) => a.deliveryId)), [archivedDeliveries])}
+          archivedDeliveryIds={archivedDeliveryIds}
           shipCapacityScu={shipCapacityScu}
           onDelete={deleteContract}
           onEdit={(c) => {

@@ -52,7 +52,9 @@ style.textContent = `
   ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
 
   button:not(:disabled) { transition: filter 0.15s; }
-  button:not(:disabled):hover { filter: brightness(2.3); }
+  button:not(:disabled):hover { filter: brightness(2.0); }
+  .contract-card button:not(:disabled):hover,
+  .delivery-card button:not(:disabled):hover { filter: brightness(2.3); }
 
   select {
     appearance: none;

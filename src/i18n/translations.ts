@@ -26,7 +26,7 @@ const translations = {
     "contractForm.pickupLocation": "Lieu de chargement",
     "contractForm.pickupPlaceholder": "Où charger cette livraison...",
     "contractForm.addDelivery": "+ Ajouter une livraison",
-    "contractForm.submit": "Ajouter",
+    "contractForm.submit": "Ajouter le contrat",
     "contractForm.save": "Enregistrer",
     "contractForm.cancel": "Annuler",
     "contractForm.choosePlaceholder": "— Choisir —",
@@ -44,7 +44,7 @@ const translations = {
     "manualForm.size": "Taille",
     "manualForm.choosePlaceholder": "— Choisir —",
     "manualForm.addRow": "+ Ligne",
-    "manualForm.submit": "✓ Ajouter le chargement",
+    "manualForm.submit": "Ajouter le chargement",
     "manualForm.titleEdit": "Modifier le chargement",
     "manualForm.save": "✓ Enregistrer",
     "manualForm.cancelEdit": "Annuler",
@@ -89,6 +89,8 @@ const translations = {
     "pending.deliveredSection": "Livrées",
     "pending.retract": "↩ Retirer",
     "pending.example": "EXEMPLE",
+    "pending.from": "DE",
+    "pending.to": "VERS",
 
     // SearchableSelect
     "select.filterPlaceholder": "Tape quelques lettres...",
@@ -125,7 +127,7 @@ const translations = {
     "contractForm.pickupLocation": "Pickup location",
     "contractForm.pickupPlaceholder": "Where to pick up this delivery...",
     "contractForm.addDelivery": "+ Add a delivery",
-    "contractForm.submit": "Add",
+    "contractForm.submit": "Add contract",
     "contractForm.save": "Save",
     "contractForm.cancel": "Cancel",
     "contractForm.choosePlaceholder": "— Choose —",
@@ -143,7 +145,7 @@ const translations = {
     "manualForm.size": "Size",
     "manualForm.choosePlaceholder": "— Choose —",
     "manualForm.addRow": "+ Row",
-    "manualForm.submit": "✓ Add cargo",
+    "manualForm.submit": "Add cargo",
     "manualForm.titleEdit": "Edit cargo",
     "manualForm.save": "✓ Save",
     "manualForm.cancelEdit": "Cancel",
@@ -188,6 +190,8 @@ const translations = {
     "pending.deliveredSection": "Delivered",
     "pending.retract": "↩ Remove",
     "pending.example": "EXAMPLE",
+    "pending.from": "FROM",
+    "pending.to": "TO",
 
     // SearchableSelect
     "select.filterPlaceholder": "Type a few letters...",

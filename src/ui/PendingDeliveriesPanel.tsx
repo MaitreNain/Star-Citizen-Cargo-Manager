@@ -80,6 +80,7 @@ export default function PendingDeliveriesPanel({
 
   const items = useMemo(() => {
     const archivedIds = new Set(archivedDeliveries.map((a) => a.deliveryId));
+    const activatedSet = new Set(activatedDeliveries);
     const result: DeliveryItem[] = [];
 
     if (demoContract) {
@@ -105,7 +106,6 @@ export default function PendingDeliveriesPanel({
         if (delivery.scu <= 0) continue;
         if (archivedIds.has(delivery.id)) continue;
         const placed = placedScuByDelivery.get(delivery.id) ?? 0;
-        const isActivated = activatedDeliveries.includes(delivery.id);
         result.push({
           contractId: contract.id,
           contractName: contract.name,
@@ -116,23 +116,34 @@ export default function PendingDeliveriesPanel({
           pickupLocation: delivery.pickupLocation,
           totalScu: delivery.scu,
           pendingScu: Math.max(0, delivery.scu - placed),
-          state: isActivated ? "loaded" : "waiting",
+          state: activatedSet.has(delivery.id) ? "loaded" : "waiting",
         });
       }
     }
     return result;
   }, [contracts, placedScuByDelivery, activatedDeliveries, archivedDeliveries, demoContract]);
 
-  const { sortedItems, loadedCount, waitingCount } = useMemo(() => {
-    let loaded = 0, waiting = 0;
-    const sorted: DeliveryItem[] = [];
-    const waitingItems: DeliveryItem[] = [];
+  const { loadedItems, waitingItems, loadedCount, waitingCount } = useMemo(() => {
+    const loaded: DeliveryItem[] = [];
+    const waiting: DeliveryItem[] = [];
     for (const item of items) {
-      if (item.state === "loaded") { sorted.push(item); loaded++; }
-      else { waitingItems.push(item); waiting++; }
+      if (item.state === "loaded") loaded.push(item);
+      else waiting.push(item);
     }
-    return { sortedItems: [...sorted, ...waitingItems], loadedCount: loaded, waitingCount: waiting };
+    return { loadedItems: loaded, waitingItems: waiting, loadedCount: loaded.length, waitingCount: waiting.length };
   }, [items]);
+
+  const fragmentsByDelivery = useMemo(() => {
+    const map = new Map<string, DeliveryFragment[]>();
+    for (const frag of fragments) {
+      const list = map.get(frag.deliveryId);
+      if (list) list.push(frag);
+      else map.set(frag.deliveryId, [frag]);
+    }
+    return map;
+  }, [fragments]);
+
+  const markedSet = useMemo(() => new Set(markedDeliveryIds), [markedDeliveryIds]);
 
   const [viderConfirm, setViderConfirm] = useState(false);
 
@@ -140,6 +151,9 @@ export default function PendingDeliveriesPanel({
 
   const isSelecting = selectedDeliveryId !== null;
   const deliveredCount = archivedDeliveries.length;
+  const selectedItem = isSelecting ? items.find((i) => i.deliveryId === selectedDeliveryId) : null;
+  const instructionActive = !!(selectedItem && selectedItem.state !== "waiting" && selectedItem.pendingScu > 0);
+  const instructionVisible = instructionActive || loadedItems.some((i) => i.pendingScu > 0);
 
   function getBayLabel(bayId: string): string {
     const index = bays.findIndex((b) => b.id === bayId);
@@ -157,11 +171,11 @@ export default function PendingDeliveriesPanel({
     const isDemo = item.isDemo === true;
     const isSelected = !isDemo && selectedDeliveryId === item.deliveryId;
     const isComplete = item.pendingScu <= 0 && item.state === "loaded";
-    const deliveryFragments = fragments.filter((f) => f.deliveryId === item.deliveryId);
+    const deliveryFragments = fragmentsByDelivery.get(item.deliveryId) ?? [];
     const showDetails = isSelected && deliveryFragments.length > 0;
     const deliveryColor = deliveryColors.get(item.deliveryId) ?? item.contractColor;
     const isHighlighted = highlightedDeliveryId === item.deliveryId && !isSelected;
-    const isMarked = markedDeliveryIds.includes(item.deliveryId);
+    const isMarked = markedSet.has(item.deliveryId);
     const isWaiting = item.state === "waiting";
 
     const borderColor = isSelected && !isWaiting
@@ -179,18 +193,21 @@ export default function PendingDeliveriesPanel({
     const bgColor = isSelected && !isWaiting
       ? "var(--accent-glow)"
       : isComplete
-        ? "rgba(34,211,160,0.06)"
+        ? "rgba(34,211,160,0.08)"
         : isHighlighted
           ? "rgba(250,204,21,0.12)"
           : isMarked
             ? "rgba(56,189,248,0.08)"
-            : "#040a10";
+            : isWaiting
+              ? "var(--panel)"
+              : "linear-gradient(150deg, var(--panel-alt) 0%, var(--panel) 100%)";
 
     const scuColor = isComplete ? "var(--success)" : isWaiting ? "var(--text)" : "var(--accent)";
 
     return (
       <div
         key={item.deliveryId}
+        className="delivery-card"
         style={{ marginBottom: "6px" }}
         ref={isHighlighted ? highlightedRef : undefined}
       >
@@ -211,52 +228,58 @@ export default function PendingDeliveriesPanel({
             userSelect: "none",
             opacity: isWaiting ? 0.8 : 1,
             transition: "background 0.15s, border-color 0.15s",
-            boxShadow: isHighlighted ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)" : "none",
+            boxShadow: isHighlighted
+              ? "0 0 0 1px #facc1544, 0 2px 12px rgba(250,204,21,0.15)"
+              : "0 1px 8px rgba(0,0,0,0.3)",
           }}
         >
-          <div style={{ padding: "8px 10px", paddingLeft: "10px" }}>
+          <div style={{ padding: "10px 12px" }}>
 
-            {/* Header */}
-            <div style={{ marginBottom: "6px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "3px" }}>
-                <div style={{
-                  width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
-                  background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
-                  border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
-                  boxShadow: isComplete ? "0 0 5px var(--success)" : isWaiting ? "none" : `0 0 6px ${deliveryColor}`,
-                }} />
-                <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text)", letterSpacing: "0.03em", flex: 1 }}>
-                  {item.commodity}
-                </span>
-                {isHighlighted && <span style={{ color: "#facc15", fontSize: "12px", flexShrink: 0 }}>◀</span>}
-                <span style={{ fontFamily: "var(--font-mono)", flexShrink: 0, fontSize: "12px", fontWeight: 700, color: scuColor }}>
-                  {isComplete ? "✓ " : ""}{item.pendingScu > 0 ? item.pendingScu : item.totalScu}
-                  <span style={{ fontSize: "10px", fontWeight: 400, marginLeft: "2px" }}>
-                    {item.pendingScu < item.totalScu && item.pendingScu > 0 ? `/ ${item.totalScu} ` : ""}SCU
+            {/* Info principale */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "8px" }}>
+              <div style={{
+                width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px",
+                background: isComplete ? "var(--success)" : isWaiting ? "transparent" : deliveryColor,
+                border: isWaiting ? `1.5px solid ${deliveryColor}` : "none",
+                boxShadow: isComplete ? "0 0 6px var(--success)" : isWaiting ? "none" : `0 0 8px ${deliveryColor}`,
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Titre : ressource + SCU */}
+                <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "3px" }}>
+                  <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text)", letterSpacing: "0.02em", flex: 1 }}>
+                    {item.commodity}
                   </span>
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "14px" }}>
-                {isDemo && <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 4px", borderRadius: "2px", opacity: 0.7 }}>{t("pending.example")}</span>}
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>
-                  {item.contractName}
-                </span>
+                  {isHighlighted && <span style={{ color: "#facc15", fontSize: "12px", flexShrink: 0 }}>◀</span>}
+                  <span style={{ fontFamily: "var(--font-mono)", flexShrink: 0, fontSize: "12px", fontWeight: 700, color: scuColor }}>
+                    {isComplete ? "✓ " : ""}{item.pendingScu > 0 ? item.pendingScu : item.totalScu}
+                    <span style={{ fontSize: "10px", fontWeight: 400, marginLeft: "2px" }}>
+                      {item.pendingScu < item.totalScu && item.pendingScu > 0 ? `/ ${item.totalScu} ` : ""}SCU
+                    </span>
+                  </span>
+                </div>
+                {/* Contrat */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  {isDemo && <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 4px", borderRadius: "2px", opacity: 0.7 }}>{t("pending.example")}</span>}
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)" }}>{item.contractName}</span>
+                </div>
+                {/* Route */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px", padding: "5px 8px", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                  {item.pickupLocation && (
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--success)", flexShrink: 0, minWidth: "32px", textAlign: "right", letterSpacing: "0.05em" }}>{t("pending.from")}</span>
+                      <span style={{ fontSize: "11px", color: "rgba(34,211,160,0.85)" }}>{item.pickupLocation}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0, minWidth: "32px", textAlign: "right", letterSpacing: "0.05em" }}>{t("pending.to")}</span>
+                    <span style={{ fontSize: "11px", color: "var(--cyan)" }}>{item.destination}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Locations */}
-            <div style={{ paddingLeft: "14px", display: "flex", flexDirection: "column", gap: "2px", marginBottom: "7px" }}>
-              {item.pickupLocation && (
-                <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--success)", flexShrink: 0 }}>↑</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.pickupLocation}</span>
-                </div>
-              )}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
-                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.destination}</span>
-              </div>
-            </div>
+            {/* Séparateur */}
+            <div style={{ borderTop: "1px solid var(--border)", margin: "0 -12px 8px", opacity: 0.6 }} />
 
             {/* Actions */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
@@ -291,16 +314,14 @@ export default function PendingDeliveriesPanel({
                       >✕</button>
                     </>
                   ) : (
-                    !isDemo && isComplete && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setConfirmingDeliveryId(item.deliveryId); }}
-                        style={{
-                          background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
-                          color: "var(--success)", cursor: "pointer", fontSize: "11px",
-                          fontFamily: "var(--font-mono)", fontWeight: 700, padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
-                        }}
-                      >{t("pending.markDone")}</button>
-                    )
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmingDeliveryId(item.deliveryId); }}
+                      style={{
+                        background: "rgba(34,211,160,0.1)", border: "1px solid rgba(34,211,160,0.4)",
+                        color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                        fontFamily: "var(--font-mono)", fontWeight: 700, padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                      }}
+                    >{t("pending.markDone")}</button>
                   ))}
                   {!isDemo && (
                     <button
@@ -382,32 +403,19 @@ export default function PendingDeliveriesPanel({
       </div>
 
       {/* Instruction contextuelle — toujours présent pour éviter les décalages */}
-      {(() => {
-        const hasPlaceable = sortedItems.some((i) => i.state === "loaded" && i.pendingScu > 0);
-        const selValid = isSelecting && (() => {
-          const sel = items.find((i) => i.deliveryId === selectedDeliveryId);
-          return sel && sel.state !== "waiting" && sel.pendingScu > 0;
-        })();
-        const visible = hasPlaceable || !!selValid;
-        const active = !!selValid;
-        return (
-          <div style={{
-            fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em",
-            padding: "6px 8px", marginBottom: "10px", borderRadius: "3px",
-            background: "var(--accent-glow)",
-            border: "1px solid var(--accent-dim)",
-            color: "var(--accent)",
-            userSelect: "none",
-            visibility: visible ? "visible" : "hidden",
-            position: "relative",
-          }}>
-            {/* Texte long — toujours en flux pour fixer la hauteur */}
-            <span style={{ opacity: active ? 0 : 1 }}>{t("pending.instructionClick")}</span>
-            {/* Texte court — superposé pour ne pas changer la hauteur */}
-            <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: active ? 1 : 0 }}>{t("pending.instructionBay")}</span>
-          </div>
-        );
-      })()}
+      <div style={{
+        fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em",
+        padding: "6px 8px", marginBottom: "10px", borderRadius: "3px",
+        background: "var(--accent-glow)",
+        border: "1px solid var(--accent-dim)",
+        color: "var(--accent)",
+        userSelect: "none",
+        visibility: instructionVisible ? "visible" : "hidden",
+        position: "relative",
+      }}>
+        <span style={{ opacity: instructionActive ? 0 : 1 }}>{t("pending.instructionClick")}</span>
+        <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: instructionActive ? 1 : 0 }}>{t("pending.instructionBay")}</span>
+      </div>
 
       {/* Chargées */}
       <div style={{ display: "flex", alignItems: "center", marginTop: "12px", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
@@ -433,7 +441,7 @@ export default function PendingDeliveriesPanel({
           }}>{t("pending.clearBay")}</button>
         )}
       </div>
-      {loadedCount > 0 && sortedItems.filter((i) => i.state === "loaded").map((item) => renderItem(item))}
+      {loadedCount > 0 && loadedItems.map((item) => renderItem(item))}
 
       <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
         <button
@@ -468,7 +476,7 @@ export default function PendingDeliveriesPanel({
           <div className="section-header" style={{ color: "var(--text-dim)", marginTop: "12px" }}>
             {t("pending.waitingSection")}
           </div>
-          {sortedItems.filter((i) => i.state === "waiting").map((item) => renderItem(item))}
+          {waitingItems.map((item) => renderItem(item))}
         </>
       )}
 
@@ -479,34 +487,41 @@ export default function PendingDeliveriesPanel({
           {archivedDeliveries.map((archived) => (
             <div key={archived.deliveryId} style={{
               marginBottom: "6px",
-              background: "rgba(34,211,160,0.04)",
+              background: "linear-gradient(150deg, rgba(34,211,160,0.06) 0%, rgba(34,211,160,0.03) 100%)",
               borderTop: "1px solid rgba(34,211,160,0.2)",
               borderRight: "1px solid rgba(34,211,160,0.2)",
               borderBottom: "1px solid rgba(34,211,160,0.2)",
               borderLeft: `4px solid ${archived.color}`,
               borderRadius: "3px", opacity: 0.85,
+              boxShadow: "0 1px 8px rgba(0,0,0,0.25)",
             }}>
-              <div style={{ padding: "8px 10px" }}>
-                <div style={{ marginBottom: "4px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "3px" }}>
-                    <div style={{ width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0, background: "var(--success)", boxShadow: "0 0 5px var(--success)" }} />
-                    <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-dim)", letterSpacing: "0.03em", flex: 1 }}>
-                      {archived.commodity}
-                    </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)", fontWeight: 700, flexShrink: 0 }}>
-                      ✓&nbsp;{archived.totalScu}&nbsp;SCU
-                    </span>
-                  </div>
-                  <div style={{ paddingLeft: "14px" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>
-                      {archived.contractName}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ paddingLeft: "14px" }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0 }}>↓</span>
-                    <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{archived.destination}</span>
+              <div style={{ padding: "10px 12px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px", background: "var(--success)", boxShadow: "0 0 6px var(--success)" }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "3px" }}>
+                      <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-dim)", flex: 1 }}>
+                        {archived.commodity}
+                      </span>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--success)", fontWeight: 700, flexShrink: 0 }}>
+                        ✓&nbsp;{archived.totalScu}&nbsp;SCU
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)" }}>{archived.contractName}</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", padding: "4px 8px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(34,211,160,0.15)", borderRadius: "2px" }}>
+                      {archived.pickupLocation && (
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--success)", flexShrink: 0, minWidth: "32px", textAlign: "right", letterSpacing: "0.05em" }}>{t("pending.from")}</span>
+                          <span style={{ fontSize: "11px", color: "rgba(34,211,160,0.85)" }}>{archived.pickupLocation}</span>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", flexShrink: 0, minWidth: "32px", textAlign: "right", letterSpacing: "0.05em" }}>{t("pending.to")}</span>
+                        <span style={{ fontSize: "11px", color: "var(--cyan)" }}>{archived.destination}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
