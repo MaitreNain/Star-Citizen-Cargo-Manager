@@ -110,7 +110,6 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
     setPickupLocation("");
     setCommodity("");
     setRows([{ id: genId(), count: 1, sizeScu: 0 }]);
-    setOpen(false);
   }
 
   return (

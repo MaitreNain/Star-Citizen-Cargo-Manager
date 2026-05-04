@@ -84,7 +84,7 @@ export default function CargoPlanner() {
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
   const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
-  const [contractFormKey, setContractFormKey] = useState(0);
+
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
   const { t } = useLanguage();
@@ -393,7 +393,6 @@ export default function CargoPlanner() {
     setContracts(nextContracts);
     setEditingContract(null);
     drag.clear();
-    setContractFormKey((k) => k + 1);
   }
 
   function updateContract(updatedContract: Contract) {
@@ -607,7 +606,6 @@ export default function CargoPlanner() {
     <>
       <div id="tuto-form" style={{ marginTop: "20px" }}>
         <ContractForm
-          key={contractFormKey}
           onAdd={addContract}
           onUpdate={updateContract}
           contracts={contracts}
