@@ -106,11 +106,23 @@ The app supports FR and EN. The active locale is stored in `localStorage` under 
 - **`AppLayout.tsx`** — two-panel layout: left sidebar (tabs: Contracts / Placement) + right 3D viewport. Global CSS variables and sci-fi classes (`.scifi-panel`, `.btn-primary`, etc.) are injected here. Includes the FR/EN toggle button in the HUD.
 - **`ContractForm.tsx`** — collapsible panel (starts closed); expands automatically when editing a contract. Add/edit a contract: name, color auto-assigned, deliveries with destination/commodity/SCU via `SearchableSelect`, max container size, required pickup location.
 - **`ContractList.tsx`** — list of contracts with drag-to-reorder, per-delivery fragment progress.
-- **`PendingDeliveriesPanel.tsx`** — activate deliveries, select one to assign to a bay, archive/restore delivered shipments.
+- **`PendingDeliveriesPanel.tsx`** — activate deliveries, build a crate pool selection, archive delivered shipments. Each loaded delivery card shows pending crates grouped by SCU size with −/+ controls. The user selects exactly which crates to place; clicking a bay in the 3D view places them. A summary bar shows the total selected SCU and a clear button. Clicking the card body toggles fragment details (which bays hold SCU from that delivery).
 - **`ManualCargoForm.tsx`** — collapsible form in the **Contracts tab** (below `ContractForm`) to add or edit explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Destination uses `SearchableSelect`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly. Supports editing via `editingContract` / `onUpdate` / `onCancelEdit` props — `CargoPlanner` routes edits here (instead of `ContractForm`) when `deliveries[0].explicitCrates` is present.
 - **`SearchableSelect.tsx`** — filterable autocomplete input backed by a string options array.
 - **`CapacityPanel.tsx`** — live SCU usage ("En soute x / xxx SCU") and remaining capacity ("Disponible x SCU") with an adaptive HSL color: `hsl(remainingPct * 1.2, 75%, 58%)` from red (0 %) to green (100 %); forced red at 0 SCU remaining.
 - **`TutorialOverlay.tsx`** — step-by-step guided tutorial triggered by the `?` button in the HUD.
+
+### Crate pool placement flow
+
+The placement tab uses an explicit pool model rather than selecting a whole delivery at once:
+
+1. User activates a delivery (moves it from "waiting" to "loaded").
+2. Each loaded card shows pending crates by size with −/+ controls → builds `crateSelection: Map<string, number>` in `CargoPlanner`. Key format: `"${deliveryId}::${sizeScu}"`.
+3. `pendingCratesByDelivery: Map<string, {sizeScu, count}[]>` (useMemo) lists unplaced crates grouped by size, largest first. Derived from `allCrates` minus `placedCrates`.
+4. User clicks a bay in the 3D view → `handleBayClick` collects the matching pending `PlannedCrate` objects, calls `placeCratesInBay` / `placeCratesInCompoundBay`, then subtracts placed counts from `crateSelection` (unplaced ones stay selected for the next bay).
+5. `isAssigningDelivery={totalSelectedCrates > 0}` highlights clickable bays in the scene and disables drag while a selection is active.
+
+`crateSelection` is cleared on: ship change, contract update/delete, delivery deactivate/archive, undo, clear placement.
 
 ### Key data flow
 
