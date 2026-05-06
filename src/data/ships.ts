@@ -23,6 +23,7 @@ export const ships: Ship[] = [
         name: "Soute principale",
         size: { x: 8, y: 12, z: 2 },
         offset: { x: 0, y: 0, z: 0 },
+        anchorFace: "ceiling",
       },
     ],
   },
@@ -290,6 +291,7 @@ export const ships: Ship[] = [
         name: "Soute 1",
         size: { x: 4, y: 8, z: 2 },
         offset: { x: 0, y: 0, z: 0 },
+        anchorFace: "ceiling",
       },
     ],
   },
@@ -571,8 +573,8 @@ export const ships: Ship[] = [
     id: "prowler-utility",
     name: "Prowler Utility",
     cargoBays: [
-      { id: "prowler-utility-bay-1", name: "Soute 1", size: { x: 2, y: 4, z: 2 }, offset: { x: -3, y: 0, z: 0 }, },
-      { id: "prowler-utility-bay-2", name: "Soute 2", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 0 }, },
+      { id: "prowler-utility-bay-1", name: "Soute 1", size: { x: 2, y: 4, z: 2 }, offset: { x: -3, y: 0, z: 0 }, anchorFace: "ceiling" },
+      { id: "prowler-utility-bay-2", name: "Soute 2", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 0 }, anchorFace: "ceiling" },
     ],
   },
 {

@@ -18,6 +18,7 @@ type CrateToPlace = {
 type CargoBayLike = {
   id: string
   size: Vector3
+  anchorFace?: "floor" | "ceiling"
 }
 
 /**
@@ -32,6 +33,8 @@ function findBestStackPosition(
 ): { position: Vector3; dimensions: Vector3 } | null {
   const rotations = getRotations(crate.dimensions)
 
+  const anchor = bay.anchorFace ?? "floor"
+
   for (const dims of rotations) {
     const maxX = bay.size.x - dims.x
     const maxY = bay.size.y - dims.y
@@ -42,10 +45,11 @@ function findBestStackPosition(
     // On part du fond (maxY) mais jamais en dessous de startY
     for (let y = maxY; y >= startY; y--)
       for (let x = 0; x <= maxX; x++)
-        for (let z = 0; z <= maxZ; z++) {
+        for (let zi = 0; zi <= maxZ; zi++) {
+          const z = anchor === "ceiling" ? maxZ - zi : zi
           const position = { x, y, z }
           if (checkCollision({ id: crate.id, dimensions: dims }, { ...position, bayId: bay.id }, alreadyPlaced)) continue
-          if (!checkSupport({ id: crate.id, dimensions: dims }, position, alreadyPlaced, bay.id)) continue
+          if (!checkSupport({ id: crate.id, dimensions: dims }, position, alreadyPlaced, bay.id, anchor, bay.size.z)) continue
           return { position, dimensions: dims }
         }
   }

@@ -15,6 +15,7 @@ type CargoBayLike = {
   id: string;
   size: Vector3;
   sections?: CompoundSection[];
+  anchorFace?: "floor" | "ceiling";
 };
 
 export function applyGravity<T extends PlacedCrateLike>(
@@ -31,9 +32,14 @@ export function applyGravity<T extends PlacedCrateLike>(
         if (!bay) return false;
         return bay.sections
           ? !checkSupportInCompound(c, c.gridPosition, state, c.bayId)
-          : !checkSupport(c, c.gridPosition, state, c.bayId);
+          : !checkSupport(c, c.gridPosition, state, c.bayId, bay.anchorFace ?? "floor", bay.size.z);
       })
-      .sort((a, b) => a.gridPosition.z - b.gridPosition.z);
+      .sort((a, b) => {
+        const anchor = bayMap.get(a.bayId)?.anchorFace ?? "floor";
+        return anchor === "ceiling"
+          ? b.gridPosition.z - a.gridPosition.z
+          : a.gridPosition.z - b.gridPosition.z;
+      });
 
     if (unsupported.length === 0) break;
 
@@ -45,7 +51,7 @@ export function applyGravity<T extends PlacedCrateLike>(
 
       const supported = bay.sections
         ? checkSupportInCompound(crate, crate.gridPosition, state, crate.bayId)
-        : checkSupport(crate, crate.gridPosition, state, crate.bayId);
+        : checkSupport(crate, crate.gridPosition, state, crate.bayId, bay.anchorFace ?? "floor", bay.size.z);
       if (supported) continue;
 
       const others = state.filter((c) => c.id !== crate.id);

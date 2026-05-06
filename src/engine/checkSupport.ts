@@ -19,19 +19,27 @@ export function checkSupport(
   movingCrate: { dimensions: Vector3; id: string },
   newPosition: Vector3,
   placedCrates: PlacedCrateLike[],
-  bayId: string
+  bayId: string,
+  anchorFace: "floor" | "ceiling" = "floor",
+  bayDepthZ: number = 0
 ) {
-  if (newPosition.z === 0) return true;
-
-  const supportZ = newPosition.z - 1;
-  const cratesBelow = placedCrates.filter(
+  const others = placedCrates.filter(
     (crate) => crate.id !== movingCrate.id && crate.bayId === bayId
   );
 
-  for (let x = newPosition.x; x < newPosition.x + movingCrate.dimensions.x; x++) {
-    for (let y = newPosition.y; y < newPosition.y + movingCrate.dimensions.y; y++) {
-      if (!cratesBelow.some((crate) => occupiesCell(crate, x, y, supportZ))) return false;
-    }
+  if (anchorFace === "ceiling") {
+    if (newPosition.z + movingCrate.dimensions.z === bayDepthZ) return true;
+    const supportZ = newPosition.z + movingCrate.dimensions.z;
+    for (let x = newPosition.x; x < newPosition.x + movingCrate.dimensions.x; x++)
+      for (let y = newPosition.y; y < newPosition.y + movingCrate.dimensions.y; y++)
+        if (!others.some((crate) => occupiesCell(crate, x, y, supportZ))) return false;
+    return true;
   }
+
+  if (newPosition.z === 0) return true;
+  const supportZ = newPosition.z - 1;
+  for (let x = newPosition.x; x < newPosition.x + movingCrate.dimensions.x; x++)
+    for (let y = newPosition.y; y < newPosition.y + movingCrate.dimensions.y; y++)
+      if (!others.some((crate) => occupiesCell(crate, x, y, supportZ))) return false;
   return true;
 }

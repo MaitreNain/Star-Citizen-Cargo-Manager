@@ -9,6 +9,7 @@ type CargoBayLike = {
   id: string;
   size: Vector3;
   sections?: CompoundSection[];
+  anchorFace?: "floor" | "ceiling";
 };
 
 type PlacedCrateLike = {
@@ -24,9 +25,11 @@ export function resolveStackPosition(
   bay: CargoBayLike,
   placedCrates: PlacedCrateLike[]
 ) {
+  const anchor = bay.anchorFace ?? "floor";
   const maxZ = bay.size.z - movingCrate.dimensions.z;
 
-  for (let z = 0; z <= maxZ; z++) {
+  for (let zi = 0; zi <= maxZ; zi++) {
+    const z = anchor === "ceiling" ? maxZ - zi : zi;
     const candidate = { bayId: bay.id, x: targetXY.x, y: targetXY.y, z };
 
     const fitsBox =
@@ -49,7 +52,7 @@ export function resolveStackPosition(
 
     const supported = bay.sections
       ? checkSupportInCompound(movingCrate, candidate, placedCrates, bay.id)
-      : checkSupport(movingCrate, candidate, placedCrates, bay.id);
+      : checkSupport(movingCrate, candidate, placedCrates, bay.id, anchor, bay.size.z);
     if (!supported) continue;
 
     return candidate;

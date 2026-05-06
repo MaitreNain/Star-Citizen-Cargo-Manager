@@ -55,19 +55,24 @@ export default function CargoBayMesh({
   const spriteH = 0.5;
   const labelTex = useLabelTexture(labelText, labelColor);
 
+  const isCeiling = bay.anchorFace === "ceiling";
+  const gridY = isCeiling ? size.z - 0.015 : 0.015;
+  const planeY = isCeiling ? size.z - 0.01 : 0.01;
+  const hoverZ = isCeiling ? size.z - 1 : 0;
+
   function getCellFromEventPoint(pt: { x: number; z: number }): CellPosition {
     return {
       bayId: bay.id,
       x: Math.max(0, Math.min(size.x - 1, Math.floor(pt.x - offset.x))),
       y: Math.max(0, Math.min(size.y - 1, Math.floor(pt.z - offset.y))),
-      z: 0,
+      z: hoverZ,
     };
   }
 
   return (
     <group position={[offset.x, offset.z, offset.y]}>
       <BayWireframe w={size.x} h={size.z} d={size.y} highlight={highlight} />
-      <BayGrid width={size.x} depth={size.y} />
+      <BayGrid width={size.x} depth={size.y} gridY={gridY} />
 
       {isAssignTarget && (
         <mesh position={[size.x / 2, size.z / 2, size.y / 2]}>
@@ -85,7 +90,7 @@ export default function CargoBayMesh({
       </sprite>
 
       <mesh
-        position={[size.x / 2, 0.01, size.y / 2]}
+        position={[size.x / 2, planeY, size.y / 2]}
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerEnter={() => isAssignTarget && setHoveredAndInvalidate(true)}
         onPointerLeave={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}

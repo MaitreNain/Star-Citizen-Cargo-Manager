@@ -23,6 +23,7 @@ type Bay = {
   size: { x: number; y: number; z: number };
   offset: { x: number; y: number; z: number };
   group?: string;
+  anchorFace?: "floor" | "ceiling";
 };
 
 type Ship = {

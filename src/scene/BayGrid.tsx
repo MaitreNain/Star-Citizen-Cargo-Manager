@@ -4,23 +4,24 @@ import * as THREE from "three";
 type BayGridProps = {
   width: number;
   depth: number;
+  gridY?: number;
 };
 
-export default function BayGrid({ width, depth }: BayGridProps) {
+export default function BayGrid({ width, depth, gridY = 0.015 }: BayGridProps) {
   const geometry = useMemo(() => {
     const points: number[] = [];
 
     for (let x = 0; x <= width; x++) {
-      points.push(x, 0.015, 0, x, 0.015, depth);
+      points.push(x, gridY, 0, x, gridY, depth);
     }
     for (let z = 0; z <= depth; z++) {
-      points.push(0, 0.015, z, width, 0.015, z);
+      points.push(0, gridY, z, width, gridY, z);
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
     return geo;
-  }, [width, depth]);
+  }, [width, depth, gridY]);
 
   return (
     <lineSegments geometry={geometry}>
