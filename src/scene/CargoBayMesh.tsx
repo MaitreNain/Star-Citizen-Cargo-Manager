@@ -41,6 +41,7 @@ export default function CargoBayMesh({
   onHoverCell, onPointerUpCell, onBayClick,
 }: Props) {
   const { size, offset } = bay;
+  const anchor = bay.anchorFace ?? "floor";
   const { invalidate } = useThree();
   const [hovered, setHovered] = useState(false);
   const highlight = isAssignTarget && hovered;
@@ -55,24 +56,73 @@ export default function CargoBayMesh({
   const spriteH = 0.5;
   const labelTex = useLabelTexture(labelText, labelColor);
 
-  const isCeiling = bay.anchorFace === "ceiling";
-  const gridY = isCeiling ? size.z - 0.015 : 0.015;
-  const planeY = isCeiling ? size.z - 0.01 : 0.01;
-  const hoverZ = isCeiling ? size.z - 1 : 0;
+  // Grid position (Three.js Y axis = game Z / height)
+  const gridY = anchor === "ceiling" ? size.z - 0.015 : 0.015;
 
-  function getCellFromEventPoint(pt: { x: number; z: number }): CellPosition {
-    return {
-      bayId: bay.id,
-      x: Math.max(0, Math.min(size.x - 1, Math.floor(pt.x - offset.x))),
-      y: Math.max(0, Math.min(size.y - 1, Math.floor(pt.z - offset.y))),
-      z: hoverZ,
-    };
+  // Lateral grid geometry (left/right: YZ plane; front/rear: XY plane)
+  const lateralGrid = useMemo(() => {
+    const pts: number[] = [];
+    if (anchor === "left" || anchor === "right") {
+      const gx = anchor === "left" ? 0.015 : size.x - 0.015;
+      for (let y = 0; y <= size.z; y++) pts.push(gx, y, 0, gx, y, size.y);
+      for (let z = 0; z <= size.y; z++) pts.push(gx, 0, z, gx, size.z, z);
+    } else if (anchor === "front" || anchor === "rear") {
+      const gz = anchor === "front" ? 0.015 : size.y - 0.015;
+      for (let x = 0; x <= size.x; x++) pts.push(x, 0, gz, x, size.z, gz);
+      for (let y = 0; y <= size.z; y++) pts.push(0, y, gz, size.x, y, gz);
+    }
+    if (pts.length === 0) return null;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    return geo;
+  }, [anchor, size.x, size.y, size.z]);
+
+  // Interaction plane: position, rotation, geometry args
+  type PlaneConfig = { pos: [number, number, number]; rot: [number, number, number]; args: [number, number] };
+  const plane: PlaneConfig = (() => {
+    switch (anchor) {
+      case "ceiling":
+        return { pos: [size.x / 2, size.z - 0.01, size.y / 2], rot: [-Math.PI / 2, 0, 0], args: [size.x, size.y] };
+      case "left":
+        return { pos: [0.01, size.z / 2, size.y / 2], rot: [0, Math.PI / 2, 0], args: [size.y, size.z] };
+      case "right":
+        return { pos: [size.x - 0.01, size.z / 2, size.y / 2], rot: [0, -Math.PI / 2, 0], args: [size.y, size.z] };
+      case "front":
+        return { pos: [size.x / 2, size.z / 2, 0.01], rot: [0, 0, 0], args: [size.x, size.z] };
+      case "rear":
+        return { pos: [size.x / 2, size.z / 2, size.y - 0.01], rot: [0, Math.PI, 0], args: [size.x, size.z] };
+      default: // floor
+        return { pos: [size.x / 2, 0.01, size.y / 2], rot: [-Math.PI / 2, 0, 0], args: [size.x, size.y] };
+    }
+  })();
+
+  function getCellFromEventPoint(pt: THREE.Vector3): CellPosition {
+    const lx = pt.x - offset.x;        // local Three.js x = game x
+    const ly = pt.y - offset.z;        // local Three.js y = game z (height)
+    const lz = pt.z - offset.y;        // local Three.js z = game y (depth)
+    const cx = (v: number, max: number) => Math.max(0, Math.min(max - 1, Math.floor(v)));
+    switch (anchor) {
+      case "left":   return { bayId: bay.id, x: 0,           y: cx(lz, size.y), z: cx(ly, size.z) };
+      case "right":  return { bayId: bay.id, x: size.x - 1,  y: cx(lz, size.y), z: cx(ly, size.z) };
+      case "front":  return { bayId: bay.id, x: cx(lx, size.x), y: 0,           z: cx(ly, size.z) };
+      case "rear":   return { bayId: bay.id, x: cx(lx, size.x), y: size.y - 1,  z: cx(ly, size.z) };
+      case "ceiling":return { bayId: bay.id, x: cx(lx, size.x), y: cx(lz, size.y), z: size.z - 1 };
+      default:       return { bayId: bay.id, x: cx(lx, size.x), y: cx(lz, size.y), z: 0 };
+    }
   }
 
   return (
     <group position={[offset.x, offset.z, offset.y]}>
       <BayWireframe w={size.x} h={size.z} d={size.y} highlight={highlight} />
-      <BayGrid width={size.x} depth={size.y} gridY={gridY} />
+
+      {(anchor === "floor" || anchor === "ceiling") && (
+        <BayGrid width={size.x} depth={size.y} gridY={gridY} />
+      )}
+      {lateralGrid && (
+        <lineSegments geometry={lateralGrid}>
+          <lineBasicMaterial color="#1a3a5c" transparent opacity={0.6} />
+        </lineSegments>
+      )}
 
       {isAssignTarget && (
         <mesh position={[size.x / 2, size.z / 2, size.y / 2]}>
@@ -90,8 +140,8 @@ export default function CargoBayMesh({
       </sprite>
 
       <mesh
-        position={[size.x / 2, planeY, size.y / 2]}
-        rotation={[-Math.PI / 2, 0, 0]}
+        position={plane.pos}
+        rotation={plane.rot}
         onPointerEnter={() => isAssignTarget && setHoveredAndInvalidate(true)}
         onPointerLeave={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}
         onClick={(e) => {
@@ -104,8 +154,8 @@ export default function CargoBayMesh({
         }}
         onPointerOut={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}
       >
-        <planeGeometry args={[size.x, size.y]} />
-        <meshBasicMaterial transparent opacity={0} />
+        <planeGeometry args={plane.args} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );

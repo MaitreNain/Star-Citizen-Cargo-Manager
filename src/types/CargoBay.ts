@@ -1,6 +1,6 @@
 import type { Vector3 } from "./Vector3";
 
-export type AnchorFace = "floor" | "ceiling";
+export type AnchorFace = "floor" | "ceiling" | "left" | "right" | "front" | "rear";
 
 export type CargoBay = {
   id: string;

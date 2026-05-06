@@ -15,29 +15,20 @@ function occupiesCell(crate: PlacedCrateLike, x: number, y: number, z: number) {
   );
 }
 
+// Always called with floor-space positions (anchor face already transformed to z=0).
 export function checkSupport(
   movingCrate: { dimensions: Vector3; id: string },
   newPosition: Vector3,
   placedCrates: PlacedCrateLike[],
-  bayId: string,
-  anchorFace: "floor" | "ceiling" = "floor",
-  bayDepthZ: number = 0
+  bayId: string
 ) {
+  if (newPosition.z === 0) return true;
+
+  const supportZ = newPosition.z - 1;
   const others = placedCrates.filter(
     (crate) => crate.id !== movingCrate.id && crate.bayId === bayId
   );
 
-  if (anchorFace === "ceiling") {
-    if (newPosition.z + movingCrate.dimensions.z === bayDepthZ) return true;
-    const supportZ = newPosition.z + movingCrate.dimensions.z;
-    for (let x = newPosition.x; x < newPosition.x + movingCrate.dimensions.x; x++)
-      for (let y = newPosition.y; y < newPosition.y + movingCrate.dimensions.y; y++)
-        if (!others.some((crate) => occupiesCell(crate, x, y, supportZ))) return false;
-    return true;
-  }
-
-  if (newPosition.z === 0) return true;
-  const supportZ = newPosition.z - 1;
   for (let x = newPosition.x; x < newPosition.x + movingCrate.dimensions.x; x++)
     for (let y = newPosition.y; y < newPosition.y + movingCrate.dimensions.y; y++)
       if (!others.some((crate) => occupiesCell(crate, x, y, supportZ))) return false;

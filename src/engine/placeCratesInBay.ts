@@ -1,8 +1,15 @@
 import type { Vector3 } from "../types/Vector3"
 import type { PlacedCrate } from "../types/PlacedCrate"
+import type { AnchorFace } from "../types/CargoBay"
 import { checkCollision } from "./checkCollision"
 import { checkSupport } from "./checkSupport"
 import { getRotations } from "./getRotatedDimensions"
+import {
+  getFloorBaySize,
+  transformPosToFloor,
+  transformDimToFloor,
+  untransformFromFloor,
+} from "./anchorTransform"
 
 type CrateToPlace = {
   id: string
@@ -18,38 +25,33 @@ type CrateToPlace = {
 type CargoBayLike = {
   id: string
   size: Vector3
-  anchorFace?: "floor" | "ceiling"
+  anchorFace?: AnchorFace
 }
 
-/**
- * startY : profondeur minimale de départ (fond = maxY, rampe = 0).
- * En mode séparé, on passe la profondeur après l'espace vide réservé.
- */
-function findBestStackPosition(
-  crate: CrateToPlace,
-  bay: CargoBayLike,
-  alreadyPlaced: Array<PlacedCrate & Partial<CrateToPlace>>,
-  startY: number = 0
+type FloorCrate = { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 }
+
+function findBestPositionInFloorSpace(
+  crate: { id: string; dimensions: Vector3 },
+  floorBaySize: Vector3,
+  bayId: string,
+  floorPlaced: FloorCrate[],
+  startY: number
 ): { position: Vector3; dimensions: Vector3 } | null {
   const rotations = getRotations(crate.dimensions)
 
-  const anchor = bay.anchorFace ?? "floor"
-
   for (const dims of rotations) {
-    const maxX = bay.size.x - dims.x
-    const maxY = bay.size.y - dims.y
-    const maxZ = bay.size.z - dims.z
+    const maxX = floorBaySize.x - dims.x
+    const maxY = floorBaySize.y - dims.y
+    const maxZ = floorBaySize.z - dims.z
 
     if (maxX < 0 || maxY < 0 || maxZ < 0) continue
 
-    // On part du fond (maxY) mais jamais en dessous de startY
     for (let y = maxY; y >= startY; y--)
       for (let x = 0; x <= maxX; x++)
-        for (let zi = 0; zi <= maxZ; zi++) {
-          const z = anchor === "ceiling" ? maxZ - zi : zi
+        for (let z = 0; z <= maxZ; z++) {
           const position = { x, y, z }
-          if (checkCollision({ id: crate.id, dimensions: dims }, { ...position, bayId: bay.id }, alreadyPlaced)) continue
-          if (!checkSupport({ id: crate.id, dimensions: dims }, position, alreadyPlaced, bay.id, anchor, bay.size.z)) continue
+          if (checkCollision({ id: crate.id, dimensions: dims }, { ...position, bayId }, floorPlaced)) continue
+          if (!checkSupport({ id: crate.id, dimensions: dims }, position, floorPlaced, bayId)) continue
           return { position, dimensions: dims }
         }
   }
@@ -63,19 +65,48 @@ export function placeCratesInBay(
   alreadyPlaced: Array<PlacedCrate & Partial<CrateToPlace>> = [],
   startY: number = 0
 ): Array<PlacedCrate & CrateToPlace> {
-  const placedCrates: Array<PlacedCrate & CrateToPlace> = []
+  const anchor = bay.anchorFace ?? "floor"
+  const floorSize = getFloorBaySize(anchor, bay.size)
+
+  const toFloorCrate = (c: { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 }): FloorCrate => ({
+    id: c.id,
+    bayId: c.bayId,
+    gridPosition: transformPosToFloor(c.gridPosition, c.dimensions, anchor, bay.size),
+    dimensions: transformDimToFloor(c.dimensions, anchor),
+  })
+
+  const floorAlready: FloorCrate[] = alreadyPlaced.map(toFloorCrate)
+  const floorAccum: FloorCrate[] = []
+  const result: Array<PlacedCrate & CrateToPlace> = []
 
   for (const crate of crates) {
-    const result = findBestStackPosition(crate, bay, [...alreadyPlaced, ...placedCrates], startY)
-    if (!result) continue
-    placedCrates.push({
+    const floorDim = transformDimToFloor(crate.dimensions, anchor)
+    const found = findBestPositionInFloorSpace(
+      { id: crate.id, dimensions: floorDim },
+      floorSize,
+      bay.id,
+      [...floorAlready, ...floorAccum],
+      startY
+    )
+    if (!found) continue
+
+    const { pos: gamePos, dim: gameDim } = untransformFromFloor(found.position, found.dimensions, anchor, bay.size)
+
+    result.push({
       ...crate,
-      dimensions: result.dimensions,
+      dimensions: gameDim,
       sizeScu: crate.size,
       bayId: bay.id,
-      gridPosition: result.position
+      gridPosition: gamePos,
+    })
+
+    floorAccum.push({
+      id: crate.id,
+      bayId: bay.id,
+      gridPosition: found.position,
+      dimensions: found.dimensions,
     })
   }
 
-  return placedCrates
+  return result
 }

@@ -142,7 +142,7 @@ export default function CargoScene({
       const rotatedDimensions = getRotatedDimensions(draggedCrate.dimensions, dragRotation);
       const rotatedCrate = { ...draggedCrate, dimensions: rotatedDimensions };
       const resolvedPosition = resolveStackPosition(
-        rotatedCrate, { x: hoveredCell.x, y: hoveredCell.y }, bayForStack, placedCrates
+        rotatedCrate, hoveredCell, bayForStack, placedCrates
       );
 
       if (resolvedPosition) {

@@ -319,30 +319,10 @@ export const ships: Ship[] = [
     id: "hull-a",
     name: "Hull A",
     cargoBays: [
-      {
-        id: "hull-a-bay-1",
-        name: "Soute 1",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: -3, y: 0, z: 0 },
-      },
-      {
-        id: "hull-a-bay-2",
-        name: "Soute 2",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: -3, y: 0, z: 3 },
-      },
-      {
-        id: "hull-a-bay-3",
-        name: "Soute 3",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: 1, y: 0, z: 0 },
-      },
-      {
-        id: "hull-a-bay-4",
-        name: "Soute 4",
-        size: { x: 2, y: 4, z: 2 },
-        offset: { x: 1, y: 0, z: 3 },
-      },
+      { id: "hull-a-bay-1", name: "Soute 1", size: { x: 2, y: 4, z: 2 }, offset: { x: -3, y: 0, z: 0 }, anchorFace: "right" },
+      { id: "hull-a-bay-2", name: "Soute 2", size: { x: 2, y: 4, z: 2 }, offset: { x: -3, y: 0, z: 3 }, anchorFace: "right" },
+      { id: "hull-a-bay-3", name: "Soute 3", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 0 }, anchorFace: "left" },
+      { id: "hull-a-bay-4", name: "Soute 4", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 3 }, anchorFace: "left" },
     ],
   },
 
