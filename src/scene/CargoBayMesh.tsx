@@ -155,7 +155,7 @@ export default function CargoBayMesh({
         onPointerOut={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}
       >
         <planeGeometry args={plane.args} />
-        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+        <meshBasicMaterial transparent opacity={0} side={anchor === "floor" || anchor === "ceiling" ? THREE.DoubleSide : THREE.FrontSide} />
       </mesh>
     </group>
   );

@@ -3,7 +3,7 @@ import type { PlacedCrate } from "../types/PlacedCrate"
 import type { AnchorFace } from "../types/CargoBay"
 import { checkCollision } from "./checkCollision"
 import { checkSupport } from "./checkSupport"
-import { getRotations } from "./getRotatedDimensions"
+import { getRotations, getRotationsLateral } from "./getRotatedDimensions"
 import {
   getFloorBaySize,
   transformPosToFloor,
@@ -35,9 +35,10 @@ function findBestPositionInFloorSpace(
   floorBaySize: Vector3,
   bayId: string,
   floorPlaced: FloorCrate[],
-  startY: number
+  startY: number,
+  isLateral: boolean
 ): { position: Vector3; dimensions: Vector3 } | null {
-  const rotations = getRotations(crate.dimensions)
+  const rotations = isLateral ? getRotationsLateral(crate.dimensions) : getRotations(crate.dimensions)
 
   for (const dims of rotations) {
     const maxX = floorBaySize.x - dims.x
@@ -46,7 +47,8 @@ function findBestPositionInFloorSpace(
 
     if (maxX < 0 || maxY < 0 || maxZ < 0) continue
 
-    for (let y = maxY; y >= startY; y--)
+    for (let yi = 0; yi <= maxY - startY; yi++) {
+      const y = isLateral ? startY + yi : maxY - yi
       for (let x = 0; x <= maxX; x++)
         for (let z = 0; z <= maxZ; z++) {
           const position = { x, y, z }
@@ -54,6 +56,7 @@ function findBestPositionInFloorSpace(
           if (!checkSupport({ id: crate.id, dimensions: dims }, position, floorPlaced, bayId)) continue
           return { position, dimensions: dims }
         }
+    }
   }
 
   return null
@@ -66,6 +69,7 @@ export function placeCratesInBay(
   startY: number = 0
 ): Array<PlacedCrate & CrateToPlace> {
   const anchor = bay.anchorFace ?? "floor"
+  const isLateral = anchor !== "floor" && anchor !== "ceiling"
   const floorSize = getFloorBaySize(anchor, bay.size)
 
   const toFloorCrate = (c: { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 }): FloorCrate => ({
@@ -86,7 +90,8 @@ export function placeCratesInBay(
       floorSize,
       bay.id,
       [...floorAlready, ...floorAccum],
-      startY
+      startY,
+      isLateral
     )
     if (!found) continue
 

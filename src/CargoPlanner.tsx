@@ -626,7 +626,7 @@ export default function CargoPlanner() {
     if (!movingCrate || !bayForStack) {
       drag.clear(); return;
     }
-    const rotatedDimensions = getRotatedDimensions(movingCrate.dimensions, drag.dragRotation);
+    const rotatedDimensions = getRotatedDimensions(movingCrate.dimensions, drag.dragRotation, individualBay?.anchorFace);
     const rotatedCrate = { ...movingCrate, dimensions: rotatedDimensions };
     const resolvedPosition = resolveStackPosition(rotatedCrate, drag.hoveredCell, bayForStack, placedCrates);
     if (resolvedPosition) { pushHistorySnapshot(); moveCrate(drag.draggedCrateId, resolvedPosition, rotatedDimensions); }

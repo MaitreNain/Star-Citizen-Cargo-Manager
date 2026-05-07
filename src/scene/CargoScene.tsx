@@ -90,12 +90,11 @@ export default function CargoScene({
     return cb?.worldOffset ?? { x: 0, y: 0, z: 0 };
   }
 
-  // Résout une soute (individuelle ou virtuelle composée) pour resolveStackPosition
   function resolveBayForStack(bayId: string) {
     const bay = ship.cargoBays.find((b) => b.id === bayId);
     if (bay) return bay;
     const cb = compoundBays.find((c) => c.id === bayId);
-    if (cb) return { id: cb.id, size: cb.boundingBox, sections: cb.sections };
+    if (cb) return { id: cb.id, size: cb.boundingBox, sections: cb.sections, anchorFace: undefined };
     return null;
   }
 
@@ -133,13 +132,40 @@ export default function CargoScene({
     if (!isAssigningRef.current) onStartDragRef.current?.(id);
   }, []);
 
+  // Centers the hovered cell so the dragged crate is centered on the cursor.
+  // Only the two free axes are shifted (the fixed axis depends on the anchor face).
+  function centerCell(rawCell: HoveredCell): HoveredCell {
+    if (!rawCell || !draggedCrate) return rawCell;
+    const info = resolveBayForStack(rawCell.bayId);
+    if (!info) return rawCell;
+    const anchor = info.anchorFace ?? "floor";
+    const { size } = info;
+    const dims = getRotatedDimensions(draggedCrate.dimensions, dragRotation, anchor);
+    const cl = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+    let { x, y, z } = rawCell;
+    switch (anchor) {
+      case "right": case "left":
+        y = cl(y - Math.floor(dims.y / 2), 0, size.y - dims.y);
+        z = cl(z - Math.floor(dims.z / 2), 0, size.z - dims.z);
+        break;
+      case "front": case "rear":
+        x = cl(x - Math.floor(dims.x / 2), 0, size.x - dims.x);
+        z = cl(z - Math.floor(dims.z / 2), 0, size.z - dims.z);
+        break;
+      default: // floor, ceiling
+        x = cl(x - Math.floor(dims.x / 2), 0, size.x - dims.x);
+        y = cl(y - Math.floor(dims.y / 2), 0, size.y - dims.y);
+    }
+    return { ...rawCell, x, y, z };
+  }
+
   let preview: React.ReactNode = null;
 
   if (draggedCrate && hoveredCell) {
     const bayForStack = resolveBayForStack(hoveredCell.bayId);
     if (bayForStack) {
       const bayOffset = resolveBayOffset(hoveredCell.bayId);
-      const rotatedDimensions = getRotatedDimensions(draggedCrate.dimensions, dragRotation);
+      const rotatedDimensions = getRotatedDimensions(draggedCrate.dimensions, dragRotation, bayForStack.anchorFace);
       const rotatedCrate = { ...draggedCrate, dimensions: rotatedDimensions };
       const resolvedPosition = resolveStackPosition(
         rotatedCrate, hoveredCell, bayForStack, placedCrates
@@ -196,7 +222,7 @@ export default function CargoScene({
             bayNumber={bayDisplayInfo.individual.get(bay.id) ?? 1}
             bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
-            onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
+            onHoverCell={isAssigningDelivery ? undefined : (cell) => onHoverCell(centerCell(cell))}
             onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
             onBayClick={onBayClick}
           />
@@ -210,7 +236,7 @@ export default function CargoScene({
             bayNumbers={bayDisplayInfo.compound.get(compound.id) ?? []}
             bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
-            onHoverCell={isAssigningDelivery ? undefined : onHoverCell}
+            onHoverCell={isAssigningDelivery ? undefined : (cell) => onHoverCell(centerCell(cell))}
             onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
             onBayClick={onBayClick}
           />

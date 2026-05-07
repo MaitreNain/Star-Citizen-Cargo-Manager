@@ -70,7 +70,6 @@ export default function PendingDeliveriesPanel({
   const { t, locale } = useLanguage();
   const highlightedRef = useRef<HTMLDivElement>(null);
   const [confirmingDeliveryId, setConfirmingDeliveryId] = useState<string | null>(null);
-  const [expandedDeliveryId, setExpandedDeliveryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (highlightedDeliveryId && highlightedRef.current) {
@@ -148,8 +147,8 @@ export default function PendingDeliveriesPanel({
   const totalSelectedScu = useMemo(() => {
     let total = 0;
     for (const [key, count] of crateSelection) {
-      const sizeScu = parseInt(key.split("::")[1]);
-      total += count * sizeScu;
+      const sizeScu = parseInt(key.split("::")[1], 10);
+      if (!isNaN(sizeScu)) total += sizeScu * count;
     }
     return total;
   }, [crateSelection]);
@@ -175,39 +174,33 @@ export default function PendingDeliveriesPanel({
 
   function renderItem(item: DeliveryItem) {
     const isDemo = item.isDemo === true;
-    const isExpanded = !isDemo && expandedDeliveryId === item.deliveryId;
     const isComplete = item.pendingScu <= 0 && item.state === "loaded";
     const deliveryFragments = fragmentsByDelivery.get(item.deliveryId) ?? [];
-    const showDetails = isExpanded && deliveryFragments.length > 0;
     const deliveryColor = deliveryColors.get(item.deliveryId) ?? item.contractColor;
-    const isHighlighted = highlightedDeliveryId === item.deliveryId && !isExpanded;
+    const isHighlighted = highlightedDeliveryId === item.deliveryId;
     const isMarked = markedSet.has(item.deliveryId);
     const isWaiting = item.state === "waiting";
     const pendingGroups = (!isWaiting && !isDemo) ? (pendingCratesByDelivery.get(item.deliveryId) ?? []) : [];
 
-    const borderColor = isExpanded && !isWaiting
-      ? "var(--accent)"
-      : isComplete
-        ? "rgba(34,211,160,0.4)"
-        : isHighlighted
-          ? "#facc15"
-          : isMarked
-            ? "rgba(56,189,248,0.6)"
-            : isWaiting
-              ? "var(--border)"
-              : "var(--border-glow)";
+    const borderColor = isComplete
+      ? "rgba(34,211,160,0.4)"
+      : isHighlighted
+        ? "#facc15"
+        : isMarked
+          ? "rgba(56,189,248,0.6)"
+          : isWaiting
+            ? "var(--border)"
+            : "var(--border-glow)";
 
-    const bgColor = isExpanded && !isWaiting
-      ? "var(--accent-glow)"
-      : isComplete
-        ? "rgba(34,211,160,0.08)"
-        : isHighlighted
-          ? "rgba(250,204,21,0.12)"
-          : isMarked
-            ? "rgba(56,189,248,0.08)"
-            : isWaiting
-              ? "var(--panel)"
-              : "linear-gradient(150deg, var(--panel-alt) 0%, var(--panel) 100%)";
+    const bgColor = isComplete
+      ? "rgba(34,211,160,0.08)"
+      : isHighlighted
+        ? "rgba(250,204,21,0.12)"
+        : isMarked
+          ? "rgba(56,189,248,0.08)"
+          : isWaiting
+            ? "var(--panel)"
+            : "linear-gradient(150deg, var(--panel-alt) 0%, var(--panel) 100%)";
 
     const scuColor = isComplete ? "var(--success)" : isWaiting ? "var(--text)" : "var(--accent)";
 
@@ -219,19 +212,13 @@ export default function PendingDeliveriesPanel({
         ref={isHighlighted ? highlightedRef : undefined}
       >
         <div
-          onClick={() => {
-            if (isDemo || isWaiting) return;
-            setExpandedDeliveryId((prev) => prev === item.deliveryId ? null : item.deliveryId);
-          }}
           style={{
             background: bgColor,
             borderTop: `1px solid ${borderColor}`,
             borderRight: `1px solid ${borderColor}`,
             borderBottom: `1px solid ${borderColor}`,
             borderLeft: `4px solid ${deliveryColor}`,
-            borderRadius: showDetails ? "3px 3px 0 0" : "3px",
-            cursor: isWaiting ? "default" : "pointer",
-            userSelect: "none",
+            borderRadius: "3px",
             opacity: isWaiting ? 0.8 : 1,
             transition: "background 0.15s, border-color 0.15s",
             boxShadow: isHighlighted
@@ -285,6 +272,74 @@ export default function PendingDeliveriesPanel({
                 {/* Crate pool */}
                 {pendingGroups.length > 0 && (
                   <div style={{ marginTop: "8px", padding: "6px 8px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                    {(() => {
+                      const allSelected = pendingGroups.every(
+                        (g) => (crateSelection.get(`${item.deliveryId}::${g.sizeScu}`) ?? 0) >= g.count
+                      );
+                      const deliverySelectedScu = pendingGroups.reduce(
+                        (sum, g) => sum + (crateSelection.get(`${item.deliveryId}::${g.sizeScu}`) ?? 0) * g.sizeScu, 0
+                      );
+                      return (
+                        <div style={{ display: "flex", gap: "4px", alignItems: "center", marginBottom: "6px" }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              for (const group of pendingGroups) {
+                                const key = `${item.deliveryId}::${group.sizeScu}`;
+                                const delta = group.count - (crateSelection.get(key) ?? 0);
+                                if (delta > 0) onUpdateCrateSelection(key, delta);
+                              }
+                            }}
+                            disabled={allSelected}
+                            style={{
+                              flexShrink: 0,
+                              background: allSelected ? "none" : "rgba(224,120,40,0.08)",
+                              border: `1px solid ${allSelected ? "var(--border)" : "var(--accent-dim)"}`,
+                              color: allSelected ? "var(--text-dim)" : "var(--accent)",
+                              cursor: allSelected ? "default" : "pointer",
+                              fontSize: "10px", fontFamily: "var(--font-mono)",
+                              padding: "3px 8px", borderRadius: "2px",
+                              opacity: allSelected ? 0.45 : 1,
+                            }}
+                          >{t("pending.selectAll")}</button>
+                          <div style={{
+                            marginLeft: "auto", display: "flex", alignItems: "center",
+                            border: `1px solid ${deliverySelectedScu > 0 ? "var(--accent-dim)" : "var(--border)"}`,
+                            borderRadius: "2px", overflow: "hidden",
+                            opacity: deliverySelectedScu > 0 ? 1 : 0.45,
+                          }}>
+                            <span style={{
+                              padding: "2px 7px",
+                              fontFamily: "var(--font-mono)", fontSize: "10px",
+                              color: deliverySelectedScu > 0 ? "var(--accent)" : "var(--text-dim)",
+                            }}>
+                              {deliverySelectedScu} SCU
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (deliverySelectedScu === 0) return;
+                                for (const group of pendingGroups) {
+                                  const key = `${item.deliveryId}::${group.sizeScu}`;
+                                  const selected = crateSelection.get(key) ?? 0;
+                                  if (selected > 0) onUpdateCrateSelection(key, -selected);
+                                }
+                              }}
+                              disabled={deliverySelectedScu === 0}
+                              style={{
+                                background: deliverySelectedScu > 0 ? "rgba(224,120,40,0.08)" : "none",
+                                borderLeft: `1px solid ${deliverySelectedScu > 0 ? "var(--accent-dim)" : "var(--border)"}`,
+                                border: "none",
+                                color: deliverySelectedScu > 0 ? "var(--accent)" : "var(--text-dim)",
+                                cursor: deliverySelectedScu > 0 ? "pointer" : "default",
+                                fontSize: "10px", fontFamily: "var(--font-mono)",
+                                padding: "2px 8px",
+                              }}
+                            >{t("pending.clearSelection")}</button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {pendingGroups.map((group, idx) => {
                       const key = `${item.deliveryId}::${group.sizeScu}`;
                       const selected = crateSelection.get(key) ?? 0;
@@ -330,6 +385,43 @@ export default function PendingDeliveriesPanel({
                 )}
               </div>
             </div>
+
+            {/* Fragments : emplacement des caisses */}
+            {deliveryFragments.length > 0 && (
+              <div style={{
+                marginTop: "8px",
+                background: "rgba(0,0,0,0.22)",
+                border: "1px solid var(--border)",
+                borderRadius: "2px",
+                overflow: "hidden",
+              }}>
+                {deliveryFragments.map((frag, idx) => (
+                  <div key={frag.id} style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    padding: "4px 8px",
+                    borderTop: idx > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                  }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", opacity: 0.6 }}>◈</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--cyan)", flex: 1 }}>
+                      {getBayLabel(frag.bayId)}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>
+                      {frag.placedScu}&thinsp;SCU
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRetractFragment(frag); }}
+                      style={{
+                        background: "none",
+                        border: "1px solid rgba(180,200,220,0.2)",
+                        color: "var(--text-muted)", cursor: "pointer",
+                        fontSize: "10px", fontFamily: "var(--font-mono)",
+                        padding: "1px 6px", borderRadius: "2px", flexShrink: 0,
+                      }}
+                    >{t("pending.retract")}</button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Séparateur */}
             <div style={{ borderTop: "1px solid var(--border)", margin: "0 -12px 8px", opacity: 0.6 }} />
@@ -406,37 +498,6 @@ export default function PendingDeliveriesPanel({
           </div>
         </div>
 
-        {/* Fragment details (expanded) */}
-        {showDetails && (
-          <div style={{
-            background: "rgba(4,10,18,0.8)",
-            border: `1px solid ${borderColor}`,
-            borderTop: "none",
-            borderRadius: "0 0 2px 2px",
-            padding: "4px 0",
-          }}>
-            {deliveryFragments.map((frag) => (
-              <div key={frag.id} style={{
-                display: "flex", alignItems: "center",
-                padding: "3px 10px 3px 18px", gap: "8px",
-              }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--cyan)", flex: 1 }}>
-                  {getBayLabel(frag.bayId)}&nbsp;·&nbsp;{frag.placedScu}&nbsp;SCU
-                </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRetractFragment(frag); }}
-                  style={{
-                    background: "none", border: "none",
-                    color: "var(--text-muted)", cursor: "pointer", fontSize: "11px",
-                    fontFamily: "var(--font-mono)", padding: "0 2px", flexShrink: 0,
-                  }}
-                >
-                  {t("pending.retract")}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     );
   }
@@ -470,8 +531,61 @@ export default function PendingDeliveriesPanel({
         <span style={{ position: "absolute", inset: 0, padding: "6px 8px", opacity: instructionActive ? 1 : 0 }}>{t("pending.instructionBay")}</span>
       </div>
 
+      {/* Sélection active */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "10px",
+        marginBottom: "10px", padding: "8px 10px",
+        background: totalSelectedCrates > 0
+          ? "linear-gradient(90deg, rgba(224,120,40,0.14) 0%, rgba(224,120,40,0.04) 100%)"
+          : "none",
+        borderTop: "1px solid var(--accent-dim)",
+        borderRight: "1px solid var(--accent-dim)",
+        borderBottom: "1px solid var(--accent-dim)",
+        borderLeft: `3px solid ${totalSelectedCrates > 0 ? "var(--accent)" : "var(--accent-dim)"}`,
+        borderRadius: "2px",
+        transition: "background 0.2s, border-left-color 0.2s",
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "2px" }}>
+            {t("pending.selectionLabel")}
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "14px", fontWeight: 700, lineHeight: 1, color: totalSelectedCrates > 0 ? "var(--accent)" : "var(--text-dim)" }}>
+            {totalSelectedScu}&thinsp;SCU
+          </div>
+        </div>
+        {totalSelectedCrates > 0 && (
+          <button
+            onClick={onClearCrateSelection}
+            style={{
+              flexShrink: 0,
+              background: "none",
+              border: "1px solid var(--accent-dim)",
+              color: "var(--accent)", cursor: "pointer",
+              fontSize: "10px", fontFamily: "var(--font-mono)",
+              padding: "4px 10px", borderRadius: "2px",
+              letterSpacing: "0.04em",
+            }}
+          >{t("pending.clearSelection")}</button>
+        )}
+      </div>
+
+      {/* Effacer marquages */}
+      <button
+        onClick={onClearMarked}
+        disabled={markedDeliveryIds.length === 0}
+        style={{
+          width: "100%", marginBottom: "10px",
+          background: "none",
+          border: `1px solid ${markedDeliveryIds.length > 0 ? "rgba(180,200,220,0.45)" : "var(--border)"}`,
+          color: markedDeliveryIds.length > 0 ? "var(--text)" : "var(--text-dim)",
+          cursor: markedDeliveryIds.length > 0 ? "pointer" : "default",
+          fontSize: "11px", fontFamily: "var(--font-mono)", padding: "4px 8px", borderRadius: "2px",
+          opacity: markedDeliveryIds.length > 0 ? 1 : 0.35,
+        }}
+      >{t("pending.cancelMark")}</button>
+
       {/* Chargées */}
-      <div style={{ display: "flex", alignItems: "center", marginTop: "12px", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
         <div className="section-header" style={{ color: "var(--accent)", marginBottom: 0, flex: 1 }}>{t("pending.inBay")}</div>
         {viderConfirm ? (
           <>
@@ -495,44 +609,6 @@ export default function PendingDeliveriesPanel({
         )}
       </div>
       {loadedCount > 0 && loadedItems.map((item) => renderItem(item))}
-
-      {/* Sélection active */}
-      <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
-        {totalSelectedCrates > 0 && (
-          <div style={{
-            flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "3px 8px",
-            background: "var(--accent-glow)",
-            border: "1px solid var(--accent-dim)",
-            borderRadius: "2px",
-          }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--accent)" }}>
-              {totalSelectedScu} SCU {t("pending.selectionLabel")}
-            </span>
-            <button
-              onClick={onClearCrateSelection}
-              style={{
-                background: "none", border: "none",
-                color: "var(--accent)", cursor: "pointer",
-                fontSize: "11px", fontFamily: "var(--font-mono)", padding: "0 2px",
-              }}
-            >{t("pending.clearSelection")}</button>
-          </div>
-        )}
-        <button
-          onClick={onClearMarked}
-          disabled={markedDeliveryIds.length === 0}
-          style={{
-            flex: totalSelectedCrates > 0 ? "0 0 auto" : 1,
-            background: "none",
-            border: `1px solid ${markedDeliveryIds.length > 0 ? "rgba(180,200,220,0.5)" : "var(--border)"}`,
-            color: markedDeliveryIds.length > 0 ? "var(--text)" : "var(--text-dim)",
-            cursor: markedDeliveryIds.length > 0 ? "pointer" : "default",
-            fontSize: "11px", fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: "2px",
-            opacity: markedDeliveryIds.length > 0 ? 1 : 0.35,
-          }}
-        >{t("pending.cancelMark")}</button>
-      </div>
 
       {/* En attente */}
       {waitingCount > 0 && (

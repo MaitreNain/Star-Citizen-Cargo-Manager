@@ -110,7 +110,7 @@ export default memo(function CrateMesh({
         <boxGeometry args={[size.x, size.z, size.y]} />
         <meshLambertMaterial color={color} />
       </mesh>
-      <lineSegments geometry={edgesGeo}><lineBasicMaterial color="#00000055" /></lineSegments>
+      <lineSegments geometry={edgesGeo}><lineBasicMaterial color="#000000" transparent opacity={0.33} /></lineSegments>
     </group>
   );
 });
