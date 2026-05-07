@@ -68,7 +68,7 @@ Pure functions, no React dependency.
 | `checkCollision.ts` / `checkSupport.ts` | Voxel-level overlap and gravity helpers |
 | `resolveStackPosition.ts` | Used during drag: finds the stack height at a given (x,y) cell; supports compound bays via `sections?` |
 | `applyGravity.ts` | Re-stacks all crates after a drag move; supports compound bays via `sections?` |
-| `getRotatedDimensions.ts` | Applies 90° rotation steps to crate dimensions; also exports `getRotations(dims)` used by both placement files |
+| `getRotatedDimensions.ts` | Applies 90° rotation steps to crate dimensions; accepts optional `anchorFace?: AnchorFace` to swap the correct axis pair: `left`/`right` → y↔z, `front`/`rear` → x↔z, `floor`/`ceiling`/default → x↔y. Also exports `getRotations(dims)` used by both placement files. |
 
 #### Gravity behaviour (`applyGravity.ts`)
 
@@ -76,8 +76,8 @@ When a crate becomes unsupported after a drag, gravity tries `resolveStackPositi
 
 ### 3D scene (`src/scene/`)
 
-- **`CargoScene.tsx`** — R3F `<Canvas>` in `frameloop="demand"` mode. Splits `ship.cargoBays` into `individualBays` and `compoundBays`. Renders `CargoBayMesh` for individual bays and `CompoundBayMesh` for compound bays.
-- **`CargoBayMesh.tsx`** — renders a single bay wireframe, grid, and floating label (sprite).
+- **`CargoScene.tsx`** — R3F `<Canvas>` in `frameloop="demand"` mode. Splits `ship.cargoBays` into `individualBays` and `compoundBays`. Renders `CargoBayMesh` for individual bays and `CompoundBayMesh` for compound bays. Contains `centerCell()` which offsets the hovered cell so the drag preview is centered on the cursor (subtracts `Math.floor(dim/2)` on the two free axes for each anchor type, clamped to bay bounds). `resolveBayForStack()` returns `anchorFace: undefined` for compound bays so callers always get the field without a second lookup.
+- **`CargoBayMesh.tsx`** — renders a single bay wireframe, grid, and floating label (sprite). The interaction plane uses `THREE.FrontSide` for lateral anchor faces (`left`, `right`, `front`, `rear`) so clicks from the anchor/ship side are blocked; `floor`/`ceiling` keep `THREE.DoubleSide`.
 - **`CompoundBayMesh.tsx`** — renders the merged wireframe + fill highlight (single geometry each, no internal seams), per-section grids (only for sections at z=0), and a single shared label.
 - **`CrateMesh.tsx`** — renders a placed crate; memoised, uses stable callback refs to avoid re-renders.
 - **`CratePreviewMesh.tsx`** — semi-transparent ghost shown during drag.
@@ -106,7 +106,11 @@ The app supports FR and EN. The active locale is stored in `localStorage` under 
 - **`AppLayout.tsx`** — two-panel layout: left sidebar (tabs: Contracts / Placement) + right 3D viewport. Global CSS variables and sci-fi classes (`.scifi-panel`, `.btn-primary`, etc.) are injected here. Includes the FR/EN toggle button in the HUD.
 - **`ContractForm.tsx`** — collapsible panel (starts closed); expands automatically when editing a contract. Add/edit a contract: name, color auto-assigned, deliveries with destination/commodity/SCU via `SearchableSelect`, max container size, required pickup location.
 - **`ContractList.tsx`** — list of contracts with drag-to-reorder, per-delivery fragment progress.
-- **`PendingDeliveriesPanel.tsx`** — activate deliveries, build a crate pool selection, archive delivered shipments. Each loaded delivery card shows pending crates grouped by SCU size with −/+ controls. The user selects exactly which crates to place; clicking a bay in the 3D view places them. A summary bar shows the total selected SCU and a clear button. Clicking the card body toggles fragment details (which bays hold SCU from that delivery).
+- **`PendingDeliveriesPanel.tsx`** — activate deliveries, build a crate pool selection, archive delivered shipments. Each loaded delivery card shows:
+  - Fragment placement summary (which bays hold SCU from that delivery) — always visible inline, with a "↩ Retirer" button per fragment.
+  - Pending crates grouped by SCU size with −/+ controls, a "select all" button, and a segmented counter+clear widget (SCU label | Vider button) that is always rendered but grayed when the delivery has no selection.
+  - Cards are not clickable/expandable.
+  - A global selection bar above "En Soute" is always visible: shows `0 SCU` dimmed when empty, switches to accent styling with gradient when a selection is active. `totalSelectedScu` is derived from `crateSelection` by parsing the `"deliveryId::sizeScu"` key format.
 - **`ManualCargoForm.tsx`** — collapsible form in the **Contracts tab** (below `ContractForm`) to add or edit explicit-crate cargos without creating a full hauling contract. Name and pickup location are optional. Destination uses `SearchableSelect`. Creates a `Contract` with `explicitCrates` on the delivery so crate sizes are preserved exactly. Supports editing via `editingContract` / `onUpdate` / `onCancelEdit` props — `CargoPlanner` routes edits here (instead of `ContractForm`) when `deliveries[0].explicitCrates` is present.
 - **`SearchableSelect.tsx`** — filterable autocomplete input backed by a string options array.
 - **`CapacityPanel.tsx`** — live SCU usage ("En soute x / xxx SCU") and remaining capacity ("Disponible x SCU") with an adaptive HSL color: `hsl(remainingPct * 1.2, 75%, 58%)` from red (0 %) to green (100 %); forced red at 0 SCU remaining.
@@ -117,10 +121,11 @@ The app supports FR and EN. The active locale is stored in `localStorage` under 
 The placement tab uses an explicit pool model rather than selecting a whole delivery at once:
 
 1. User activates a delivery (moves it from "waiting" to "loaded").
-2. Each loaded card shows pending crates by size with −/+ controls → builds `crateSelection: Map<string, number>` in `CargoPlanner`. Key format: `"${deliveryId}::${sizeScu}"`.
+2. Each loaded card shows pending crates by size with −/+ controls, plus a "select all" button → builds `crateSelection: Map<string, number>` in `CargoPlanner`. Key format: `"${deliveryId}::${sizeScu}"`.
 3. `pendingCratesByDelivery: Map<string, {sizeScu, count}[]>` (useMemo) lists unplaced crates grouped by size, largest first. Derived from `allCrates` minus `placedCrates`.
 4. User clicks a bay in the 3D view → `handleBayClick` collects the matching pending `PlannedCrate` objects, calls `placeCratesInBay` / `placeCratesInCompoundBay`, then subtracts placed counts from `crateSelection` (unplaced ones stay selected for the next bay).
 5. `isAssigningDelivery={totalSelectedCrates > 0}` highlights clickable bays in the scene and disables drag while a selection is active.
+6. The drag preview (ghost crate) is centered on the cursor via `centerCell()` in `CargoScene`, which intercepts `onHoverCell` before it propagates to state.
 
 `crateSelection` is cleared on: ship change, contract update/delete, delivery deactivate/archive, undo, clear placement.
 
