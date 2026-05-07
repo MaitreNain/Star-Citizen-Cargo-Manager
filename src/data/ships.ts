@@ -330,22 +330,22 @@ export const ships: Ship[] = [
     id: "hull-b",
     name: "Hull B",
     cargoBays: [
-      { id: "hull-b-bay-1",  name: "Soute 1",  size: { x: 2, y: 8, z: 2 }, offset: { x: -6,  y: 0,  z: 0 } },
-      { id: "hull-b-bay-2",  name: "Soute 2",  size: { x: 2, y: 8, z: 2 }, offset: { x: -4,  y: 0,  z: 0 } },
-      { id: "hull-b-bay-3",  name: "Soute 3",  size: { x: 2, y: 8, z: 2 }, offset: { x: -6,  y: -9, z: 0 } },
-      { id: "hull-b-bay-4",  name: "Soute 4",  size: { x: 2, y: 8, z: 2 }, offset: { x: -4,  y: -9, z: 0 } },
-      { id: "hull-b-bay-5",  name: "Soute 5",  size: { x: 2, y: 8, z: 2 }, offset: { x: -1,  y: 0,  z: 0 } },
-      { id: "hull-b-bay-6",  name: "Soute 6",  size: { x: 2, y: 8, z: 2 }, offset: { x: 1,   y: 0,  z: 0 } },
-      { id: "hull-b-bay-7",  name: "Soute 7",  size: { x: 2, y: 8, z: 2 }, offset: { x: -1,  y: -9, z: 0 } },
-      { id: "hull-b-bay-8",  name: "Soute 8",  size: { x: 2, y: 8, z: 2 }, offset: { x: 1,   y: -9, z: 0 } },
-      { id: "hull-b-bay-9",  name: "Soute 9",  size: { x: 2, y: 8, z: 2 }, offset: { x: 5,   y: 0,  z: 0 } },
-      { id: "hull-b-bay-10", name: "Soute 10", size: { x: 2, y: 8, z: 2 }, offset: { x: 7,   y: 0,  z: 0 } },
-      { id: "hull-b-bay-11", name: "Soute 11", size: { x: 2, y: 8, z: 2 }, offset: { x: 5,   y: -9, z: 0 } },
-      { id: "hull-b-bay-12", name: "Soute 12", size: { x: 2, y: 8, z: 2 }, offset: { x: 7,   y: -9, z: 0 } },
-      { id: "hull-b-bay-13", name: "Soute 13", size: { x: 2, y: 8, z: 2 }, offset: { x: 10,  y: 0,  z: 0 } },
-      { id: "hull-b-bay-14", name: "Soute 14", size: { x: 2, y: 8, z: 2 }, offset: { x: 12,  y: 0,  z: 0 } },
-      { id: "hull-b-bay-15", name: "Soute 15", size: { x: 2, y: 8, z: 2 }, offset: { x: 10,  y: -9, z: 0 } },
-      { id: "hull-b-bay-16", name: "Soute 16", size: { x: 2, y: 8, z: 2 }, offset: { x: 12,  y: -9, z: 0 } },
+      { id: "hull-b-bay-1",  name: "Soute 1",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: 0,  z: 4 }, anchorFace: "right"  },
+      { id: "hull-b-bay-2",  name: "Soute 2",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: 0,  z: 2 }, anchorFace: "right"  },
+      { id: "hull-b-bay-3",  name: "Soute 3",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: -9, z: 4 }, anchorFace: "right"  },
+      { id: "hull-b-bay-4",  name: "Soute 4",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: -9, z: 2 }, anchorFace: "right"  },
+      { id: "hull-b-bay-5",  name: "Soute 5",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: 0,  z: -2 }, anchorFace: "right"  },
+      { id: "hull-b-bay-6",  name: "Soute 6",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,   y: 0,  z: -4 }, anchorFace: "right"  },
+      { id: "hull-b-bay-7",  name: "Soute 7",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,  y: -9, z: -2 }, anchorFace: "right"  },
+      { id: "hull-b-bay-8",  name: "Soute 8",  size: { x: 2, y: 8, z: 2 }, offset: { x: 0,   y: -9, z: -4 }, anchorFace: "right"  },
+      { id: "hull-b-bay-9",  name: "Soute 9",  size: { x: 2, y: 8, z: 2 }, offset: { x: 6,   y: 0,  z: 2 }, anchorFace: "left"  },
+      { id: "hull-b-bay-10", name: "Soute 10", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,   y: 0,  z: 4 }, anchorFace: "left"  },
+      { id: "hull-b-bay-11", name: "Soute 11", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,   y: -9, z: 2 }, anchorFace: "left"  },
+      { id: "hull-b-bay-12", name: "Soute 12", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,   y: -9, z: 4 }, anchorFace: "left"  },
+      { id: "hull-b-bay-13", name: "Soute 13", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,  y: 0,  z: -2 }, anchorFace: "left"  },
+      { id: "hull-b-bay-14", name: "Soute 14", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,  y: 0,  z: -4 }, anchorFace: "left"  },
+      { id: "hull-b-bay-15", name: "Soute 15", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,  y: -9, z: -2 }, anchorFace: "left"  },
+      { id: "hull-b-bay-16", name: "Soute 16", size: { x: 2, y: 8, z: 2 }, offset: { x: 6,  y: -9, z: -4 }, anchorFace: "left"  },
     ],
   },
 
@@ -353,102 +353,33 @@ export const ships: Ship[] = [
     id: "hull-c",
     name: "Hull C",
     cargoBays: [
-      {
-        id: "hull-c-bay-1",
-        name: "Soute 1",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 0, y: 20, z: 0 },
-      },
-      {
-        id: "hull-c-bay-2",
-        name: "Soute 2",
-        size: { x: 8, y: 4, z: 6 },
-        offset: { x: 0, y: 28, z: 0 },
-      },
-      {
-        id: "hull-c-bay-3",
-        name: "Soute 3",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: -9, y: 15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-4",
-        name: "Soute 4",
-        size: { x: 4, y: 8, z: 6 },
-        offset: { x: -13, y: 15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-5",
-        name: "Soute 5",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 0, y: 10, z: 0 },
-      },
-      {
-        id: "hull-c-bay-6",
-        name: "Soute 6",
-        size: { x: 8, y: 4, z: 6 },
-        offset: { x: 0, y: 6, z: 0 },
-      },
-      {
-        id: "hull-c-bay-7",
-        name: "Soute 7",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 9, y: 15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-8",
-        name: "Soute 8",
-        size: { x: 4, y: 8, z: 6 },
-        offset: { x: 17, y: 15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-9",
-        name: "Soute 9",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 0, y: -10, z: 0 },
-      },
-      {
-        id: "hull-c-bay-10",
-        name: "Soute 10",
-        size: { x: 8, y: 4, z: 6 },
-        offset: { x: 0, y: -2, z: 0 },
-      },
-      {
-        id: "hull-c-bay-11",
-        name: "Soute 11",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: -9, y: -15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-12",
-        name: "Soute 12",
-        size: { x: 4, y: 8, z: 6 },
-        offset: { x: -13, y: -15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-13",
-        name: "Soute 13",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 0, y: -20, z: 0 },
-      },
-      {
-        id: "hull-c-bay-14",
-        name: "Soute 14",
-        size: { x: 8, y: 4, z: 6 },
-        offset: { x: 0, y: -24, z: 0 },
-      },
-      {
-        id: "hull-c-bay-15",
-        name: "Soute 15",
-        size: { x: 8, y: 8, z: 6 },
-        offset: { x: 9, y: -15, z: 0 },
-      },
-      {
-        id: "hull-c-bay-16",
-        name: "Soute 16",
-        size: { x: 4, y: 8, z: 6 },
-        offset: { x: 17, y: -15, z: 0 },
-      },
+      // Croix avant — ouvre sur la proue (anchorFace "rear" = face haute-y = côté avant du vaisseau)
+      // Bras vertical bas (VB) : x=0..4, z=0..4
+      { id: "hull-c-bay-1",  name: "Soute 1",  size: { x: 8, y: 6, z: 8 }, offset: { x: 0,  y: 4,  z: -8 }, anchorFace: "front" },
+      { id: "hull-c-bay-2",  name: "Soute 2",  size: { x: 8, y: 6, z: 4 }, offset: { x: 0,  y: 4, z: -12 }, anchorFace: "front" },
+      // Bras vertical haut (VT) : x=0..4, z=4..8
+      { id: "hull-c-bay-3",  name: "Soute 3",  size: { x: 8, y: 6, z: 8 }, offset: { x: 0,  y: 4,  z: 8 }, anchorFace: "front" },
+      { id: "hull-c-bay-4",  name: "Soute 4",  size: { x: 8, y: 6, z: 4 }, offset: { x: 0,  y: 4, z: 16 }, anchorFace: "front" },
+      // Bras horizontal gauche (HL) : x=-4..0, z=2..6
+      { id: "hull-c-bay-5",  name: "Soute 5",  size: { x: 8, y: 6, z: 8 }, offset: { x: -8, y: 4,  z: 0 }, anchorFace: "front" },
+      { id: "hull-c-bay-6",  name: "Soute 6",  size: { x: 4, y: 6, z: 8 }, offset: { x: -12, y: 4, z: 0 }, anchorFace: "front" },
+      // Bras horizontal droit (HR) : x=4..8, z=2..6
+      { id: "hull-c-bay-7",  name: "Soute 7",  size: { x: 8, y: 6, z: 8 }, offset: { x: 8,  y: 4,  z: 0 }, anchorFace: "front" },
+      { id: "hull-c-bay-8",  name: "Soute 8",  size: { x: 4, y: 6, z: 8 }, offset: { x: 16,  y: 4, z: 0 }, anchorFace: "front" },
+
+      // Croix arrière — ouvre sur la poupe (anchorFace "rear" = plan normal vers −y = côté arrière du vaisseau)
+      // Bras -z (bas) : même XZ que bras avant
+      { id: "hull-c-bay-9",  name: "Soute 9",  size: { x: 8, y: 6, z: 8 }, offset: { x: 0,   y: -10, z: -8  }, anchorFace: "rear" },
+      { id: "hull-c-bay-10", name: "Soute 10", size: { x: 8, y: 6, z: 4 }, offset: { x: 0,   y: -10, z: -12 }, anchorFace: "rear" },
+      // Bras +z (haut) : même XZ que bras avant
+      { id: "hull-c-bay-11", name: "Soute 11", size: { x: 8, y: 6, z: 8 }, offset: { x: 0,   y: -10, z: 8   }, anchorFace: "rear" },
+      { id: "hull-c-bay-12", name: "Soute 12", size: { x: 8, y: 6, z: 4 }, offset: { x: 0,   y: -10, z: 16  }, anchorFace: "rear" },
+      // Bras -x (gauche) : même XZ que bras avant
+      { id: "hull-c-bay-13", name: "Soute 13", size: { x: 8, y: 6, z: 8 }, offset: { x: -8,  y: -10, z: 0   }, anchorFace: "rear" },
+      { id: "hull-c-bay-14", name: "Soute 14", size: { x: 4, y: 6, z: 8 }, offset: { x: -12, y: -10, z: 0   }, anchorFace: "rear" },
+      // Bras +x (droit) : même XZ que bras avant
+      { id: "hull-c-bay-15", name: "Soute 15", size: { x: 8, y: 6, z: 8 }, offset: { x: 8,   y: -10, z: 0   }, anchorFace: "rear" },
+      { id: "hull-c-bay-16", name: "Soute 16", size: { x: 4, y: 6, z: 8 }, offset: { x: 16,  y: -10, z: 0   }, anchorFace: "rear" },
     ],
   },
 

@@ -139,6 +139,20 @@ export default function CargoBayMesh({
         <spriteMaterial map={labelTex.texture} transparent depthTest={false} />
       </sprite>
 
+      {/* Face arrière visuelle pour les soutes latérales — pas de handlers = pas de raycast R3F */}
+      {anchor !== "floor" && anchor !== "ceiling" && (
+        <mesh position={plane.pos} rotation={plane.rot}>
+          <planeGeometry args={plane.args} />
+          <meshBasicMaterial
+            color={highlight ? "#e07828" : "#0c2840"}
+            transparent={highlight}
+            opacity={highlight ? 0.35 : 1}
+            depthWrite={!highlight}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
       <mesh
         position={plane.pos}
         rotation={plane.rot}
@@ -155,7 +169,13 @@ export default function CargoBayMesh({
         onPointerOut={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}
       >
         <planeGeometry args={plane.args} />
-        <meshBasicMaterial transparent opacity={0} side={anchor === "floor" || anchor === "ceiling" ? THREE.DoubleSide : THREE.FrontSide} />
+        <meshBasicMaterial
+          color={highlight ? "#e07828" : "#0c2840"}
+          transparent={highlight}
+          opacity={highlight ? 0.35 : 1}
+          depthWrite={!highlight}
+          side={anchor === "floor" || anchor === "ceiling" ? THREE.DoubleSide : THREE.FrontSide}
+        />
       </mesh>
     </group>
   );

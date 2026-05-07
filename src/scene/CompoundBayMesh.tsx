@@ -215,7 +215,13 @@ export default function CompoundBayMesh({
               onPointerOut={() => { setHoveredAndInvalidate(false); onHoverCell?.(null); }}
             >
               <planeGeometry args={[sw, sd]} />
-              <meshBasicMaterial transparent opacity={0} />
+              <meshBasicMaterial
+                color={highlight ? "#e07828" : "#0c2840"}
+                transparent={section.localOffset.z !== 0 || highlight}
+                opacity={section.localOffset.z !== 0 ? 0 : highlight ? 0.35 : 1}
+                depthWrite={section.localOffset.z === 0}
+                side={THREE.DoubleSide}
+              />
             </mesh>
           </group>
         );

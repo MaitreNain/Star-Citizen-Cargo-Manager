@@ -115,6 +115,29 @@ export default function CargoScene({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Annule le drag si le pointeur est relâché hors du canvas (pointerup jamais reçu par les bays).
+  // Le ref guard empêche le double-déclenchement quand pointerup atterrit sur une bay
+  // (mesh handler + window handler se déclenchent dans le même tick synchrone).
+  const onEndDragRef = useRef(onEndDrag);
+  onEndDragRef.current = onEndDrag;
+  const dragHandledRef = useRef(false);
+  useEffect(() => { dragHandledRef.current = false; }, [draggedCrateId]);
+
+  useEffect(() => {
+    if (!draggedCrateId) return;
+    function handleWindowPointerUp() {
+      if (!dragHandledRef.current) onEndDragRef.current();
+      dragHandledRef.current = false;
+    }
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    return () => window.removeEventListener("pointerup", handleWindowPointerUp);
+  }, [draggedCrateId]);
+
+  const wrappedOnEndDrag = useCallback(() => {
+    dragHandledRef.current = true;
+    onEndDrag();
+  }, [onEndDrag]);
+
   // Callbacks stables : les refs garantissent l'accès aux valeurs les plus récentes
   // sans recréer les fonctions à chaque render (compatibilité React.memo sur CrateMesh)
   const onSelectCrateRef = useRef(onSelectCrate);
@@ -223,7 +246,7 @@ export default function CargoScene({
             bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
             onHoverCell={isAssigningDelivery ? undefined : (cell) => onHoverCell(centerCell(cell))}
-            onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
+            onPointerUpCell={isAssigningDelivery ? undefined : wrappedOnEndDrag}
             onBayClick={onBayClick}
           />
         ))}
@@ -237,7 +260,7 @@ export default function CargoScene({
             bayWord={t("scene.bay")}
             isAssignTarget={isAssigningDelivery}
             onHoverCell={isAssigningDelivery ? undefined : (cell) => onHoverCell(centerCell(cell))}
-            onPointerUpCell={isAssigningDelivery ? undefined : onEndDrag}
+            onPointerUpCell={isAssigningDelivery ? undefined : wrappedOnEndDrag}
             onBayClick={onBayClick}
           />
         ))}
