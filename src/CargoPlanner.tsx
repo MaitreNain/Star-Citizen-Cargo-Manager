@@ -422,12 +422,59 @@ export default function CargoPlanner() {
   function updateContract(updatedContract: Contract) {
     pushHistorySnapshot();
     const nextContracts = contracts.map((c) => c.id === updatedContract.id ? updatedContract : c);
-    const nextFragments = fragments.filter((f) => f.contractId !== updatedContract.id);
+
+    // New crate definitions for the updated contract (colours derived from all contracts)
+    const newCratesForContract = createCratesFromContracts(nextContracts)
+      .filter((c) => c.contractId === updatedContract.id);
+    const newCrateIds = new Set(newCratesForContract.map((c) => c.id));
+    const newCrateById = new Map(newCratesForContract.map((c) => [c.id, c]));
+
+    // Keep placed crates from other contracts unchanged.
+    // For this contract: keep only crates whose ID AND size still match the new definition.
+    // If the SCU total changed, the greedy split may reassign different sizes to the same index
+    // (e.g. crate-2 goes from 8SCU to 4SCU) — those must be removed so the new size appears unplaced.
+    const retained = placedCrates
+      .filter((c) => {
+        if (c.contractId !== updatedContract.id) return true;
+        const m = newCrateById.get(c.id);
+        return m !== undefined && m.size === c.size;
+      })
+      .map((c) => {
+        if (c.contractId !== updatedContract.id) return c;
+        const m = newCrateById.get(c.id)!;
+        return { ...c, contractName: m.contractName, color: m.color, destination: m.destination, commodity: m.commodity };
+      });
+
+    const afterGravity = applyGravity(retained, allBaysForGravity);
+
+    const nextDeliveryScuMap = new Map<string, number>();
+    for (const contract of nextContracts)
+      for (const delivery of contract.deliveries)
+        nextDeliveryScuMap.set(delivery.id, delivery.scu);
+
+    const nextFragments = buildFragmentsFromCrates(afterGravity, nextDeliveryScuMap);
+
+    const updatedDeliveryIds = new Set(updatedContract.deliveries.map((d) => d.id));
+    const oldContract = contracts.find((c) => c.id === updatedContract.id);
+    const removedDeliveryIds = new Set(
+      (oldContract?.deliveries ?? []).filter((d) => !updatedDeliveryIds.has(d.id)).map((d) => d.id)
+    );
+
     setContracts(nextContracts);
+    setPlacedCrates(afterGravity);
     setFragments(nextFragments);
-    setPlacedCrates(buildFromFragments(nextContracts, nextFragments, shipId, sortMode));
     setEditingContract(null);
-    setCrateSelection(new Map());
+    setActivatedDeliveries((prev) =>
+      removedDeliveryIds.size === 0 ? prev : prev.filter((id) => !removedDeliveryIds.has(id))
+    );
+    setCrateSelection((prev) => {
+      if (removedDeliveryIds.size === 0) return prev;
+      const next = new Map(prev);
+      for (const key of next.keys()) {
+        if (removedDeliveryIds.has(key.split("::")[0])) next.delete(key);
+      }
+      return next;
+    });
     drag.clear();
   }
 
