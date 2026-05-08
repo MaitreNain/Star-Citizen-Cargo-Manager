@@ -436,7 +436,6 @@ export default function CargoPlanner() {
     // New crate definitions for the updated contract (colours derived from all contracts)
     const newCratesForContract = createCratesFromContracts(nextContracts)
       .filter((c) => c.contractId === updatedContract.id);
-    const newCrateIds = new Set(newCratesForContract.map((c) => c.id));
     const newCrateById = new Map(newCratesForContract.map((c) => [c.id, c]));
 
     // Keep placed crates from other contracts unchanged.
