@@ -119,7 +119,7 @@ The app supports FR and EN. The active locale is stored in `localStorage` under 
 - **`TutorialOverlay.tsx`** — 9-step guided tutorial triggered by the `?` button in the HUD. Exports `TUTORIAL_DEMO_CONTRACT` (15 SCU Laranite + 23 SCU Agricium) used to populate demo crates in the scene. Key design points:
   - Steps can carry `tab` (switches sidebar tab on enter), `interactive` (enables 4-panel backdrop so the spotlight area receives pointer events — used for the 3D scene step).
   - Props `onExpandContractForm`, `onCollapseContractForm`, `onExpandManualForm` are called in phase 1 of `navigateTo` (before `SETTLE_MS`) so React re-renders the forms before `resolveSpotRect` captures the DOM rect.
-  - Navigation triggers `scrollIntoView` for steps targeting deep sidebar elements (`#tuto-manual-form` at step 3, `#tuto-list` at step 4).
+  - Every step with a `target` triggers `scrollIntoView({ behavior: "smooth", block: "center" })` in phase 2 — no `scroll` flag needed. A scroll event listener on `.scifi-sidebar` updates `spotRect` in real time so the spotlight tracks the element throughout the smooth scroll animation.
   - **Interactive backdrop**: when `step.interactive && spotRect`, the full-screen backdrop is replaced by 4 surrounding panels leaving the spotlight area fully interactive. Clicking any panel still closes the tutorial.
   - **Demo crates**: `demoPlacedCrates` in `CargoPlanner` is a `useState` (not `useMemo`) so it is mutable. Demo crates are draggable; `handleEndDrag` routes updates to `setDemoPlacedCrates` (never `placedCrates`) when `contractId === TUTORIAL_DEMO_CONTRACT.id`. `resolveStackPosition` receives the combined array so demo and real crates are mutually aware as obstacles.
 
