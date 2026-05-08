@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Contract } from "../types/Contract";
+import { useLanguage } from "../i18n/LanguageContext";
+import type { TranslationKey } from "../i18n/translations";
 
 type TabId = "contracts" | "placement";
 
@@ -12,60 +14,18 @@ type Step = {
   interactive?: boolean;
 };
 
-const STEPS: Step[] = [
-  {
-    title: "Bienvenue dans Cargo Planner",
-    body: "Ce guide rapide te présente les étapes essentielles pour utiliser cette appli et ainsi te faciliter la vie pour tes opérations de Hauling.",
-  },
-  {
-    title: "① Choisir son vaisseau",
-    body: "Commence par sélectionner le vaisseau que tu vas piloter. La capacité totale et la disposition des soutes seront calculées automatiquement.",
-    target: "#tuto-ship",
-    tab: "contracts",
-  },
-  {
-    title: "② Créer un contrat de Hauling",
-    body: "Renseigne un nom de contrat (optionnel) et la taille maximum des caisses du contrat (voir description du contrat ingame).\n\nEnsuite, inscris les informations du contrat (Ressource, quantité, destination et lieu de chargement).\n\nChaque « Livraison » correspond à un objectif de contrat.",
-    target: "#tuto-form",
-    tab: "contracts",
-  },
-  {
-    title: "③ Chargement personnalisé",
-    body: "Si tu connais déjà la composition exacte de ton chargement (taille et nombre de caisses), utilise le formulaire de chargement personnalisé.\n\nTu définis directement les caisses à charger, sans passer par un contrat de hauling. Idéal pour un chargement ponctuel ou un ajustement manuel.",
-    target: "#tuto-manual-form",
-    tab: "contracts",
-    scroll: true,
-  },
-  {
-    title: "④ Gérer ses contrats",
-    body: "Tes contrats apparaissent ici. Tu peux les modifier ou les supprimer si besoin.",
-    target: "#tuto-list",
-    tab: "contracts",
-    scroll: true,
-  },
-  {
-    title: "⑤ Onglet Placement",
-    body: "Une fois tes contrats créés, passe à l'onglet Placement pour charger tes caisses dans les soutes.",
-    target: "#tuto-tab-placement",
-  },
-  {
-    title: "⑥ Cartes de livraison",
-    body: "Chaque objectif de contrat apparaît ici sous forme de carte de livraison — une carte correspond à un objectif de contrat.\n\nTu peux marquer une livraison (via l'icône dédiée) pour retrouver facilement ses caisses dans la vue 3D : elles seront mises en évidence parmi les autres.",
-    target: "#tuto-deliveries",
-    tab: "placement",
-  },
-  {
-    title: "⑦ Activer & placer",
-    body: "Le processus de chargement se déroule en quatre étapes :\n\n① Active la livraison avec « Activer ».\n② Sélectionne le nombre de caisses à placer (boutons − / +) ou utilise « Tout sélectionner ».\n③ Clique sur une soute dans la vue 3D pour y affecter les caisses.\n④ Une fois livrée à destination, archive la livraison pour garder ta liste à jour.",
-    target: "#tuto-deliveries",
-    tab: "placement",
-  },
-  {
-    title: "⑧ Vue 3D — les soutes",
-    body: "Navigation :\n• Clic gauche ou droit + glisser pour orbiter\n• Molette pour zoomer\n\nManipulation des caisses :\n• Glisse-dépose pour déplacer une caisse\n• R pour la faire pivoter\n• La gravité s'applique automatiquement après chaque déplacement\n• Relâcher la souris hors de la vue annule le déplacement en cours",
-    target: "#tuto-scene",
-    interactive: true,
-  },
+type StepMeta = Omit<Step, "title" | "body">;
+
+const STEP_META: StepMeta[] = [
+  {},
+  { target: "#tuto-ship", tab: "contracts" },
+  { target: "#tuto-form", tab: "contracts" },
+  { target: "#tuto-manual-form", tab: "contracts", scroll: true },
+  { target: "#tuto-list", tab: "contracts", scroll: true },
+  { target: "#tuto-tab-placement" },
+  { target: "#tuto-deliveries", tab: "placement" },
+  { target: "#tuto-deliveries", tab: "placement" },
+  { target: "#tuto-scene", interactive: true },
 ];
 
 export const TUTORIAL_DEMO_CONTRACT: Contract = {
@@ -114,10 +74,17 @@ function resolveSpotRect(stepData: Step): SpotRect | null {
 }
 
 export default function TutorialOverlay({ onClose, onChangeTab, onExpandContractForm, onCollapseContractForm, onExpandManualForm }: Props) {
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [cardVisible, setCardVisible] = useState(false);
   const [spotRect, setSpotRect] = useState<SpotRect | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const STEPS: Step[] = STEP_META.map((meta, i) => ({
+    ...meta,
+    title: t(`tuto.step${i}.title` as TranslationKey),
+    body: t(`tuto.step${i}.body` as TranslationKey),
+  }));
 
   const current = STEPS[step];
 
@@ -295,7 +262,7 @@ export default function TutorialOverlay({ onClose, onChangeTab, onExpandContract
         <div className="corner-br" />
 
         <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--accent)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "8px" }}>
-          Étape {step + 1} / {STEPS.length}
+          {t("tuto.stepLabel")} {step + 1} / {STEPS.length}
         </div>
 
         <div style={{ fontFamily: "var(--font-ui)", fontSize: "15px", fontWeight: 700, color: "var(--text)", lineHeight: 1.3, marginBottom: "10px" }}>
@@ -307,15 +274,15 @@ export default function TutorialOverlay({ onClose, onChangeTab, onExpandContract
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button onClick={onClose} style={{ ...btnBase, fontSize: "10px", opacity: 0.55 }}>✕ Fermer</button>
+          <button onClick={onClose} style={{ ...btnBase, fontSize: "10px", opacity: 0.55 }}>{t("tuto.close")}</button>
           <div style={{ display: "flex", gap: "6px" }}>
             {step > 0 && (
-              <button onClick={() => navigateTo(step - 1)} style={btnBase}>← Préc.</button>
+              <button onClick={() => navigateTo(step - 1)} style={btnBase}>{t("tuto.prev")}</button>
             )}
             {step < STEPS.length - 1 ? (
-              <button onClick={() => navigateTo(step + 1)} style={btnPrimary}>Suivant →</button>
+              <button onClick={() => navigateTo(step + 1)} style={btnPrimary}>{t("tuto.next")}</button>
             ) : (
-              <button onClick={onClose} style={btnPrimary}>✓ Terminer</button>
+              <button onClick={onClose} style={btnPrimary}>{t("tuto.finish")}</button>
             )}
           </div>
         </div>
