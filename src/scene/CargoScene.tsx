@@ -283,6 +283,7 @@ export default function CargoScene({
               dimmed={isDimmed}
               onSelect={stableOnSelect}
               onDragStart={stableOnDragStart}
+              isAssigningRef={isAssigningRef}
             />
           );
         })}

@@ -23,9 +23,10 @@ type Props = {
   contractsCount: number;
   editingContract?: Contract | null;
   onCancelEdit?: () => void;
+  forceOpen?: number;
 };
 
-export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editingContract, onCancelEdit }: Props) {
+export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editingContract, onCancelEdit, forceOpen }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [destination, setDestination] = useState("");
@@ -49,6 +50,10 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
       setOpen(true);
     }
   }, [editingContract]);
+
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
   const totalScu = rows.reduce((sum, r) => sum + Math.max(0, r.count) * r.sizeScu, 0);
   const canSubmit = name.trim().length > 0 && destination.trim().length > 0 && totalScu > 0;
 

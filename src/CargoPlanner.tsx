@@ -71,7 +71,7 @@ function saveToStorage(data: object) {
 export default function CargoPlanner() {
   const saved = useMemo(() => loadFromStorage(), []);
 
-  const [shipId, setShipId] = useState<string>(saved?.shipId ?? "c2-hercules-starlifter");
+  const [shipId, setShipId] = useState<string>(saved?.shipId ?? "constellation-taurus");
   const [contracts, setContracts] = useState<Contract[]>(saved?.contracts ?? initialContracts);
   const [fragments, setFragments] = useState<DeliveryFragment[]>(saved?.fragments ?? []);
   const [placedCrates, setPlacedCrates] = useState<PlacedCrateWithMeta[]>(saved?.placedCrates ?? []);
@@ -87,6 +87,9 @@ export default function CargoPlanner() {
   const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
 
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [contractFormForceOpen, setContractFormForceOpen] = useState(0);
+  const [contractFormForceClose, setContractFormForceClose] = useState(0);
+  const [manualFormForceOpen, setManualFormForceOpen] = useState(0);
 
   const { t } = useLanguage();
   const { canUndo, push: pushToHistory, pop: popHistory } = useHistory();
@@ -106,8 +109,10 @@ export default function CargoPlanner() {
     ];
   }, [ship]);
 
-  const demoPlacedCrates = useMemo((): PlacedCrateWithMeta[] => {
-    if (!tutorialOpen || ship.cargoBays.length === 0) return [];
+  const [demoPlacedCrates, setDemoPlacedCrates] = useState<PlacedCrateWithMeta[]>([]);
+
+  useEffect(() => {
+    if (!tutorialOpen || ship.cargoBays.length === 0) { setDemoPlacedCrates([]); return; }
     const crates = createCratesFromContracts([TUTORIAL_DEMO_CONTRACT]);
     const withBay = crates.map((c) => ({
       ...c,
@@ -117,8 +122,13 @@ export default function CargoPlanner() {
     }));
     const sorted = sortCrates(withBay, "destination");
     const result = placeCratesInShip(sorted, ship);
-    return result.placed as PlacedCrateWithMeta[];
+    setDemoPlacedCrates(result.placed as PlacedCrateWithMeta[]);
   }, [tutorialOpen, ship]);
+
+  const allPlacedCrates = useMemo(
+    () => tutorialOpen ? [...placedCrates, ...demoPlacedCrates] : placedCrates,
+    [tutorialOpen, placedCrates, demoPlacedCrates]
+  );
 
   const maxCrateCapacity = useMemo(() => {
     const sizes = [32, 24, 16, 8, 4, 2, 1];
@@ -663,7 +673,7 @@ export default function CargoPlanner() {
     if (!drag.draggedCrateId || !drag.hoveredCell) {
       drag.clear(); return;
     }
-    const movingCrate = placedCrates.find((c) => c.id === drag.draggedCrateId);
+    const movingCrate = allPlacedCrates.find((c) => c.id === drag.draggedCrateId);
     const hoveredBayId = drag.hoveredCell!.bayId;
     const individualBay = ship.cargoBays.find((b) => b.id === hoveredBayId && !b.group);
     const compoundBay = !individualBay ? buildSingleCompoundBay(ship.cargoBays, hoveredBayId) : null;
@@ -675,8 +685,24 @@ export default function CargoPlanner() {
     }
     const rotatedDimensions = getRotatedDimensions(movingCrate.dimensions, drag.dragRotation, individualBay?.anchorFace);
     const rotatedCrate = { ...movingCrate, dimensions: rotatedDimensions };
-    const resolvedPosition = resolveStackPosition(rotatedCrate, drag.hoveredCell, bayForStack, placedCrates);
-    if (resolvedPosition) { pushHistorySnapshot(); moveCrate(drag.draggedCrateId, resolvedPosition, rotatedDimensions); }
+    const resolvedPosition = resolveStackPosition(rotatedCrate, drag.hoveredCell, bayForStack, allPlacedCrates);
+    if (resolvedPosition) {
+      const isDemo = movingCrate.contractId === TUTORIAL_DEMO_CONTRACT.id;
+      if (isDemo) {
+        setDemoPlacedCrates((prevDemo) => {
+          const combined = [...placedCrates, ...prevDemo].map((c) =>
+            c.id === drag.draggedCrateId
+              ? { ...c, bayId: resolvedPosition.bayId, gridPosition: { x: resolvedPosition.x, y: resolvedPosition.y, z: resolvedPosition.z }, dimensions: rotatedDimensions }
+              : c
+          );
+          const afterGravity = applyGravity(combined, allBaysForGravity);
+          return afterGravity.filter((c) => c.contractId === TUTORIAL_DEMO_CONTRACT.id);
+        });
+      } else {
+        pushHistorySnapshot();
+        moveCrate(drag.draggedCrateId, resolvedPosition, rotatedDimensions);
+      }
+    }
     drag.clear();
   }
 
@@ -706,15 +732,20 @@ export default function CargoPlanner() {
           contracts={contracts}
           editingContract={editingContract}
           onCancelEdit={() => setEditingContract(null)}
+          forceOpen={contractFormForceOpen}
+          forceClose={contractFormForceClose}
         />
       </div>
-      <ManualCargoForm
-        onAdd={addContract}
-        onUpdate={updateContract}
-        contractsCount={contracts.length}
-        editingContract={editingManualCargo}
-        onCancelEdit={() => setEditingManualCargo(null)}
-      />
+      <div id="tuto-manual-form">
+        <ManualCargoForm
+          onAdd={addContract}
+          onUpdate={updateContract}
+          contractsCount={contracts.length}
+          editingContract={editingManualCargo}
+          onCancelEdit={() => setEditingManualCargo(null)}
+          forceOpen={manualFormForceOpen}
+        />
+      </div>
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
         {deleteAllConfirm ? (
           <>
@@ -806,7 +837,7 @@ export default function CargoPlanner() {
       content={
         <CargoScene
           ship={ship}
-          placedCrates={tutorialOpen ? [...placedCrates, ...demoPlacedCrates] : placedCrates}
+          placedCrates={allPlacedCrates}
           selectedCrateId={drag.selectedCrateId}
           onSelectCrate={handleSelectCrate}
           hoveredCell={drag.hoveredCell}
@@ -824,8 +855,11 @@ export default function CargoPlanner() {
     />
     {tutorialOpen && (
       <TutorialOverlay
-        onClose={() => setTutorialOpen(false)}
+        onClose={() => { setTutorialOpen(false); setContractFormForceOpen(0); setContractFormForceClose(0); setManualFormForceOpen(0); }}
         onChangeTab={setActiveTab}
+        onExpandContractForm={() => setContractFormForceOpen((n) => n + 1)}
+        onCollapseContractForm={() => setContractFormForceClose((n) => n + 1)}
+        onExpandManualForm={() => setManualFormForceOpen((n) => n + 1)}
       />
     )}
     </>

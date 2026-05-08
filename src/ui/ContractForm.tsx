@@ -10,6 +10,8 @@ type Props = {
   contracts: Contract[];
   editingContract: Contract | null;
   onCancelEdit: () => void;
+  forceOpen?: number;
+  forceClose?: number;
 };
 
 const ALLOWED_CONTAINER_SIZES = [1, 2, 4, 8, 16, 24, 32];
@@ -29,7 +31,7 @@ function createEmptyDelivery(): ContractDelivery {
   return { id: crypto.randomUUID(), commodity: "", destination: "", scu: 0, pickupLocation: "" };
 }
 
-export default function ContractForm({ onAdd, onUpdate, contracts, editingContract, onCancelEdit }: Props) {
+export default function ContractForm({ onAdd, onUpdate, contracts, editingContract, onCancelEdit, forceOpen, forceClose }: Props) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -52,6 +54,9 @@ export default function ContractForm({ onAdd, onUpdate, contracts, editingContra
       resetForm();
     }
   }, [editingContract]);
+
+  useEffect(() => { if (forceOpen)  setOpen(true);  }, [forceOpen]);
+  useEffect(() => { if (forceClose) setOpen(false); }, [forceClose]);
 
   // S'assure qu'on a assez de refs pour chaque livraison
   useEffect(() => {

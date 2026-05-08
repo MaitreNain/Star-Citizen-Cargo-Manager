@@ -14,6 +14,7 @@ type Props = {
   dimmed?: boolean;
   onSelect?: (id: string) => void;
   onDragStart?: (id: string) => void;
+  isAssigningRef?: React.MutableRefObject<boolean>;
 };
 
 function useEdgesGeometry(x: number, y: number, z: number) {
@@ -47,20 +48,20 @@ export default memo(function CrateMesh({
   size, gridPosition, bayOffset,
   color = "orange", label,
   selected = false, dimmed = false,
-  onSelect, onDragStart,
+  onSelect, onDragStart, isAssigningRef,
 }: Props) {
   // Callback refs: handlers stay stable across renders, always read latest values
-  const ctxRef = useRef({ crateId, onSelect, onDragStart });
-  ctxRef.current = { crateId, onSelect, onDragStart };
+  const ctxRef = useRef({ crateId, onSelect, onDragStart, isAssigningRef });
+  ctxRef.current = { crateId, onSelect, onDragStart, isAssigningRef };
 
   const handleClick = useCallback((e: any) => {
-    e.stopPropagation();
+    if (!ctxRef.current.isAssigningRef?.current) e.stopPropagation();
     const { crateId, onSelect } = ctxRef.current;
     onSelect?.(crateId);
   }, []);
 
   const handlePointerDown = useCallback((e: any) => {
-    e.stopPropagation();
+    if (!ctxRef.current.isAssigningRef?.current) e.stopPropagation();
     const { crateId, onDragStart } = ctxRef.current;
     onDragStart?.(crateId);
   }, []);

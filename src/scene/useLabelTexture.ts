@@ -3,9 +3,9 @@ import * as THREE from "three";
 
 export function useLabelTexture(text: string, color: string): { texture: THREE.CanvasTexture; ratio: number } {
   return useMemo(() => {
-    const fontSize = 26;
-    const paddingH = 28;
-    const paddingV = 16;
+    const fontSize = 72;
+    const paddingH = 10;
+    const paddingV = 6;
     const canvasH = fontSize + paddingV * 2;
 
     const measure = document.createElement("canvas");
@@ -19,17 +19,18 @@ export function useLabelTexture(text: string, color: string): { texture: THREE.C
     canvas.height = canvasH;
     const ctx = canvas.getContext("2d")!;
 
-    ctx.fillStyle = "rgba(6,12,18,0.88)";
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.roundRect(2, 2, canvasW - 4, canvasH - 4, 6);
-    ctx.stroke();
-    ctx.fillStyle = color;
     ctx.font = `bold ${fontSize}px Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
+    // Ombre portée (effet de profondeur gravé)
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = "#000000";
+    ctx.fillText(text, canvasW / 2 + 2, canvasH / 2 + 2);
+
+    // Texte principal
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = color;
     ctx.fillText(text, canvasW / 2, canvasH / 2);
 
     const texture = new THREE.CanvasTexture(canvas);

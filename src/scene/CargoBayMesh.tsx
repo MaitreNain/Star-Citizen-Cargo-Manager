@@ -51,10 +51,15 @@ export default function CargoBayMesh({
     invalidate();
   }
 
-  const labelText = isAssignTarget ? `> ${bayWord} ${bayNumber}` : `${bayWord} ${bayNumber}`;
+  const labelText = `${bayWord} ${bayNumber}`;
   const labelColor = highlight ? "#e07828" : isAssignTarget ? "#f8a060" : "#38bdf8";
-  const spriteH = 0.5;
   const labelTex = useLabelTexture(labelText, labelColor);
+  // floor/ceiling : label pivoté 90° pour suivre l'axe longueur (game Y) → faceW/H inversés
+  const [faceW, faceH] = (anchor === "left" || anchor === "right") ? [size.y, size.z]
+    : (anchor === "front" || anchor === "rear") ? [size.x, size.z]
+    : [size.y, size.x]; // labelW le long de game Y, labelH le long de game X
+  const labelH = Math.min(faceH * 0.75, faceW * 0.75 / labelTex.ratio, 2.0);
+  const labelW = labelTex.ratio * labelH;
 
   // Grid position (Three.js Y axis = game Z / height)
   const gridY = anchor === "ceiling" ? size.z - 0.015 : 0.015;
@@ -96,6 +101,10 @@ export default function CargoBayMesh({
     }
   })();
 
+  const labelRot: [number, number, number] = (anchor === "floor" || anchor === "ceiling")
+    ? [-Math.PI / 2, 0, Math.PI / 2]
+    : plane.rot;
+
   function getCellFromEventPoint(pt: THREE.Vector3): CellPosition {
     const lx = pt.x - offset.x;        // local Three.js x = game x
     const ly = pt.y - offset.z;        // local Three.js y = game z (height)
@@ -131,13 +140,11 @@ export default function CargoBayMesh({
         </mesh>
       )}
 
-      <sprite
-        position={[size.x / 2, size.z + 0.55, size.y / 2]}
-        scale={[labelTex.ratio * spriteH, spriteH, 1]}
-        onClick={(e) => { e.stopPropagation(); if (isAssignTarget) onBayClick?.(bay.id); }}
-      >
-        <spriteMaterial map={labelTex.texture} transparent depthTest={false} />
-      </sprite>
+      {/* Label gravé sur la face d'ancrage */}
+      <mesh position={plane.pos} rotation={labelRot} raycast={() => {}}>
+        <planeGeometry args={[labelW, labelH]} />
+        <meshBasicMaterial map={labelTex.texture} transparent depthTest={false} side={THREE.FrontSide} />
+      </mesh>
 
       {/* Face arrière visuelle pour les soutes latérales — pas de handlers = pas de raycast R3F */}
       {anchor !== "floor" && anchor !== "ceiling" && (

@@ -146,12 +146,14 @@ export default function CompoundBayMesh({
   const { wireGeo, fillGeo } = useMemo(() => buildCompoundGeometry(sections), [sections]);
 
   const bayLabel = `${bayWord} ${bayNumbers[0]}`;
-  const labelText = isAssignTarget ? `> ${bayLabel}` : bayLabel;
   const labelColor = highlight ? "#e07828" : isAssignTarget ? "#f8a060" : "#38bdf8";
-  const spriteH = 0.5;
-  const labelTex = useLabelTexture(labelText, labelColor);
+  const labelTex = useLabelTexture(bayLabel, labelColor);
+  // Floor : labelW le long de game Y (longueur), labelH le long de game X (largeur)
+  const faceW = compound.boundingBox.y;
+  const faceH = compound.boundingBox.x;
+  const labelH = Math.min(faceH * 0.75, faceW * 0.75 / labelTex.ratio, 2.0);
+  const labelW = labelTex.ratio * labelH;
 
-  const bbMaxZ = Math.max(...sections.map((s) => s.localOffset.z + s.size.z));
   const bbCenterX = compound.boundingBox.x / 2;
   const bbCenterY = compound.boundingBox.y / 2;
 
@@ -227,13 +229,13 @@ export default function CompoundBayMesh({
         );
       })}
 
-      <sprite
-        position={[worldOffset.x + bbCenterX, worldOffset.z + bbMaxZ + 0.55, worldOffset.y + bbCenterY]}
-        scale={[labelTex.ratio * spriteH, spriteH, 1]}
-        onClick={(e) => { e.stopPropagation(); if (isAssignTarget) onBayClick?.(groupId); }}
-      >
-        <spriteMaterial map={labelTex.texture} transparent depthTest={false} />
-      </sprite>
+      {/* Label gravé sur le plancher (face d'ancrage) */}
+      <group position={[worldOffset.x, worldOffset.z, worldOffset.y]}>
+        <mesh position={[bbCenterX, 0.02, bbCenterY]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} raycast={() => {}}>
+          <planeGeometry args={[labelW, labelH]} />
+          <meshBasicMaterial map={labelTex.texture} transparent depthTest={false} side={THREE.FrontSide} />
+        </mesh>
+      </group>
     </group>
   );
 }

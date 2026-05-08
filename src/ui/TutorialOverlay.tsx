@@ -8,6 +8,8 @@ type Step = {
   body: string;
   target?: string;
   tab?: TabId;
+  scroll?: boolean;
+  interactive?: boolean;
 };
 
 const STEPS: Step[] = [
@@ -22,32 +24,47 @@ const STEPS: Step[] = [
     tab: "contracts",
   },
   {
-    title: "② Créer un contrat",
-    body: "Renseigne un nom de contrat (optionnel) et la taille maximum des caisses du contrat (voir description du contrat ingame).\n\nEnsuite, inscris les informations du contrat (Ressource, quantité, destination et lieu de chargement).\nChaque « Livraison » correspond à un objectif de contrat.",
+    title: "② Créer un contrat de Hauling",
+    body: "Renseigne un nom de contrat (optionnel) et la taille maximum des caisses du contrat (voir description du contrat ingame).\n\nEnsuite, inscris les informations du contrat (Ressource, quantité, destination et lieu de chargement).\n\nChaque « Livraison » correspond à un objectif de contrat.",
     target: "#tuto-form",
     tab: "contracts",
   },
   {
-    title: "③ Gérer ses contrats",
+    title: "③ Chargement personnalisé",
+    body: "Si tu connais déjà la composition exacte de ton chargement (taille et nombre de caisses), utilise le formulaire de chargement personnalisé.\n\nTu définis directement les caisses à charger, sans passer par un contrat de hauling. Idéal pour un chargement ponctuel ou un ajustement manuel.",
+    target: "#tuto-manual-form",
+    tab: "contracts",
+    scroll: true,
+  },
+  {
+    title: "④ Gérer ses contrats",
     body: "Tes contrats apparaissent ici. Tu peux les modifier ou les supprimer si besoin.",
     target: "#tuto-list",
     tab: "contracts",
+    scroll: true,
   },
   {
-    title: "④ Onglet Placement",
+    title: "⑤ Onglet Placement",
     body: "Une fois tes contrats créés, passe à l'onglet Placement pour charger tes caisses dans les soutes.",
     target: "#tuto-tab-placement",
   },
   {
-    title: "⑤ Activer & placer les livraisons",
-    body: "Clique sur « Activer » pour indiquer qu'une livraison est prête à être chargée. Sélectionne la carte de livraison (en cliquant dessus) que tu souhaites charger et clique sur une soute dans la vue 3D pour y affecter les caisses.",
+    title: "⑥ Cartes de livraison",
+    body: "Chaque objectif de contrat apparaît ici sous forme de carte de livraison — une carte correspond à un objectif de contrat.\n\nTu peux marquer une livraison (via l'icône dédiée) pour retrouver facilement ses caisses dans la vue 3D : elles seront mises en évidence parmi les autres.",
     target: "#tuto-deliveries",
     tab: "placement",
   },
   {
-    title: "⑥ Vue 3D — les soutes",
-    body: "La vue 3D représente les soutes de ton vaisseau. Tu peux naviguer autour de la soute avec clic droit ou clic gauche tout en déplaçant ta souris.\nTu peux aussi déplacer manuellement les caisses et les faire pivoter avec R.",
+    title: "⑦ Activer & placer",
+    body: "Le processus de chargement se déroule en quatre étapes :\n\n① Active la livraison avec « Activer ».\n② Sélectionne le nombre de caisses à placer (boutons − / +) ou utilise « Tout sélectionner ».\n③ Clique sur une soute dans la vue 3D pour y affecter les caisses.\n④ Une fois livrée à destination, archive la livraison pour garder ta liste à jour.",
+    target: "#tuto-deliveries",
+    tab: "placement",
+  },
+  {
+    title: "⑧ Vue 3D — les soutes",
+    body: "Navigation :\n• Clic gauche ou droit + glisser pour orbiter\n• Molette pour zoomer\n\nManipulation des caisses :\n• Glisse-dépose pour déplacer une caisse\n• R pour la faire pivoter\n• La gravité s'applique automatiquement après chaque déplacement\n• Relâcher la souris hors de la vue annule le déplacement en cours",
     target: "#tuto-scene",
+    interactive: true,
   },
 ];
 
@@ -62,14 +79,14 @@ export const TUTORIAL_DEMO_CONTRACT: Contract = {
       id: "__demo_d1__",
       commodity: "Laranite",
       destination: "Lorville - Hurston",
-      scu: 96,
+      scu: 15,
       pickupLocation: "Port Tressler",
     },
     {
       id: "__demo_d2__",
       commodity: "Agricium",
       destination: "Area 18 - ArcCorp",
-      scu: 48,
+      scu: 23,
       pickupLocation: "Port Tressler",
     },
   ],
@@ -78,6 +95,9 @@ export const TUTORIAL_DEMO_CONTRACT: Contract = {
 type Props = {
   onClose: () => void;
   onChangeTab: (tab: TabId) => void;
+  onExpandContractForm?: () => void;
+  onCollapseContractForm?: () => void;
+  onExpandManualForm?: () => void;
 };
 
 const FADE_MS = 140;
@@ -93,7 +113,7 @@ function resolveSpotRect(stepData: Step): SpotRect | null {
   return r.width > 0 && r.height > 0 ? { top: r.top, left: r.left, width: r.width, height: r.height } : null;
 }
 
-export default function TutorialOverlay({ onClose, onChangeTab }: Props) {
+export default function TutorialOverlay({ onClose, onChangeTab, onExpandContractForm, onCollapseContractForm, onExpandManualForm }: Props) {
   const [step, setStep] = useState(0);
   const [cardVisible, setCardVisible] = useState(false);
   const [spotRect, setSpotRect] = useState<SpotRect | null>(null);
@@ -124,9 +144,13 @@ export default function TutorialOverlay({ onClose, onChangeTab }: Props) {
       const next = STEPS[newStep];
       setStep(newStep);
       if (next.tab) onChangeTab(next.tab);
+      if (newStep === 2) onExpandContractForm?.();
+      if (newStep === 3) { onCollapseContractForm?.(); onExpandManualForm?.(); }
 
-      // Phase 2 — wait for DOM to settle (tab switch, re-render)
+      // Phase 2 — wait for DOM to settle (tab switch, re-render, form expansion)
       timerRef.current = setTimeout(() => {
+        if (next.scroll && next.target)
+          document.querySelector(next.target)?.scrollIntoView({ behavior: "instant", block: "nearest" });
         setSpotRect(resolveSpotRect(next));
         setCardVisible(true);
         timerRef.current = null;
@@ -221,13 +245,25 @@ export default function TutorialOverlay({ onClose, onChangeTab }: Props) {
     letterSpacing: "0.06em",
   };
 
+  const isInteractive = current.interactive && !!spotRect;
+
   return (
     <>
-      {/* Clickable backdrop */}
-      <div
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 9990, background: "transparent" }}
-      />
+      {/* Backdrop — full screen when normal, 4 panels around spotlight when interactive */}
+      {isInteractive && spotRect ? (() => {
+        const t = spotRect.top - PAD, l = spotRect.left - PAD;
+        const r = spotRect.left + spotRect.width + PAD, b = spotRect.top + spotRect.height + PAD;
+        const h = b - t;
+        const p: React.CSSProperties = { position: "fixed", zIndex: 9990, background: "transparent" };
+        return <>
+          <div onClick={onClose} style={{ ...p, top: 0, left: 0, right: 0, height: t }} />
+          <div onClick={onClose} style={{ ...p, top: b, left: 0, right: 0, bottom: 0 }} />
+          <div onClick={onClose} style={{ ...p, top: t, left: 0, width: l, height: h }} />
+          <div onClick={onClose} style={{ ...p, top: t, left: r, right: 0, height: h }} />
+        </>;
+      })() : (
+        <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9990, background: "transparent" }} />
+      )}
 
       {/* Spotlight */}
       {spotRect && (

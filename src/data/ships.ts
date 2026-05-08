@@ -15,33 +15,6 @@ export const ships: Ship[] = [
   },
 
   {
-    id: "argo-raft",
-    name: "Argo RAFT",
-    cargoBays: [
-      {
-        id: "raft-bay-1",
-        name: "Soute principale",
-        size: { x: 8, y: 12, z: 2 },
-        offset: { x: 0, y: 0, z: 0 },
-        anchorFace: "ceiling",
-      },
-    ],
-  },
-
-  {
-    id: "asgard",
-    name: "Asgard",
-    cargoBays: [
-      {
-        id: "asgard-bay-1",
-        name: "Soute 1",
-        size: { x: 5, y: 9, z: 4 },
-        offset: { x: 0, y: 0, z: 0 },
-      },
-    ],
-  },
-
-  {
     id: "c1-spirit",
     name: "C1 Spirit",
     cargoBays: [
@@ -488,6 +461,34 @@ export const ships: Ship[] = [
       { id: "prowler-utility-bay-2", name: "Soute 2", size: { x: 2, y: 4, z: 2 }, offset: { x: 1, y: 0, z: 0 }, anchorFace: "ceiling" },
     ],
   },
+
+{
+  id: "raft",
+  name: "RAFT",
+  cargoBays: [
+    {
+      id: "raft-bay-1",
+      name: "Soute principale",
+      size: { x: 8, y: 12, z: 2 },
+      offset: { x: 0, y: 0, z: 0 },
+      anchorFace: "ceiling",
+    },
+  ],
+},
+
+{
+  id: "asgard",
+  name: "Asgard",
+  cargoBays: [
+    {
+      id: "asgard-bay-1",
+      name: "Soute 1",
+      size: { x: 5, y: 9, z: 4 },
+      offset: { x: 0, y: 0, z: 0 },
+    },
+  ],
+},
+
 {
   id: "reclaimer",
   name: "Reclaimer",
