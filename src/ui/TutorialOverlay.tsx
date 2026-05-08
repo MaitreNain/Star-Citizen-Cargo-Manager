@@ -10,7 +10,6 @@ type Step = {
   body: string;
   target?: string;
   tab?: TabId;
-  scroll?: boolean;
   interactive?: boolean;
 };
 
@@ -20,8 +19,8 @@ const STEP_META: StepMeta[] = [
   {},
   { target: "#tuto-ship", tab: "contracts" },
   { target: "#tuto-form", tab: "contracts" },
-  { target: "#tuto-manual-form", tab: "contracts", scroll: true },
-  { target: "#tuto-list", tab: "contracts", scroll: true },
+  { target: "#tuto-manual-form", tab: "contracts" },
+  { target: "#tuto-list", tab: "contracts" },
   { target: "#tuto-tab-placement" },
   { target: "#tuto-deliveries", tab: "placement" },
   { target: "#tuto-deliveries", tab: "placement" },
@@ -116,8 +115,8 @@ export default function TutorialOverlay({ onClose, onChangeTab, onExpandContract
 
       // Phase 2 — wait for DOM to settle (tab switch, re-render, form expansion)
       timerRef.current = setTimeout(() => {
-        if (next.scroll && next.target)
-          document.querySelector(next.target)?.scrollIntoView({ behavior: "instant", block: "nearest" });
+        if (next.target)
+          document.querySelector(next.target)?.scrollIntoView({ behavior: "smooth", block: "center" });
         setSpotRect(resolveSpotRect(next));
         setCardVisible(true);
         timerRef.current = null;
@@ -127,9 +126,14 @@ export default function TutorialOverlay({ onClose, onChangeTab, onExpandContract
 
   // Resize handler — keep spotlight in sync
   useEffect(() => {
-    function onResize() { setSpotRect(resolveSpotRect(current)); }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    function update() { setSpotRect(resolveSpotRect(current)); }
+    window.addEventListener("resize", update);
+    const sidebar = document.querySelector(".scifi-sidebar");
+    sidebar?.addEventListener("scroll", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      sidebar?.removeEventListener("scroll", update);
+    };
   }, [step]);
 
   // Keyboard navigation
