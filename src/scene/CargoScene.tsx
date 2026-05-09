@@ -288,6 +288,43 @@ export default function CargoScene({
           );
         })}
 
+        {/* Invisible top-face planes — allow aiming at an existing crate top during drag */}
+        {!!draggedCrateId && placedCrates
+          .filter((crate) => crate.id !== draggedCrateId)
+          .map((crate) => {
+            const bayOffset = resolveBayOffset(crate.bayId);
+            const bayInfo = resolveBayForStack(crate.bayId);
+            if (!bayInfo) return null;
+            // Three.js coords: game x→x, game z→y (height), game y→z (depth)
+            const px = bayOffset.x + crate.gridPosition.x + crate.dimensions.x / 2;
+            const py = bayOffset.z + crate.gridPosition.z + crate.dimensions.z + 0.01;
+            const pz = bayOffset.y + crate.gridPosition.y + crate.dimensions.y / 2;
+            return (
+              <mesh
+                key={`dh-${crate.id}`}
+                position={[px, py, pz]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  const gx = Math.max(0, Math.min(bayInfo.size.x - 1, Math.floor(e.point.x - bayOffset.x)));
+                  const gy = Math.max(0, Math.min(bayInfo.size.y - 1, Math.floor(e.point.z - bayOffset.y)));
+                  onHoverCell(centerCell({ bayId: crate.bayId, x: gx, y: gy, z: 0 }));
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  const gx = Math.max(0, Math.min(bayInfo.size.x - 1, Math.floor(e.point.x - bayOffset.x)));
+                  const gy = Math.max(0, Math.min(bayInfo.size.y - 1, Math.floor(e.point.z - bayOffset.y)));
+                  onHoverCell(centerCell({ bayId: crate.bayId, x: gx, y: gy, z: 0 }));
+                  wrappedOnEndDrag();
+                }}
+              >
+                <planeGeometry args={[crate.dimensions.x, crate.dimensions.y]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+              </mesh>
+            );
+          })
+        }
+
         {preview}
 
         <OrbitControls enabled={!draggedCrateId} />
