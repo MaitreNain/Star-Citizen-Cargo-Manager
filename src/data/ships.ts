@@ -325,6 +325,7 @@ export const ships: Ship[] = [
   {
     id: "hull-c",
     name: "Hull C",
+    maxCrateScu: 32,
     cargoBays: [
       // Croix avant — ouvre sur la proue (anchorFace "rear" = face haute-y = côté avant du vaisseau)
       // Bras vertical bas (VB) : x=0..4, z=0..4
@@ -359,6 +360,7 @@ export const ships: Ship[] = [
   {
     id: "idris-p",
     name: "Idris P",
+    maxCrateScu: 16,
     cargoBays: [
       { id: "idris-p-bay-1",  name: "Soute 1",  size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 0,  z: 0 } },
       { id: "idris-p-bay-2",  name: "Soute 2",  size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 6,  z: 0 } },
@@ -393,18 +395,21 @@ export const ships: Ship[] = [
         name: "Soute 19",
         size: { x: 3, y: 4, z: 2 },
         offset: { x: 17, y: 13, z: 0 },
+        maxCrateScu: 2,
       },
       {
         id: "idris-p-bay-20",
         name: "Soute 20",
         size: { x: 3, y: 4, z: 2 },
         offset: { x: 22, y: 13, z: 0 },
+        maxCrateScu: 2,
       },
     ],
   },
 {
   id: "idris-m",
   name: "Idris M",
+  maxCrateScu: 16,
   cargoBays: [
     { id: "idris-m-bay-1",  name: "Soute 1",  size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 0,  z: 0 } },
     { id: "idris-m-bay-2",  name: "Soute 2",  size: { x: 4, y: 4, z: 4 }, offset: { x: 0, y: 6,  z: 0 } },

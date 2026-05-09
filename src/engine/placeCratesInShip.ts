@@ -24,10 +24,12 @@ type Bay = {
   offset: { x: number; y: number; z: number };
   group?: string;
   anchorFace?: "floor" | "ceiling" | "left" | "right" | "front" | "rear";
+  maxCrateScu?: number;
 };
 
 type Ship = {
   cargoBays: Bay[];
+  maxCrateScu?: number;
 };
 
 type PlacedCrateWithSource = PlacedCrate & Crate;
@@ -71,7 +73,8 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
     const inBay = () => placed.filter((p) => p.bayId === bay.id);
 
     for (const [deliveryId, deliveryCrates] of deliveryMap) {
-      const result = placeCratesInBay(deliveryCrates, bay, inBay(), 0).map((placedCrate) => {
+      const effectiveBay = { ...bay, maxCrateScu: bay.maxCrateScu ?? ship.maxCrateScu };
+      const result = placeCratesInBay(deliveryCrates, effectiveBay, inBay(), 0).map((placedCrate) => {
         const source = deliveryCrates.find((c) => c.id === placedCrate.id)!;
         return { ...source, ...placedCrate };
       });
@@ -101,7 +104,8 @@ export function placeCratesInShip(crates: Crate[], ship: Ship): PlacementResult 
     const inCompound = () => placed.filter((p) => p.bayId === compound.id);
 
     for (const [deliveryId, deliveryCrates] of deliveryMap) {
-      const result = placeCratesInCompoundBay(deliveryCrates, compound, inCompound()).map((placedCrate) => {
+      const effectiveCompound = { ...compound, maxCrateScu: compound.maxCrateScu ?? ship.maxCrateScu };
+      const result = placeCratesInCompoundBay(deliveryCrates, effectiveCompound, inCompound()).map((placedCrate) => {
         const source = deliveryCrates.find((c) => c.id === placedCrate.id)!;
         return { ...source, ...placedCrate };
       });

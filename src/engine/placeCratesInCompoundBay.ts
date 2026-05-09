@@ -86,6 +86,7 @@ export function placeCratesInCompoundBay(
   compound: CompoundBay,
   alreadyPlaced: Array<PlacedCrate> = []
 ): Array<PlacedCrate & CrateToPlace> {
+  if (compound.maxCrateScu) crates = crates.filter((c) => c.size <= compound.maxCrateScu!);
   const placed: Array<PlacedCrate & CrateToPlace> = [];
   for (const crate of crates) {
     const result = findBestPosition(crate, compound, [...alreadyPlaced, ...placed]);

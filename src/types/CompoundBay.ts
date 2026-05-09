@@ -12,4 +12,5 @@ export type CompoundBay = {
   worldOffset: Vector3;
   boundingBox: Vector3;
   sections: CompoundSection[];
+  maxCrateScu?: number;
 };

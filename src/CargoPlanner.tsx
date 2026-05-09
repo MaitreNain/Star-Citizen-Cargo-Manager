@@ -31,7 +31,7 @@ import { resolveStackPosition } from "./engine/resolveStackPosition";
 import { applyGravity } from "./engine/applyGravity";
 import { getRotatedDimensions } from "./engine/getRotatedDimensions";
 import { sortCrates } from "./engine/sortCrates";
-import { computeRemainingCapacity } from "./engine/computeRemainingCapacity";
+import { computeRemainingCapacity, getShipMaxCrateScu } from "./engine/computeRemainingCapacity";
 import { buildCompoundBays, buildSingleCompoundBay } from "./engine/buildCompoundBays";
 
 const STORAGE_KEY = "cargo-planner-v1";
@@ -131,8 +131,13 @@ export default function CargoPlanner() {
   );
 
   const maxCrateCapacity = useMemo(
-    () => computeRemainingCapacity(ship.cargoBays, placedCrates),
+    () => computeRemainingCapacity(ship.cargoBays, placedCrates, ship.maxCrateScu),
     [ship, placedCrates]
+  );
+
+  const effectiveMaxCrateScu = useMemo(
+    () => getShipMaxCrateScu(ship.cargoBays, ship.maxCrateScu),
+    [ship]
   );
 
   const placedScuByDelivery = useMemo(() => {
@@ -404,11 +409,13 @@ export default function CargoPlanner() {
     const alreadyInBay = placedCrates.filter((c) => c.bayId === bayId);
     const placedCrateIds = new Set(placedCrates.map((c) => c.id));
 
-    // Collect pending crates matching the selection
+    // Collect pending crates matching the selection (skip crates exceeding the bay's max crate size)
+    const bayMaxScu = (individualBay?.maxCrateScu ?? compoundBay?.maxCrateScu) ?? ship.maxCrateScu;
     const remaining = new Map(crateSelection);
     const cratesToPlace: PlannedCrate[] = [];
     for (const crate of allCrates) {
       if (placedCrateIds.has(crate.id)) continue;
+      if (bayMaxScu && crate.size > bayMaxScu) continue;
       const key = `${crate.deliveryId}::${crate.size}`;
       const wanted = remaining.get(key) ?? 0;
       if (wanted > 0) {
@@ -589,6 +596,7 @@ export default function CargoPlanner() {
         shipCapacityScu={shipCapacityScu}
         maxCrateCapacity={maxCrateCapacity}
         totalDeliveredScu={totalDeliveredScu}
+        maxCrateScu={effectiveMaxCrateScu}
       />
       <button onClick={undoLastAction} disabled={!canUndo} className="btn-secondary" style={{ width: "100%", marginBottom: "4px" }}>
         {t("planner.undo")}

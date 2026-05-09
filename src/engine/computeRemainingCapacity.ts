@@ -11,6 +11,19 @@ const SCU_DIMS: Record<number, [number, number, number]> = {
   8:  [2, 2, 2], 16: [4, 2, 2], 24: [6, 2, 2], 32: [8, 2, 2],
 };
 
+export function getShipMaxCrateScu(cargoBays: CargoBay[], maxCrateScu?: number): number {
+  if (maxCrateScu) return maxCrateScu;
+  const desc = (v: number[]) => [...v].sort((a, b) => b - a);
+  for (const scu of SCU_SIZES) {
+    const [da, db, dc] = desc(SCU_DIMS[scu]);
+    if (cargoBays.some(({ size: { x, y, z } }) => {
+      const [ba, bb, bc] = desc([x, y, z]);
+      return ba >= da && bb >= db && bc >= dc;
+    })) return scu;
+  }
+  return 1;
+}
+
 function orientations([a, b, c]: [number, number, number]): [number, number, number][] {
   return [[a, b, c], [b, a, c]];
 }
@@ -77,15 +90,17 @@ function countFittingCrates(
 
 export function computeRemainingCapacity(
   cargoBays: CargoBay[],
-  placedCrates: CrateLike[]
+  placedCrates: CrateLike[],
+  maxCrateScu?: number
 ): { scu: number; count: number }[] {
   const { compoundBays, individualBays } = buildCompoundBays(cargoBays);
+  const allowedSizes = maxCrateScu ? SCU_SIZES.filter((s) => s <= maxCrateScu) : SCU_SIZES;
   const countsByScu = new Map<number, number>();
 
   for (const bay of individualBays) {
     const { x: W, y: D, z: H } = bay.size;
     const occupied = buildOccupied(bay.id, W, D, placedCrates);
-    for (const scu of SCU_SIZES) {
+    for (const scu of allowedSizes) {
       const count = countFittingCrates(W, D, H, occupied, scu);
       if (count > 0) countsByScu.set(scu, (countsByScu.get(scu) ?? 0) + count);
     }
@@ -94,7 +109,7 @@ export function computeRemainingCapacity(
   for (const compound of compoundBays) {
     const { x: W, y: D, z: H } = compound.boundingBox;
     const occupied = buildOccupied(compound.id, W, D, placedCrates);
-    for (const scu of SCU_SIZES) {
+    for (const scu of allowedSizes) {
       const count = countFittingCrates(W, D, H, occupied, scu,
         (cx, cy, cz) => isValidCellInCompound(cx, cy, cz, compound.sections));
       if (count > 0) countsByScu.set(scu, (countsByScu.get(scu) ?? 0) + count);

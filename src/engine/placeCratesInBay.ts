@@ -26,6 +26,7 @@ type CargoBayLike = {
   id: string
   size: Vector3
   anchorFace?: AnchorFace
+  maxCrateScu?: number
 }
 
 type FloorCrate = { id: string; bayId: string; gridPosition: Vector3; dimensions: Vector3 }
@@ -68,6 +69,7 @@ export function placeCratesInBay(
   alreadyPlaced: Array<PlacedCrate & Partial<CrateToPlace>> = [],
   startY: number = 0
 ): Array<PlacedCrate & CrateToPlace> {
+  if (bay.maxCrateScu) crates = crates.filter((c) => c.size <= bay.maxCrateScu!)
   const anchor = bay.anchorFace ?? "floor"
   const isLateral = anchor !== "floor" && anchor !== "ceiling"
   const floorSize = getFloorBaySize(anchor, bay.size)

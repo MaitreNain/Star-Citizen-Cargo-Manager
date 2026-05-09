@@ -4,4 +4,5 @@ export type Ship = {
   id: string;
   name: string;
   cargoBays: CargoBay[];
+  maxCrateScu?: number;
 };

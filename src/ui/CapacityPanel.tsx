@@ -5,6 +5,7 @@ type Props = {
   shipCapacityScu: number;
   maxCrateCapacity: { scu: number; count: number }[];
   totalDeliveredScu: number;
+  maxCrateScu: number;
 };
 
 export default function CapacityPanel({
@@ -12,6 +13,7 @@ export default function CapacityPanel({
   shipCapacityScu,
   maxCrateCapacity,
   totalDeliveredScu,
+  maxCrateScu,
 }: Props) {
   const { t } = useLanguage();
   const available = Math.max(0, shipCapacityScu - totalPlacedScu);
@@ -46,12 +48,21 @@ export default function CapacityPanel({
         </span>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           {t("capacity.available")}
         </span>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: availableColor }}>
           {available} SCU
+        </span>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          {t("capacity.maxCrate")}
+        </span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, color: "var(--accent)" }}>
+          {maxCrateScu} SCU
         </span>
       </div>
 

@@ -9,4 +9,5 @@ export type CargoBay = {
   offset: Vector3;
   group?: string;
   anchorFace?: AnchorFace;
+  maxCrateScu?: number;
 };

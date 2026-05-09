@@ -49,7 +49,9 @@ export function buildCompoundBays(bays: CargoBay[]): {
       y: Math.max(...sections.map((s) => s.localOffset.y + s.size.y)),
       z: Math.max(...sections.map((s) => s.localOffset.z + s.size.z)),
     };
-    compoundBays.push({ id: groupId, worldOffset, boundingBox, sections });
+    const maxScus = groupBays.map((b) => b.maxCrateScu).filter((v): v is number => v !== undefined);
+    const maxCrateScu = maxScus.length > 0 ? Math.min(...maxScus) : undefined;
+    compoundBays.push({ id: groupId, worldOffset, boundingBox, sections, maxCrateScu });
   }
 
   return { compoundBays, individualBays };

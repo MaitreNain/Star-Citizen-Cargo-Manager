@@ -12,6 +12,7 @@ const translations = {
     "capacity.inBay": "En soute",
     "capacity.available": "Disponible",
     "capacity.delivered": "SCU livrés",
+    "capacity.maxCrate": "Contenant max",
 
     // ContractForm
     "contractForm.title": "Contrat de Hauling",
@@ -141,6 +142,7 @@ const translations = {
     "capacity.inBay": "In bay",
     "capacity.available": "Available",
     "capacity.delivered": "SCU delivered",
+    "capacity.maxCrate": "Max container",
 
     // ContractForm
     "contractForm.title": "Hauling Contract",
