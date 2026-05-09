@@ -378,32 +378,18 @@ export const ships: Ship[] = [
       { id: "idris-p-bay-14", name: "Soute 14", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 32, z: 0 } },
       { id: "idris-p-bay-15", name: "Soute 15", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 37, z: 0 } },
       { id: "idris-p-bay-16", name: "Soute 16", size: { x: 4, y: 4, z: 4 }, offset: { x: 6, y: 47, z: 0 } },
-      {
-        id: "idris-p-bay-17",
-        name: "Soute 17",
-        size: { x: 18, y: 4, z: 2 },
-        offset: { x: 12, y: 0, z: 0 },
-      },
-      {
-        id: "idris-p-bay-18",
-        name: "Soute 18",
-        size: { x: 14, y: 5, z: 2 },
-        offset: { x: 14, y: 6, z: 0 },
-      },
-      {
-        id: "idris-p-bay-19",
-        name: "Soute 19",
-        size: { x: 3, y: 4, z: 2 },
-        offset: { x: 17, y: 13, z: 0 },
-        maxCrateScu: 2,
-      },
-      {
-        id: "idris-p-bay-20",
-        name: "Soute 20",
-        size: { x: 3, y: 4, z: 2 },
-        offset: { x: 22, y: 13, z: 0 },
-        maxCrateScu: 2,
-      },
+
+      { id: "idris-p-bay-17", name: "Soute 17", size: { x: 18, y: 4, z: 2 }, offset: { x: 12, y: 8, z: 0 }, },
+
+      { id: "idris-p-bay-18", name: "Soute 18", size: { x: 14, y: 5, z: 2 }, offset: { x: 14, y: 1, z: 0 }, group: "Soute-18" },
+      { id: "idris-p-bay-19", name: "Soute 18a", size: { x: 2, y: 1, z: 2 }, offset: { x: 14, y: 0, z: 0 }, group: "Soute-18" },
+      { id: "idris-p-bay-20", name: "Soute 18b", size: { x: 2, y: 1, z: 2 }, offset: { x: 26, y: 0, z: 0 }, group: "Soute-18" },
+
+      { id: "idris-p-bay-21", name: "Soute 19", size: { x: 5, y: 1, z: 2 }, offset: { x: 18.5, y: 0, z: 0 }, },
+
+      { id: "idris-p-bay-22", name: "Soute 19", size: { x: 3, y: 4, z: 2 }, offset: { x: 17, y: 14, z: 0 }, maxCrateScu: 2, },
+
+      { id: "idris-p-bay-23", name: "Soute 20", size: { x: 3, y: 4, z: 2 }, offset: { x: 22, y: 14, z: 0 }, maxCrateScu: 2, },
     ],
   },
 {
