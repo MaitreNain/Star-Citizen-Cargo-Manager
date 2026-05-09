@@ -31,7 +31,6 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
   const [name, setName] = useState("");
   const [destination, setDestination] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
-  const [commodity, setCommodity] = useState("");
   const [rows, setRows] = useState<CrateRow[]>([{ id: genId(), count: 1, sizeScu: 0 }]);
 
   const { t } = useLanguage();
@@ -42,7 +41,6 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
       setName(editingContract.name);
       setDestination(delivery?.destination ?? "");
       setPickupLocation(delivery?.pickupLocation ?? "");
-      setCommodity(delivery?.commodity === "Cargo" ? "" : (delivery?.commodity ?? ""));
       setRows(
         delivery?.explicitCrates?.map((c) => ({ id: genId(), count: c.count, sizeScu: c.sizeScu })) ??
         [{ id: genId(), count: 1, sizeScu: 0 }]
@@ -82,7 +80,7 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
         maxContainerSize: Math.max(...validRows.map((r) => r.sizeScu)),
         deliveries: [{
           ...delivery,
-          commodity: commodity.trim() || "Cargo",
+          commodity: editingContract.deliveries[0]?.commodity ?? "Cargo",
           destination: destination.trim(),
           pickupLocation: pickupLocation.trim(),
           scu: totalScu,
@@ -100,7 +98,7 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
         deliveryOrder: 0,
         deliveries: [{
           id: genId(),
-          commodity: commodity.trim() || "Cargo",
+          commodity: "Cargo",
           destination: destination.trim(),
           pickupLocation: pickupLocation.trim(),
           scu: totalScu,
@@ -113,7 +111,6 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
     setName("");
     setDestination("");
     setPickupLocation("");
-    setCommodity("");
     setRows([{ id: genId(), count: 1, sizeScu: 0 }]);
   }
 
@@ -274,7 +271,6 @@ export default function ManualCargoForm({ onAdd, onUpdate, contractsCount, editi
                   setName("");
                   setDestination("");
                   setPickupLocation("");
-                  setCommodity("");
                   setRows([{ id: genId(), count: 1, sizeScu: 0 }]);
                 }}
                 className="btn-secondary"

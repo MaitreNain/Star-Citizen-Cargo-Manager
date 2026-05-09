@@ -122,14 +122,14 @@ export default function PendingDeliveriesPanel({
     return result;
   }, [contracts, placedScuByDelivery, activatedDeliveries, archivedDeliveries, demoContract]);
 
-  const { loadedItems, waitingItems, loadedCount, waitingCount } = useMemo(() => {
+  const { loadedItems, waitingItems } = useMemo(() => {
     const loaded: DeliveryItem[] = [];
     const waiting: DeliveryItem[] = [];
     for (const item of items) {
       if (item.state === "loaded") loaded.push(item);
       else waiting.push(item);
     }
-    return { loadedItems: loaded, waitingItems: waiting, loadedCount: loaded.length, waitingCount: waiting.length };
+    return { loadedItems: loaded, waitingItems: waiting };
   }, [items]);
 
   const fragmentsByDelivery = useMemo(() => {
@@ -511,8 +511,8 @@ export default function PendingDeliveriesPanel({
 
       {/* Résumé */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "10px", fontFamily: "var(--font-mono)", fontSize: "11px", flexWrap: "wrap" }}>
-        {waitingCount > 0 && <span style={{ color: "var(--text-dim)" }}>⏳ {waitingCount} {t("pending.waiting")}</span>}
-        {loadedCount > 0 && <span style={{ color: "var(--accent)" }}>↑ {loadedCount} {t("pending.loaded")}{locale === "fr" && loadedCount > 1 ? "s" : ""}</span>}
+        {waitingItems.length > 0 && <span style={{ color: "var(--text-dim)" }}>⏳ {waitingItems.length} {t("pending.waiting")}</span>}
+        {loadedItems.length > 0 && <span style={{ color: "var(--accent)" }}>↑ {loadedItems.length} {t("pending.loaded")}{locale === "fr" && loadedItems.length > 1 ? "s" : ""}</span>}
         {deliveredCount > 0 && <span style={{ color: "var(--success)" }}>✓ {deliveredCount} {t("pending.delivered")}{locale === "fr" && deliveredCount > 1 ? "s" : ""}</span>}
       </div>
 
@@ -585,7 +585,7 @@ export default function PendingDeliveriesPanel({
       >{t("pending.cancelMark")}</button>
 
       {/* Chargées */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: loadedCount > 0 ? "10px" : "6px" }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: loadedItems.length > 0 ? "10px" : "6px" }}>
         <div className="section-header" style={{ color: "var(--accent)", marginBottom: 0, flex: 1 }}>{t("pending.inBay")}</div>
         {viderConfirm ? (
           <>
@@ -608,10 +608,10 @@ export default function PendingDeliveriesPanel({
           }}>{t("pending.clearBay")}</button>
         )}
       </div>
-      {loadedCount > 0 && loadedItems.map((item) => renderItem(item))}
+      {loadedItems.length > 0 && loadedItems.map((item) => renderItem(item))}
 
       {/* En attente */}
-      {waitingCount > 0 && (
+      {waitingItems.length > 0 && (
         <>
           <div className="section-header" style={{ color: "var(--text-dim)", marginTop: "12px" }}>
             {t("pending.waitingSection")}

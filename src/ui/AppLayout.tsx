@@ -405,10 +405,11 @@ export type TabId = "contracts" | "placement";
 const SESSION_KEY = "cargo-planner-session-start";
 
 function getSessionStart(): number {
-  if (!sessionStorage.getItem(SESSION_KEY)) {
-    sessionStorage.setItem(SESSION_KEY, Date.now().toString());
-  }
-  return parseInt(sessionStorage.getItem(SESSION_KEY)!);
+  const stored = sessionStorage.getItem(SESSION_KEY);
+  if (stored) return parseInt(stored);
+  const now = Date.now();
+  sessionStorage.setItem(SESSION_KEY, now.toString());
+  return now;
 }
 
 function formatElapsed(secs: number): string {

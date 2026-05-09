@@ -1,7 +1,6 @@
 import type { Contract } from "./Contract";
 import type { DeliveryFragment } from "./DeliveryFragment";
 import type { ArchivedDelivery } from "./ArchivedDelivery";
-import type { SortMode } from "../engine/sortCrates";
 
 export type HoveredCell = { bayId: string; x: number; y: number; z: number } | null;
 
@@ -28,5 +27,4 @@ export type PlannerSnapshot = {
   fragments: DeliveryFragment[];
   archivedDeliveries: ArchivedDelivery[];
   activatedDeliveries: string[];
-  sortMode: SortMode;
 };

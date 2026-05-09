@@ -30,8 +30,9 @@ import { placeCratesInShip } from "./engine/placeCratesInShip";
 import { resolveStackPosition } from "./engine/resolveStackPosition";
 import { applyGravity } from "./engine/applyGravity";
 import { getRotatedDimensions } from "./engine/getRotatedDimensions";
-import { sortCrates, type SortMode } from "./engine/sortCrates";
-import { buildCompoundBays, buildSingleCompoundBay, isValidCellInCompound } from "./engine/buildCompoundBays";
+import { sortCrates } from "./engine/sortCrates";
+import { computeRemainingCapacity } from "./engine/computeRemainingCapacity";
+import { buildCompoundBays, buildSingleCompoundBay } from "./engine/buildCompoundBays";
 
 const STORAGE_KEY = "cargo-planner-v1";
 
@@ -75,7 +76,6 @@ export default function CargoPlanner() {
   const [contracts, setContracts] = useState<Contract[]>(saved?.contracts ?? initialContracts);
   const [fragments, setFragments] = useState<DeliveryFragment[]>(saved?.fragments ?? []);
   const [placedCrates, setPlacedCrates] = useState<PlacedCrateWithMeta[]>(saved?.placedCrates ?? []);
-  const [sortMode, setSortMode] = useState<SortMode>(saved?.sortMode ?? "destination");
   const [archivedDeliveries, setArchivedDeliveries] = useState<ArchivedDelivery[]>(saved?.archivedDeliveries ?? []);
   const [activatedDeliveries, setActivatedDeliveries] = useState<string[]>(saved?.activatedDeliveries ?? []);
 
@@ -96,8 +96,8 @@ export default function CargoPlanner() {
   const drag = useDragState();
 
   useEffect(() => {
-    saveToStorage({ shipId, contracts, fragments, placedCrates, sortMode, archivedDeliveries, activatedDeliveries });
-  }, [shipId, contracts, fragments, placedCrates, sortMode, archivedDeliveries, activatedDeliveries]);
+    saveToStorage({ shipId, contracts, fragments, placedCrates, archivedDeliveries, activatedDeliveries });
+  }, [shipId, contracts, fragments, placedCrates, archivedDeliveries, activatedDeliveries]);
 
   const ship = useMemo(() => ships.find((s) => s.id === shipId)!, [shipId]);
   const shipCapacityScu = useMemo(() => ship.cargoBays.reduce((sum, bay) => sum + bay.size.x * bay.size.y * bay.size.z, 0), [ship]);
@@ -130,134 +130,10 @@ export default function CargoPlanner() {
     [tutorialOpen, placedCrates, demoPlacedCrates]
   );
 
-  const maxCrateCapacity = useMemo(() => {
-    const sizes = [32, 24, 16, 8, 4, 2, 1];
-    const dims: Record<number, [number, number, number]> = {
-      1:  [1, 1, 1], 2:  [2, 1, 1], 4:  [2, 2, 1],
-      8:  [2, 2, 2], 16: [4, 2, 2], 24: [6, 2, 2], 32: [8, 2, 2],
-    };
-
-    function perms([a, b, c]: [number, number, number]): [number, number, number][] {
-      return [[a, b, c], [b, a, c]];
-    }
-
-    const { compoundBays: compBays, individualBays: indivBays } = buildCompoundBays(ship.cargoBays);
-
-    function buildOccupied(bayId: string, W: number, D: number): Set<number> {
-      const s = new Set<number>();
-      for (const c of placedCrates) {
-        if (c.bayId !== bayId) continue;
-        const { x, y, z } = c.gridPosition;
-        const { x: dx, y: dy, z: dz } = c.dimensions;
-        for (let cx = x; cx < x + dx; cx++)
-          for (let cy = y; cy < y + dy; cy++)
-            for (let cz = z; cz < z + dz; cz++)
-              s.add(cx + cy * W + cz * W * D);
-      }
-      return s;
-    }
-
-    const countsByScu = new Map<number, number>();
-
-    // Soutes individuelles
-    for (const bay of indivBays) {
-      const W = bay.size.x, D = bay.size.y, H = bay.size.z;
-      const occupied = buildOccupied(bay.id, W, D);
-
-      for (const scu of sizes) {
-        let count = 0;
-        let found = true;
-
-        while (found) {
-          found = false;
-          outer:
-          for (const [dx, dy, dz] of perms(dims[scu])) {
-            if (dx > W || dy > D || dz > H) continue;
-            for (let z = 0; z <= H - dz && !found; z++)
-              for (let y = 0; y <= D - dy && !found; y++)
-                for (let x = 0; x <= W - dx && !found; x++) {
-                  let ok = true;
-                  check:
-                  for (let cx = x; cx < x + dx; cx++)
-                    for (let cy = y; cy < y + dy; cy++)
-                      for (let cz = z; cz < z + dz; cz++)
-                        if (occupied.has(cx + cy * W + cz * W * D)) { ok = false; break check; }
-                  if (ok) {
-                    for (let cx = x; cx < x + dx; cx++)
-                      for (let cy = y; cy < y + dy; cy++)
-                        for (let cz = z; cz < z + dz; cz++)
-                          occupied.add(cx + cy * W + cz * W * D);
-                    count++;
-                    found = true;
-                  }
-                }
-            if (found) break outer;
-          }
-        }
-
-        if (count > 0) countsByScu.set(scu, (countsByScu.get(scu) ?? 0) + count);
-      }
-    }
-
-    // Soutes composées
-    for (const compound of compBays) {
-      const W = compound.boundingBox.x, D = compound.boundingBox.y, H = compound.boundingBox.z;
-      const occupied = buildOccupied(compound.id, W, D);
-
-      for (const scu of sizes) {
-        let count = 0;
-        let found = true;
-
-        while (found) {
-          found = false;
-          outer:
-          for (const [dx, dy, dz] of perms(dims[scu])) {
-            if (dx > W || dy > D || dz > H) continue;
-            for (let z = 0; z <= H - dz && !found; z++)
-              for (let y = 0; y <= D - dy && !found; y++)
-                for (let x = 0; x <= W - dx && !found; x++) {
-                  // Vérifier que tous les voxels sont dans l'union des sections
-                  let allValid = true;
-                  vcheck:
-                  for (let cx = x; cx < x + dx; cx++)
-                    for (let cy = y; cy < y + dy; cy++)
-                      for (let cz = z; cz < z + dz; cz++)
-                        if (!isValidCellInCompound(cx, cy, cz, compound.sections)) { allValid = false; break vcheck; }
-                  if (!allValid) continue;
-
-                  let ok = true;
-                  check:
-                  for (let cx = x; cx < x + dx; cx++)
-                    for (let cy = y; cy < y + dy; cy++)
-                      for (let cz = z; cz < z + dz; cz++)
-                        if (occupied.has(cx + cy * W + cz * W * D)) { ok = false; break check; }
-                  if (ok) {
-                    for (let cx = x; cx < x + dx; cx++)
-                      for (let cy = y; cy < y + dy; cy++)
-                        for (let cz = z; cz < z + dz; cz++)
-                          occupied.add(cx + cy * W + cz * W * D);
-                    count++;
-                    found = true;
-                  }
-                }
-            if (found) break outer;
-          }
-        }
-
-        if (count > 0) countsByScu.set(scu, (countsByScu.get(scu) ?? 0) + count);
-      }
-    }
-
-    const result: { scu: number; count: number }[] = [];
-    for (const scu of sizes) {
-      const count = countsByScu.get(scu) ?? 0;
-      if (count > 0) {
-        result.push({ scu, count });
-        if (result.length >= 3) break;
-      }
-    }
-    return result;
-  }, [ship, placedCrates]);
+  const maxCrateCapacity = useMemo(
+    () => computeRemainingCapacity(ship.cargoBays, placedCrates),
+    [ship, placedCrates]
+  );
 
   const placedScuByDelivery = useMemo(() => {
     const map = new Map<string, number>();
@@ -326,7 +202,7 @@ export default function CargoPlanner() {
   }, [contracts, placedScuByDelivery, archivedDeliveryIds, activatedDeliveries]);
 
   function getSnapshot(): PlannerSnapshot {
-    return { shipId, contracts, placedCrates, fragments, archivedDeliveries, activatedDeliveries, sortMode };
+    return { shipId, contracts, placedCrates, fragments, archivedDeliveries, activatedDeliveries };
   }
 
   function pushHistorySnapshot() {
@@ -341,7 +217,6 @@ export default function CargoPlanner() {
       setFragments(last.fragments);
       setArchivedDeliveries(last.archivedDeliveries);
       setActivatedDeliveries(last.activatedDeliveries);
-      setSortMode(last.sortMode);
       setEditingContract(null);
       setCrateSelection(new Map());
       drag.clear();
@@ -351,8 +226,7 @@ export default function CargoPlanner() {
   function buildFromFragments(
     nextContracts: Contract[],
     nextFragments: DeliveryFragment[],
-    nextShipId: string,
-    nextSortMode: SortMode
+    nextShipId: string
   ): PlacedCrateWithMeta[] {
     const nextShip = ships.find((s) => s.id === nextShipId)!;
     const allCrates = createCratesFromContracts(nextContracts);
@@ -385,7 +259,7 @@ export default function CargoPlanner() {
       }
     }
 
-    const sorted = sortCrates(assignedCrates, nextSortMode);
+    const sorted = sortCrates(assignedCrates, "destination");
     const result = placeCratesInShip(sorted, nextShip);
     return result.placed as PlacedCrateWithMeta[];
   }
@@ -515,7 +389,7 @@ export default function CargoPlanner() {
   function reorderContracts(reordered: Contract[]) {
     pushHistorySnapshot();
     setContracts(reordered);
-    setPlacedCrates(buildFromFragments(reordered, fragments, shipId, sortMode));
+    setPlacedCrates(buildFromFragments(reordered, fragments, shipId));
     drag.clear();
   }
 
