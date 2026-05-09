@@ -32,6 +32,7 @@ type Props = {
   markedDeliveryIds?: string[];
   isAssigningDelivery?: boolean;
   onBayClick?: (bayId: string) => void;
+  bayWarnings?: { id: number; text: string }[];
 };
 
 // Composant interne qui invalide la scène quand les données changent
@@ -56,6 +57,7 @@ export default function CargoScene({
   markedDeliveryIds = [],
   isAssigningDelivery = false,
   onBayClick = () => {},
+  bayWarnings = [],
 }: Props) {
   const { t } = useLanguage();
   const draggedCrate = placedCrates.find((c) => c.id === draggedCrateId);
@@ -372,6 +374,27 @@ export default function CargoScene({
           boxShadow: "0 4px 16px rgba(224,120,40,0.4)",
         }}>
           {t("scene.clickBay")}
+        </div>
+      )}
+
+      {/* Avertissements taille de caisse */}
+      {bayWarnings.length > 0 && (
+        <div style={{
+          position: "absolute", bottom: "24px", left: "24px",
+          display: "flex", flexDirection: "column", gap: "3px",
+          pointerEvents: "none", userSelect: "none",
+        }}>
+          {bayWarnings.map(({ id, text }) => (
+            <div key={id} style={{
+              color: "#f87171",
+              fontSize: "12px", fontWeight: 600,
+              fontFamily: "var(--font-mono)",
+              whiteSpace: "nowrap",
+              textShadow: "0 1px 4px rgba(0,0,0,0.9)",
+            }}>
+              {text}
+            </div>
+          ))}
         </div>
       )}
     </div>

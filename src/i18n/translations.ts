@@ -104,6 +104,7 @@ const translations = {
     "scene.ramp": "ARRIÈRE",
     "scene.front": "AVANT",
     "scene.clickBay": "Cliquez sur une soute pour assigner",
+    "scene.bayMaxWarning": "Caisses trop grandes pour cette soute — max",
 
     // Tutorial
     "tuto.stepLabel": "Étape",
@@ -234,6 +235,7 @@ const translations = {
     "scene.ramp": "REAR",
     "scene.front": "FRONT",
     "scene.clickBay": "Click a bay to assign",
+    "scene.bayMaxWarning": "Crates too large for this bay — max",
 
     // Tutorial
     "tuto.stepLabel": "Step",

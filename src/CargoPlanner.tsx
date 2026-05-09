@@ -86,6 +86,8 @@ export default function CargoPlanner() {
   const [activeTab, setActiveTab] = useState<TabId>("contracts");
   const [markedDeliveryIds, setMarkedDeliveryIds] = useState<string[]>([]);
 
+  const [bayWarnings, setBayWarnings] = useState<{ id: number; text: string }[]>([]);
+
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [contractFormForceOpen, setContractFormForceOpen] = useState(0);
   const [contractFormForceClose, setContractFormForceClose] = useState(0);
@@ -413,15 +415,23 @@ export default function CargoPlanner() {
     const bayMaxScu = (individualBay?.maxCrateScu ?? compoundBay?.maxCrateScu) ?? ship.maxCrateScu;
     const remaining = new Map(crateSelection);
     const cratesToPlace: PlannedCrate[] = [];
+    let rejectedBySize = false;
     for (const crate of allCrates) {
       if (placedCrateIds.has(crate.id)) continue;
-      if (bayMaxScu && crate.size > bayMaxScu) continue;
+      if (bayMaxScu && crate.size > bayMaxScu) { rejectedBySize = true; continue; }
       const key = `${crate.deliveryId}::${crate.size}`;
       const wanted = remaining.get(key) ?? 0;
       if (wanted > 0) {
         cratesToPlace.push(crate);
         remaining.set(key, wanted - 1);
       }
+    }
+    if (rejectedBySize && cratesToPlace.length === 0) {
+      const id = Date.now();
+      const text = `${t("scene.bayMaxWarning")} ${bayMaxScu} SCU`;
+      setBayWarnings((prev) => [...prev.slice(-4), { id, text }]);
+      setTimeout(() => setBayWarnings((prev) => prev.filter((w) => w.id !== id)), 10000);
+      return;
     }
     if (cratesToPlace.length === 0) return;
 
@@ -731,6 +741,7 @@ export default function CargoPlanner() {
           markedDeliveryIds={markedDeliveryIds}
           isAssigningDelivery={totalSelectedCrates > 0}
           onBayClick={handleBayClick}
+          bayWarnings={bayWarnings}
         />
       }
     />
