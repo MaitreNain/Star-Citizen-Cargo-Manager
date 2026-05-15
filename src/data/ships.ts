@@ -419,6 +419,26 @@ export const ships: Ship[] = [
 },
 
   {
+    id: "ironclad",
+    name: "Ironclad",
+    cargoBays: [
+      { id: "ironclad-bay-1", name: "Soute 1", size: { x: 6, y: 10, z: 6 }, offset: { x: 0, y:  0, z: 0 } },
+      { id: "ironclad-bay-2", name: "Soute 2", size: { x: 6, y: 10, z: 6 }, offset: { x: 7, y:  0, z: 0 } },
+      { id: "ironclad-bay-3", name: "Soute 3", size: { x: 6, y: 20, z: 6 }, offset: { x: 0, y: 11, z: 0 } },
+      { id: "ironclad-bay-4", name: "Soute 4", size: { x: 6, y: 20, z: 6 }, offset: { x: 7, y: 11, z: 0 } },
+    ],
+  },
+
+  {
+    id: "ironclad-assault",
+    name: "Ironclad Assault",
+    cargoBays: [
+      { id: "ironclad-assault-bay-1", name: "Soute 1", size: { x: 6, y: 20, z: 6 }, offset: { x: 0, y: 0, z: 0 } },
+      { id: "ironclad-assault-bay-2", name: "Soute 2", size: { x: 6, y: 20, z: 6 }, offset: { x: 7, y: 0, z: 0 } },
+    ],
+  },
+
+  {
     id: "m2-hercules-starlifter",
     name: "M2 Hercules",
     cargoBays: [
