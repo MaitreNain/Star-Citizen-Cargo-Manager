@@ -400,6 +400,22 @@ export default function CargoPlanner() {
     drag.clear();
   }
 
+  function handleDefineDeliveryCrates(
+    contractId: string,
+    deliveryId: string,
+    crates: { sizeScu: number; count: number }[]
+  ) {
+    pushHistorySnapshot();
+    setContracts(contracts.map((c) =>
+      c.id !== contractId ? c : {
+        ...c,
+        deliveries: c.deliveries.map((d) =>
+          d.id !== deliveryId ? d : { ...d, explicitCrates: crates }
+        ),
+      }
+    ));
+  }
+
   function handleBayClick(bayId: string) {
     if (totalSelectedCrates === 0) return;
     pushHistorySnapshot();
@@ -710,6 +726,7 @@ export default function CargoPlanner() {
           archivedDeliveries={archivedDeliveries}
           onArchiveDelivery={archiveDelivery}
           demoContract={tutorialOpen ? TUTORIAL_DEMO_CONTRACT : undefined}
+          onDefineDeliveryCrates={handleDefineDeliveryCrates}
         />
       </div>
     </>

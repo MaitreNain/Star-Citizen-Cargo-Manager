@@ -95,6 +95,13 @@ const translations = {
     "pending.example": "EXEMPLE",
     "pending.from": "DE",
     "pending.to": "VERS",
+    "pending.defineCrates": "Définir les caisses",
+    "pending.defineTitle": "Composition des caisses",
+    "pending.redefine": "Redéfinir",
+    "pending.defineConfirm": "Valider",
+    "pending.defineCancel": "Annuler",
+    "pending.defineBlocked": "↩ Retirer les caisses pour modifier",
+    "pending.defineChooseSize": "— Taille —",
 
     // SearchableSelect
     "select.filterPlaceholder": "Tape quelques lettres...",
@@ -226,6 +233,13 @@ const translations = {
     "pending.example": "EXAMPLE",
     "pending.from": "FROM",
     "pending.to": "TO",
+    "pending.defineCrates": "Define crates",
+    "pending.defineTitle": "Crate composition",
+    "pending.redefine": "Redefine",
+    "pending.defineConfirm": "Confirm",
+    "pending.defineCancel": "Cancel",
+    "pending.defineBlocked": "↩ Remove crates to modify",
+    "pending.defineChooseSize": "— Size —",
 
     // SearchableSelect
     "select.filterPlaceholder": "Type a few letters...",

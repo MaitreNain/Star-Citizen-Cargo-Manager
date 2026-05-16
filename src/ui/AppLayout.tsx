@@ -56,6 +56,10 @@ style.textContent = `
   .contract-card button:not(:disabled):hover,
   .delivery-card button:not(:disabled):hover { filter: brightness(2.3); }
 
+  input.crate-count-input::-webkit-inner-spin-button,
+  input.crate-count-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input.crate-count-input { -moz-appearance: textfield; }
+
   select {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23e07828'/%3E%3C/svg%3E");

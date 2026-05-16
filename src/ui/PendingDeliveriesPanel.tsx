@@ -4,6 +4,10 @@ import type { Contract } from "../types/Contract";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
 import type { ArchivedDelivery } from "../types/ArchivedDelivery";
 
+const SCU_SIZES = [1, 2, 4, 8, 16, 24, 32];
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+type CrateRow = { id: string; count: number; sizeScu: number };
+
 type DeliveryItem = {
   contractId: string;
   contractName: string;
@@ -16,6 +20,8 @@ type DeliveryItem = {
   pendingScu: number;
   state: "waiting" | "loaded";
   isDemo?: boolean;
+  hasExplicitCrates: boolean;
+  explicitCrates?: { sizeScu: number; count: number }[];
 };
 
 type Props = {
@@ -41,6 +47,7 @@ type Props = {
   archivedDeliveries: ArchivedDelivery[];
   onArchiveDelivery: (deliveryId: string) => void;
   demoContract?: Contract;
+  onDefineDeliveryCrates: (contractId: string, deliveryId: string, crates: { sizeScu: number; count: number }[]) => void;
 };
 
 export default function PendingDeliveriesPanel({
@@ -66,10 +73,13 @@ export default function PendingDeliveriesPanel({
   archivedDeliveries,
   onArchiveDelivery,
   demoContract,
+  onDefineDeliveryCrates,
 }: Props) {
   const { t, locale } = useLanguage();
   const highlightedRef = useRef<HTMLDivElement>(null);
   const [confirmingDeliveryId, setConfirmingDeliveryId] = useState<string | null>(null);
+  const [definingDeliveryId, setDefiningDeliveryId] = useState<string | null>(null);
+  const [draftRows, setDraftRows] = useState<CrateRow[]>([]);
 
   useEffect(() => {
     if (highlightedDeliveryId && highlightedRef.current) {
@@ -96,6 +106,8 @@ export default function PendingDeliveriesPanel({
           pendingScu: 0,
           state: "loaded",
           isDemo: true,
+          hasExplicitCrates: true,
+          explicitCrates: delivery.explicitCrates,
         });
       }
     }
@@ -116,6 +128,8 @@ export default function PendingDeliveriesPanel({
           totalScu: delivery.scu,
           pendingScu: Math.max(0, delivery.scu - placed),
           state: activatedSet.has(delivery.id) ? "loaded" : "waiting",
+          hasExplicitCrates: !!delivery.explicitCrates,
+          explicitCrates: delivery.explicitCrates,
         });
       }
     }
@@ -180,7 +194,14 @@ export default function PendingDeliveriesPanel({
     const isHighlighted = highlightedDeliveryId === item.deliveryId;
     const isMarked = markedSet.has(item.deliveryId);
     const isWaiting = item.state === "waiting";
+    const isDefining = definingDeliveryId === item.deliveryId;
     const pendingGroups = (!isWaiting && !isDemo) ? (pendingCratesByDelivery.get(item.deliveryId) ?? []) : [];
+    const hasPlacedFragments = deliveryFragments.length > 0;
+
+    const draftTotal = isDefining
+      ? draftRows.reduce((sum, r) => sum + Math.max(0, r.count) * (r.sizeScu || 0), 0)
+      : 0;
+    const canConfirm = isDefining && draftTotal === item.totalScu && draftRows.every((r) => r.sizeScu > 0 && r.count > 0);
 
     const borderColor = isComplete
       ? "rgba(34,211,160,0.4)"
@@ -268,6 +289,101 @@ export default function PendingDeliveriesPanel({
                     <span style={{ fontSize: "11px", color: "var(--cyan)" }}>{item.destination}</span>
                   </div>
                 </div>
+
+                {/* Définition des caisses (livraisons en attente uniquement) */}
+                {isWaiting && (
+                  isDefining ? (
+                    <div style={{ marginTop: "8px", border: "1px solid var(--border-glow)", borderRadius: "2px", overflow: "hidden" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 8px", background: "rgba(30,74,110,0.2)", borderBottom: "1px solid var(--border-glow)" }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-dim)", textTransform: "uppercase" }}>{t("pending.defineTitle")}</span>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, color: draftTotal === item.totalScu ? "var(--success)" : draftTotal > item.totalScu ? "var(--danger)" : "var(--text-muted)" }}>
+                          {draftTotal}&thinsp;/&thinsp;{item.totalScu}&thinsp;SCU
+                        </span>
+                      </div>
+                      <div style={{ padding: "6px 8px" }}>
+                        {draftRows.map((row) => (
+                          <div key={row.id} style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "4px" }}>
+                            <input
+                              type="number"
+                              min={1}
+                              max={99}
+                              className="crate-count-input"
+                              value={row.count}
+                              onChange={(e) => {
+                                const val = Math.max(1, parseInt(e.target.value) || 1);
+                                setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, count: val } : r));
+                              }}
+                              style={{
+                                width: "42px", textAlign: "center",
+                                border: "1px solid var(--border-glow)", borderRadius: "2px",
+                                outline: "none", fontFamily: "var(--font-mono)",
+                                fontSize: "12px", color: "var(--text-bright)",
+                                background: "rgba(0,0,0,0.3)", padding: "4px 2px",
+                              }}
+                            />
+                            <span style={{ color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>×</span>
+                            <select
+                              value={row.sizeScu}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, sizeScu: val } : r));
+                              }}
+                              className="scifi-input"
+                              style={{ flex: 1, padding: "4px 8px", fontSize: "12px" }}
+                            >
+                              <option value={0} disabled>{t("pending.defineChooseSize")}</option>
+                              {SCU_SIZES.map((s) => <option key={s} value={s}>{s} SCU</option>)}
+                            </select>
+                            <button
+                              onClick={() => setDraftRows((prev) => prev.filter((r) => r.id !== row.id))}
+                              style={{
+                                background: "none", border: "none",
+                                color: "var(--danger)", cursor: "pointer",
+                                fontSize: "13px", padding: "2px 3px",
+                                visibility: draftRows.length > 1 ? "visible" : "hidden",
+                              }}
+                            >✕</button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => setDraftRows((prev) => [...prev, { id: genId(), count: 1, sizeScu: 0 }])}
+                          style={{
+                            background: "none", border: "1px solid var(--border-glow)",
+                            color: "var(--text-dim)", cursor: "pointer",
+                            fontSize: "10px", fontFamily: "var(--font-mono)",
+                            padding: "2px 8px", borderRadius: "2px", marginTop: "2px",
+                          }}
+                        >{t("manualForm.addRow")}</button>
+                      </div>
+                    </div>
+                  ) : item.hasExplicitCrates ? (
+                    <div style={{ marginTop: "6px" }}>
+                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "3px" }}>
+                        {item.explicitCrates!.map((c, i) => (
+                          <span key={i} style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)" }}>
+                            {c.count}&thinsp;×&thinsp;{c.sizeScu}&thinsp;SCU
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        {hasPlacedFragments ? (
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                            {t("pending.defineBlocked")}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDraftRows(item.explicitCrates!.map((c) => ({ id: genId(), count: c.count, sizeScu: c.sizeScu }))); setDefiningDeliveryId(item.deliveryId); }}
+                            style={{
+                              background: "none", border: "1px solid var(--border-glow)",
+                              color: "var(--text-muted)", cursor: "pointer",
+                              fontSize: "10px", fontFamily: "var(--font-mono)", padding: "1px 6px", borderRadius: "2px",
+                            }}
+                          >{t("pending.redefine")}</button>
+                        )}
+                      </div>
+                    </div>
+                  ) : null
+                )}
 
                 {/* Crate pool */}
                 {pendingGroups.length > 0 && (
@@ -429,14 +545,69 @@ export default function PendingDeliveriesPanel({
             {/* Actions */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "4px" }}>
               {isWaiting ? (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
-                  style={{
-                    background: "rgba(34,211,160,0.08)", border: "1px solid rgba(34,211,160,0.35)",
-                    color: "var(--success)", cursor: "pointer", fontSize: "11px",
-                    fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
-                  }}
-                >{t("pending.activate")}</button>
+                isDefining ? (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!canConfirm) return;
+                        const validRows = draftRows.filter((r) => r.count > 0 && r.sizeScu > 0);
+                        onDefineDeliveryCrates(item.contractId, item.deliveryId, validRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })));
+                        setDefiningDeliveryId(null);
+                        setDraftRows([]);
+                      }}
+                      disabled={!canConfirm}
+                      style={{
+                        background: canConfirm ? "rgba(34,211,160,0.1)" : "none",
+                        border: `1px solid ${canConfirm ? "rgba(34,211,160,0.5)" : "var(--border)"}`,
+                        color: canConfirm ? "var(--success)" : "var(--border-glow)",
+                        cursor: canConfirm ? "pointer" : "default",
+                        fontSize: "11px", fontFamily: "var(--font-mono)", fontWeight: 700,
+                        padding: "2px 8px", borderRadius: "2px",
+                      }}
+                    >{t("pending.defineConfirm")}</button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDefiningDeliveryId(null); setDraftRows([]); }}
+                      style={{
+                        background: "none", border: "1px solid var(--border-glow)",
+                        color: "var(--text-muted)", cursor: "pointer",
+                        fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
+                      }}
+                    >{t("pending.defineCancel")}</button>
+                  </>
+                ) : (
+                  <>
+                    {item.hasExplicitCrates ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onActivateDelivery(item.deliveryId); }}
+                        style={{
+                          background: "rgba(34,211,160,0.08)", border: "1px solid rgba(34,211,160,0.35)",
+                          color: "var(--success)", cursor: "pointer", fontSize: "11px",
+                          fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                        }}
+                      >{t("pending.activate")}</button>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDraftRows([{ id: genId(), count: 1, sizeScu: 0 }]); setDefiningDeliveryId(item.deliveryId); }}
+                        style={{
+                          background: "rgba(56,189,248,0.08)", border: "1px solid var(--cyan-dim)",
+                          color: "var(--cyan)", cursor: "pointer", fontSize: "11px",
+                          fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px", whiteSpace: "nowrap",
+                        }}
+                      >{t("pending.defineCrates")}</button>
+                    )}
+                    {!isDemo && (
+                      <button
+                        disabled
+                        style={{
+                          background: "none", border: "1px solid var(--border)",
+                          color: "var(--border-glow)", cursor: "default",
+                          fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
+                        }}
+                      >{t("pending.deactivate")}</button>
+                    )}
+                  </>
+                )
               ) : (
                 <>
                   {!isDemo && isComplete && (confirmingDeliveryId === item.deliveryId ? (
@@ -479,20 +650,17 @@ export default function PendingDeliveriesPanel({
                       }}
                     >{isMarked ? t("pending.marked") : t("pending.mark")}</button>
                   )}
+                  {!isDemo && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeactivateDelivery(item.deliveryId); }}
+                      style={{
+                        background: "none", border: "1px solid rgba(224,80,80,0.3)",
+                        color: "var(--danger)", cursor: "pointer",
+                        fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
+                      }}
+                    >{t("pending.deactivate")}</button>
+                  )}
                 </>
-              )}
-              {!isDemo && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); if (item.state === "loaded") onDeactivateDelivery(item.deliveryId); }}
-                  disabled={item.state === "waiting"}
-                  style={{
-                    background: "none",
-                    border: `1px solid ${item.state === "waiting" ? "var(--border)" : "rgba(224,80,80,0.3)"}`,
-                    color: item.state === "waiting" ? "var(--border-glow)" : "var(--danger)",
-                    cursor: item.state === "waiting" ? "default" : "pointer",
-                    fontSize: "11px", fontFamily: "var(--font-mono)", padding: "2px 8px", borderRadius: "2px",
-                  }}
-                >{t("pending.deactivate")}</button>
               )}
             </div>
           </div>
