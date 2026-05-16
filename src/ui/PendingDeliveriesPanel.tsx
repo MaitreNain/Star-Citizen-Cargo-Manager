@@ -196,12 +196,10 @@ export default function PendingDeliveriesPanel({
     const isWaiting = item.state === "waiting";
     const isDefining = definingDeliveryId === item.deliveryId;
     const pendingGroups = (!isWaiting && !isDemo) ? (pendingCratesByDelivery.get(item.deliveryId) ?? []) : [];
-    const hasPlacedFragments = deliveryFragments.length > 0;
-
     const draftTotal = isDefining
       ? draftRows.reduce((sum, r) => sum + Math.max(0, r.count) * (r.sizeScu || 0), 0)
       : 0;
-    const canConfirm = isDefining && draftTotal === item.totalScu && draftRows.every((r) => r.sizeScu > 0 && r.count > 0);
+    const canConfirm = draftTotal === item.totalScu && draftRows.every((r) => r.sizeScu > 0 && r.count > 0);
 
     const borderColor = isComplete
       ? "rgba(34,211,160,0.4)"
@@ -323,7 +321,7 @@ export default function PendingDeliveriesPanel({
                                     flex: 1, width: 0, textAlign: "center", border: "none", outline: "none",
                                     fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--text-bright)",
                                     background: "rgba(0,0,0,0.3)", padding: "7px 4px",
-                                  } as React.CSSProperties}
+                                  }}
                                 />
                                 <div style={{ display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border-glow)" }}>
                                   <button
@@ -382,7 +380,7 @@ export default function PendingDeliveriesPanel({
                         ))}
                       </div>
                       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        {hasPlacedFragments ? (
+                        {deliveryFragments.length > 0 ? (
                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-muted)", fontStyle: "italic" }}>
                             {t("pending.defineBlocked")}
                           </span>
@@ -566,9 +564,7 @@ export default function PendingDeliveriesPanel({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!canConfirm) return;
-                        const validRows = draftRows.filter((r) => r.count > 0 && r.sizeScu > 0);
-                        onDefineDeliveryCrates(item.contractId, item.deliveryId, validRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })));
+                        onDefineDeliveryCrates(item.contractId, item.deliveryId, draftRows.map((r) => ({ sizeScu: r.sizeScu, count: r.count })));
                         setDefiningDeliveryId(null);
                         setDraftRows([]);
                       }}
