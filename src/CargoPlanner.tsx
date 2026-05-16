@@ -115,7 +115,8 @@ export default function CargoPlanner() {
 
   useEffect(() => {
     if (!tutorialOpen || ship.cargoBays.length === 0) { setDemoPlacedCrates([]); return; }
-    const crates = createCratesFromContracts([TUTORIAL_DEMO_CONTRACT]);
+    const demoContractForScene = { ...TUTORIAL_DEMO_CONTRACT, deliveries: TUTORIAL_DEMO_CONTRACT.deliveries.filter(d => d.explicitCrates) };
+    const crates = createCratesFromContracts([demoContractForScene]);
     const withBay = crates.map((c) => ({
       ...c,
       assignedBayId: c.deliveryId === "__demo_d1__"

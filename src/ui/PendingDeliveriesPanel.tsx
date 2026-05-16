@@ -104,9 +104,9 @@ export default function PendingDeliveriesPanel({
           pickupLocation: delivery.pickupLocation,
           totalScu: delivery.scu,
           pendingScu: 0,
-          state: "loaded",
+          state: delivery.explicitCrates ? "loaded" : "waiting",
           isDemo: true,
-          hasExplicitCrates: true,
+          hasExplicitCrates: !!delivery.explicitCrates,
           explicitCrates: delivery.explicitCrates,
         });
       }

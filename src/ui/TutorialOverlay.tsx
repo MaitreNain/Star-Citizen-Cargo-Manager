@@ -24,6 +24,7 @@ const STEP_META: StepMeta[] = [
   { target: "#tuto-tab-placement" },
   { target: "#tuto-deliveries", tab: "placement" },
   { target: "#tuto-deliveries", tab: "placement" },
+  { target: "#tuto-deliveries", tab: "placement" },
   { target: "#tuto-scene", interactive: true },
 ];
 
@@ -40,12 +41,21 @@ export const TUTORIAL_DEMO_CONTRACT: Contract = {
       destination: "Lorville - Hurston",
       scu: 15,
       pickupLocation: "Port Tressler",
+      explicitCrates: [{ sizeScu: 8, count: 1 }, { sizeScu: 4, count: 1 }, { sizeScu: 2, count: 1 }, { sizeScu: 1, count: 1 }],
     },
     {
       id: "__demo_d2__",
       commodity: "Agricium",
       destination: "Area 18 - ArcCorp",
       scu: 23,
+      pickupLocation: "Port Tressler",
+      explicitCrates: [{ sizeScu: 16, count: 1 }, { sizeScu: 4, count: 1 }, { sizeScu: 2, count: 1 }, { sizeScu: 1, count: 1 }],
+    },
+    {
+      id: "__demo_d3__",
+      commodity: "Tungsten",
+      destination: "New Babbage - MicroTech",
+      scu: 12,
       pickupLocation: "Port Tressler",
     },
   ],

@@ -133,10 +133,12 @@ const translations = {
     "tuto.step5.body": "Une fois tes contrats créés, passe à l'onglet Placement pour charger tes caisses dans les soutes.",
     "tuto.step6.title": "⑥ Cartes de livraison",
     "tuto.step6.body": "Chaque objectif de contrat apparaît ici sous forme de carte de livraison — une carte correspond à un objectif de contrat.\n\nTu peux marquer une livraison (via l'icône dédiée) pour retrouver facilement ses caisses dans la vue 3D : elles seront mises en évidence parmi les autres.",
-    "tuto.step7.title": "⑦ Activer & placer",
-    "tuto.step7.body": "Le processus de chargement se déroule en quatre étapes :\n\n① Active la livraison avec « Activer ».\n② Sélectionne le nombre de caisses à placer (boutons − / +) ou utilise « Tout sélectionner ».\n③ Clique sur une soute dans la vue 3D pour y affecter les caisses.\n④ Une fois livrée à destination, archive la livraison pour garder ta liste à jour.",
-    "tuto.step8.title": "⑧ Vue 3D — les soutes",
-    "tuto.step8.body": "Navigation :\n• Clic gauche ou droit + glisser pour orbiter\n• Molette pour zoomer\n\nManipulation des caisses :\n• Glisse-dépose pour déplacer une caisse\n• R pour la faire pivoter\n• La gravité s'applique automatiquement après chaque déplacement\n• Relâcher la souris hors de la vue annule le déplacement en cours",
+    "tuto.step7.title": "⑦ Définir la composition",
+    "tuto.step7.body": "Avant d'activer une livraison de hauling, tu dois préciser la composition exacte des caisses.\n\nClique sur « Définir les caisses » : un formulaire s'ouvre avec la décomposition proposée par l'app. Modifie si elle ne correspond pas à ce que tu as in-game, puis confirme.\n\nLe total en SCU doit correspondre au contrat. Une fois confirmé, le bouton « Activer » apparaît.",
+    "tuto.step8.title": "⑧ Activer & placer",
+    "tuto.step8.body": "Le processus de chargement se déroule en quatre étapes :\n\n① Active la livraison avec « Activer ».\n② Sélectionne le nombre de caisses à placer (boutons − / +) ou utilise « Tout sélectionner ».\n③ Clique sur une soute dans la vue 3D pour y affecter les caisses.\n④ Une fois livrée à destination, archive la livraison pour garder ta liste à jour.",
+    "tuto.step9.title": "⑨ Vue 3D — les soutes",
+    "tuto.step9.body": "Navigation :\n• Clic gauche ou droit + glisser pour orbiter\n• Molette pour zoomer\n\nManipulation des caisses :\n• Glisse-dépose pour déplacer une caisse\n• R pour la faire pivoter\n• La gravité s'applique automatiquement après chaque déplacement\n• Relâcher la souris hors de la vue annule le déplacement en cours",
   },
 
   en: {
@@ -271,10 +273,12 @@ const translations = {
     "tuto.step5.body": "Once your contracts are created, switch to the Placement tab to load your crates into the bays.",
     "tuto.step6.title": "⑥ Delivery Cards",
     "tuto.step6.body": "Each contract objective appears here as a delivery card — one card corresponds to one contract objective.\n\nYou can mark a delivery (via the dedicated icon) to easily find its crates in the 3D view: they will be highlighted among the others.",
-    "tuto.step7.title": "⑦ Activate & Place",
-    "tuto.step7.body": "The loading process has four steps:\n\n① Activate the delivery with « Activate ».\n② Select the number of crates to place (− / + buttons) or use « Select all ».\n③ Click on a bay in the 3D view to assign the crates.\n④ Once delivered to destination, archive the delivery to keep your list up to date.",
-    "tuto.step8.title": "⑧ 3D View — the bays",
-    "tuto.step8.body": "Navigation:\n• Left or right click + drag to orbit\n• Scroll wheel to zoom\n\nCrate manipulation:\n• Drag and drop to move a crate\n• R to rotate it\n• Gravity is automatically applied after each move\n• Releasing the mouse outside the view cancels the current drag",
+    "tuto.step7.title": "⑦ Define Crate Composition",
+    "tuto.step7.body": "Before activating a hauling delivery, you need to specify the exact crate breakdown.\n\nClick « Define Crates »: a form opens with the app's suggested breakdown. Adjust if needed, then confirm.\n\nThe total SCU must match the contract. Once confirmed, the « Activate » button appears.",
+    "tuto.step8.title": "⑧ Activate & Place",
+    "tuto.step8.body": "The loading process has four steps:\n\n① Activate the delivery with « Activate ».\n② Select the number of crates to place (− / + buttons) or use « Select all ».\n③ Click on a bay in the 3D view to assign the crates.\n④ Once delivered to destination, archive the delivery to keep your list up to date.",
+    "tuto.step9.title": "⑨ 3D View — the bays",
+    "tuto.step9.body": "Navigation:\n• Left or right click + drag to orbit\n• Scroll wheel to zoom\n\nCrate manipulation:\n• Drag and drop to move a crate\n• R to rotate it\n• Gravity is automatically applied after each move\n• Releasing the mouse outside the view cancels the current drag",
   },
 } as const;
 
