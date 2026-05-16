@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
 import type { Contract } from "../types/Contract";
 import type { DeliveryFragment } from "../types/DeliveryFragment";
@@ -300,51 +300,67 @@ export default function PendingDeliveriesPanel({
                           {draftTotal}&thinsp;/&thinsp;{item.totalScu}&thinsp;SCU
                         </span>
                       </div>
-                      <div style={{ padding: "6px 8px" }}>
-                        {draftRows.map((row) => (
-                          <div key={row.id} style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "4px" }}>
-                            <input
-                              type="number"
-                              min={1}
-                              max={99}
-                              className="crate-count-input"
-                              value={row.count}
-                              onChange={(e) => {
-                                const val = Math.max(1, parseInt(e.target.value) || 1);
-                                setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, count: val } : r));
-                              }}
-                              style={{
-                                width: "42px", textAlign: "center",
-                                border: "1px solid var(--border-glow)", borderRadius: "2px",
-                                outline: "none", fontFamily: "var(--font-mono)",
-                                fontSize: "12px", color: "var(--text-bright)",
-                                background: "rgba(0,0,0,0.3)", padding: "4px 2px",
-                              }}
-                            />
-                            <span style={{ color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>×</span>
-                            <select
-                              value={row.sizeScu}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value);
-                                setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, sizeScu: val } : r));
-                              }}
-                              className="scifi-input"
-                              style={{ flex: 1, padding: "4px 8px", fontSize: "12px" }}
-                            >
-                              <option value={0} disabled>{t("pending.defineChooseSize")}</option>
-                              {SCU_SIZES.map((s) => <option key={s} value={s}>{s} SCU</option>)}
-                            </select>
-                            <button
-                              onClick={() => setDraftRows((prev) => prev.filter((r) => r.id !== row.id))}
-                              style={{
-                                background: "none", border: "none",
-                                color: "var(--danger)", cursor: "pointer",
-                                fontSize: "13px", padding: "2px 3px",
-                                visibility: draftRows.length > 1 ? "visible" : "hidden",
-                              }}
-                            >✕</button>
-                          </div>
-                        ))}
+                      <div style={{ padding: "8px 10px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: "6px 8px", alignItems: "center", marginBottom: "6px" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Quantité</span>
+                          <span />
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Taille</span>
+                          <span />
+                          {draftRows.map((row) => (
+                            <Fragment key={row.id}>
+                              <div style={{ display: "flex", alignItems: "stretch", border: "1px solid var(--border-glow)", borderRadius: "2px", overflow: "hidden" }}>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={99}
+                                  className="crate-count-input"
+                                  value={row.count}
+                                  onChange={(e) => {
+                                    const val = Math.max(1, parseInt(e.target.value) || 1);
+                                    setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, count: val } : r));
+                                  }}
+                                  style={{
+                                    flex: 1, width: 0, textAlign: "center", border: "none", outline: "none",
+                                    fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--text-bright)",
+                                    background: "rgba(0,0,0,0.3)", padding: "7px 4px",
+                                  } as React.CSSProperties}
+                                />
+                                <div style={{ display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border-glow)" }}>
+                                  <button
+                                    onClick={() => setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, count: Math.min(99, r.count + 1) } : r))}
+                                    style={{ background: "none", border: "none", borderBottom: "1px solid var(--border-glow)", color: "var(--text-dim)", cursor: "pointer", padding: "0 7px", flex: 1, fontSize: "8px", lineHeight: 1 }}
+                                  >▲</button>
+                                  <button
+                                    onClick={() => setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, count: Math.max(1, r.count - 1) } : r))}
+                                    style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", padding: "0 7px", flex: 1, fontSize: "8px", lineHeight: 1 }}
+                                  >▼</button>
+                                </div>
+                              </div>
+                              <span style={{ color: "var(--text-dim)", fontSize: "18px", lineHeight: 1, textAlign: "center" }}>×</span>
+                              <select
+                                value={row.sizeScu}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  setDraftRows((prev) => prev.map((r) => r.id === row.id ? { ...r, sizeScu: val } : r));
+                                }}
+                                className="scifi-input"
+                                style={{ padding: "7px 8px", fontSize: "13px" }}
+                              >
+                                <option value={0} disabled>{t("pending.defineChooseSize")}</option>
+                                {SCU_SIZES.map((s) => <option key={s} value={s}>{s} SCU</option>)}
+                              </select>
+                              <button
+                                onClick={() => setDraftRows((prev) => prev.filter((r) => r.id !== row.id))}
+                                style={{
+                                  background: "none", border: "none",
+                                  color: "var(--danger)", cursor: "pointer",
+                                  fontSize: "14px", padding: "2px 2px",
+                                  visibility: draftRows.length > 1 ? "visible" : "hidden",
+                                }}
+                              >✕</button>
+                            </Fragment>
+                          ))}
+                        </div>
                         <button
                           onClick={() => setDraftRows((prev) => [...prev, { id: genId(), count: 1, sizeScu: 0 }])}
                           style={{
@@ -588,7 +604,16 @@ export default function PendingDeliveriesPanel({
                       >{t("pending.activate")}</button>
                     ) : (
                       <button
-                        onClick={(e) => { e.stopPropagation(); setDraftRows([{ id: genId(), count: 1, sizeScu: 0 }]); setDefiningDeliveryId(item.deliveryId); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const defaultGroups = pendingCratesByDelivery.get(item.deliveryId) ?? [];
+                          setDraftRows(
+                            defaultGroups.length > 0
+                              ? defaultGroups.map((g) => ({ id: genId(), count: g.count, sizeScu: g.sizeScu }))
+                              : [{ id: genId(), count: 1, sizeScu: 0 }]
+                          );
+                          setDefiningDeliveryId(item.deliveryId);
+                        }}
                         style={{
                           background: "rgba(56,189,248,0.08)", border: "1px solid var(--cyan-dim)",
                           color: "var(--cyan)", cursor: "pointer", fontSize: "11px",
